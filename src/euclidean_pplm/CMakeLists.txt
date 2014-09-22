@@ -1,4 +1,2 @@
-add_maggie_test(euclidean_pplm.exe
-    SOURCES     euclidean_pplm.cpp euclidean_pplm.h
-    LINK
-)
+add_executable(euclidean_pplm.exe euclidean_pplm.cpp euclidean_pplm.h)
+#target_link_libraries(euclidean_pplm.exe )

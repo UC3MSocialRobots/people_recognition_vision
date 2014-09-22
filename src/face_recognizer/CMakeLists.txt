@@ -4,22 +4,14 @@
 #    LINK        xml_document # opencv_facerec
 #)
 
-add_maggie_test(test_face_recognizer.exe
-    SOURCES     test_face_recognizer.cpp face_recognizer.h
-    LINK        string_utils xml_document
-)
+add_executable(test_face_recognizer.exe test_face_recognizer.cpp face_recognizer.h)
+target_link_libraries(test_face_recognizer.exe string_utils xml_document)
 
-add_maggie_test(launcher_face_recognizer_ros.exe
-    SOURCES     launcher_face_recognizer_ros.cpp
-    LINK        xml_document
-)
+add_executable(launcher_face_recognizer_ros.exe launcher_face_recognizer_ros.cpp)
+target_link_libraries(launcher_face_recognizer_ros.exe xml_document)
 
-add_maggie_test(launcher_face_recognizer_add_pics.exe
-    SOURCES     launcher_face_recognizer_add_pics.cpp
-    LINK        xml_document
-)
+add_executable(launcher_face_recognizer_add_pics.exe launcher_face_recognizer_add_pics.cpp)
+target_link_libraries(launcher_face_recognizer_add_pics.exe xml_document)
 
-add_maggie_test(launcher_face_recognizer_viewer.exe
-    SOURCES     launcher_face_recognizer_viewer.cpp
-    LINK        
-)
+add_executable(launcher_face_recognizer_viewer.exe launcher_face_recognizer_viewer.cpp)
+#target_link_libraries(test_args_parser.exe )
