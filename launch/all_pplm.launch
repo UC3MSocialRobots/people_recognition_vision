@@ -1,0 +1,31 @@
+<launch>
+<!-- the different PeoplePoseList matchers (PPLM).
+   If you add a new PPLM,
+   don't forget to add  its topic to
+   ukf_multimodal.launch (in people_recognition_vision pkg) -->
+<arg name="robot"/>
+<group ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="height_pplm.exe"
+  name="height_pplm"  output="screen"
+  args="" />
+
+  <node pkg="people_recognition_vision" type="phs_pplm.exe"
+  name="phs_pplm"  output="screen"
+  args="" />
+
+  <node pkg="people_recognition_vision" type="euclidean_pplm.exe"
+  name="euclidean_pplm"  output="screen"
+  args="" />
+
+  <!-- event GUI -->
+  <node pkg="ad_core" type="launcher_qt_event_sender_interface.exe"
+        name="pplm_event_gui"
+        output="screen"
+        args='event_keys="|HEIGHT_PPLM_START;HEIGHT_PPLM_START;0
+                          |HEIGHT_PPLM_STOP;HEIGHT_PPLM_STOP;0
+                          |PHS_PPLM_START;PHS_PPLM_START;0
+                          |PHS_PPLM_STOP;PHS_PPLM_STOP;0
+                          |EUCLIDEAN_PPLM_START;EUCLIDEAN_PPLM_START;0
+                          |EUCLIDEAN_PPLM_STOP;EUCLIDEAN_PPLM_STOP;0"'/>
+</group>
+</launch>

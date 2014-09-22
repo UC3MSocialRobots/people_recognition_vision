@@ -1,0 +1,11 @@
+<launch>
+<arg name="robot"/>
+<include file="$(find main_control)/launch/nite_only_start.launch"/>
+
+<group ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="breast_detector.exe"
+        name="breast_detector" output="screen" required="true"
+        args="1" />
+</group>
+</launch>
+

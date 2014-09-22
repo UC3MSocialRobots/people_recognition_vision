@@ -1,0 +1,19 @@
+<launch>
+<param name="user/compressed/format" value="png"/>
+<arg name="robot"/>
+
+<!-- the face detection node - already has a namespace -->
+<include file="$(find vision)/launch/face_count.launch">
+  <arg name="robot" value="$(arg robot)" />
+</include>
+
+<group ns="$(arg robot)">
+  <!-- the receiver -->
+  <node pkg="people_recognition_vision" type="hist_tracking_vision_skill"
+        name="hist_tracking_vision_skill" output="screen"
+        args="--google --activate
+              _data_acquisition_by_wait_for_message:=false"/>
+
+</group>
+</launch>
+

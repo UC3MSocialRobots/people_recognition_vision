@@ -1,0 +1,79 @@
+<launch>
+<arg name="robot" value="fake_robot"/>
+<arg name="viewer" default="true"/>
+
+<!-- MCP -->
+<include file="$(find ad_core)/launch/ad_servers.launch">
+  <arg name="robot" value="$(arg robot)" />
+</include>
+
+<!-- event interface -->
+<include file="$(find people_recognition_vision)/launch/ukf_event_marker.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="eventgui" value="true" />
+  <arg name="marker" value="false" />
+</include>
+
+
+<group ns="$(arg robot)">
+  <!-- truth PPL publisher -->
+  <node pkg="people_detection_vision" type="KTP2PPL.exe"
+    name="KTP2PPL"  output="screen" required="true"
+    args="/home/user/Downloads/0datasets/KTP_dataset_images/ground_truth/Still_gt2D.txt
+          _display:=true" />
+<!--
+    args="/media/disk/Datasets/KTP_dataset_images/ground_truth/Still_gt2D.txt
+-->
+  <!-- TF converter /openni_rgb_optical_frame -> /base_link
+        - cf Kinect2baseLink_TF.txt -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_tf_broadcaster"
+          args="-0.27 1.271 0.002    0 0.735 -0.678 0    /openni_rgb_optical_frame  /base_link   100"/>
+
+  <arg name="pplp_topic" default="anon_ppl"/>
+  <arg name="ukfs_topics" default="ukf_euclidean/ppl;ukf_phs/ppl;ukf_height/ppl;ukf_phs_euclidean/ppl"/>
+  <arg name="common_ukf_args" default="_static_frame_id:=/base_link  _track_timeout:=10  _ppl_input_topics:=$(arg pplp_topic)"/>
+
+  <!-- UKF (sensor fusion) for euclidean -->
+  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
+        output="screen" respawn="false" name="ukf_euclidean"
+        args="$(arg common_ukf_args)  _ppl_matcher_services:=euclidean_pplm/match_ppl" />
+  <!-- UKF (sensor fusion) for phs -->
+  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
+        output="screen" respawn="false" name="ukf_phs"
+        args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl" />
+  <!-- UKF (sensor fusion) for height -->
+  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
+        output="screen" respawn="false" name="ukf_height"
+        args="$(arg common_ukf_args)  _ppl_matcher_services:=height_pplm/match_ppl" />
+  <!-- UKF (sensor fusion) for phs+euclidean -->
+  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
+        output="screen" respawn="false" name="ukf_phs_euclidean"
+        args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl;euclidean_pplm/match_ppl" />
+
+  <!-- PPL benchmarker -->
+  <node pkg="people_detection_vision" type="pplp_benchmarker.exe"
+    name="pplp_benchmarker"  output="screen"
+    args="_ppl_topics:=$(arg ukfs_topics)
+          _errors_display_timeout:=15
+          _results_filename:=$(find people_recognition_vision)/pplp_benchmarker_results.txt" />
+
+  <!-- PPL viewer -->
+  <node if="$(arg viewer)" pkg="people_utils" type="ppl_viewer.exe"
+    name="ppl_viewer"  output="screen"
+    args="_ppl_topics:='ground_truth_ppl;$(arg ukfs_topics)'
+          _reprojection_mode:=xy
+          _width:=480 _height:=800
+          _xmin:=-3 _xmax:=3 _ymin:=-8 _ymax:=1" />
+
+  <!-- make a bag -->
+  <!--
+  <node pkg="rosbag" type="record" name="bagmaker"  output="screen" args="ground_truth_ppl" />
+  -->
+</group>
+
+<!-- the PPL matchers and their GUIs -->
+<include file="$(find people_recognition_vision)/launch/all_pplm.launch">
+  <arg name="robot" value="$(arg robot)" />
+</include>
+
+</launch>

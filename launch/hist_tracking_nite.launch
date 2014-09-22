@@ -1,0 +1,14 @@
+<launch>
+<arg name="robot" default="nite_only"/>
+<include file="$(find main_control)/launch/nite_only_start.launch"/>
+
+<group ns="$(arg robot)">
+  <!-- ROS_NAMESPACE=nite_only gdb ./hist_tracking_nite_skill.exe -->
+  <node pkg="people_recognition_vision" type="hist_tracking_nite_skill.exe"
+        name="hist_tracking_nite_skill" output="screen" required="true"
+        args=""
+        />
+</group>
+
+</launch>
+

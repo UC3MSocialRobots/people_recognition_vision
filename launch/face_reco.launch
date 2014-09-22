@@ -1,0 +1,71 @@
+<launch>
+<arg name="robot"/>
+<arg name="eventgui" default="true"/>
+<arg name="face_detector" default="face_detector_pplp"/>
+
+<include file="$(find people_detection_vision)/launch/$(arg face_detector).launch">
+  <arg name="robot" value="$(arg robot)" />
+</include>
+
+<group ns="$(arg robot)">
+  <!-- the face recognition node -->
+  <node pkg="people_recognition_vision" type="launcher_face_recognizer_ros.exe"
+        name="face_recognizer_person"  output="screen"
+        args="_xml_filename:=$(find vision_utils)/data/images/faces/people_lab/index.xml
+              _ppl_input_topic:=$(arg face_detector)/ppl"
+        launch-prefix="" />
+
+  <!-- the gender recognition node -->
+  <node pkg="people_recognition_vision" type="launcher_face_recognizer_ros.exe"
+        name="face_recognizer_gender"  output="screen"
+        args="_xml_filename:=$(find vision_utils)/data/images/faces/google_genders/index.xml
+              _ppl_input_topic:=$(arg face_detector)/ppl"
+        launch-prefix="" />
+<!--
+        args="_xml_filename:=$(find long_term_memory)/long_term_memory/images/faces/YaleB/index.xml"
+-->
+
+ <!-- to add new pictures -->
+  <node pkg="people_recognition_vision" type="launcher_face_recognizer_add_pics.exe"
+        name="face_recognizer_add_pics"  output="screen"
+        args="_person_name:=irene
+              _ppl_input_topic:=$(arg face_detector)/ppl
+              _xml_filename:=$(find vision_utils)/data/images/faces/people_lab/index.xml
+              _xml_filename_out:=$(find vision_utils)/data/images/faces/people_lab_out/index.xml" />
+
+  <!-- the UKF filter for numbers of men and women detected -->
+<!--
+  <node pkg="people_recognition_vision" type="ukf_genders.exe"
+        name="ukf_genders"  output="screen"
+        args="_ppl_input_topic:=face_recognizer_gender/ppl" />
+-->
+
+  <!-- the viewer -->
+  <node pkg="people_recognition_vision" type="launcher_face_recognizer_viewer.exe"
+        name="face_recognizer_viewer"  output="screen"
+        args="_ppl_input_topics:=face_recognizer_person/ppl;face_recognizer_gender/ppl;$(arg face_detector)/ppl" />
+<!--
+        args="_ppl_input_topics:=face_recognizer_person/ppl;face_recognizer_gender/ppl;" />
+-->
+
+  <!-- the event interface skill -->
+  <node if="$(arg eventgui)" pkg="ad_core" type="launcher_qt_event_sender_interface.exe"
+        name="face_recognizer_event_gui"
+        output="screen"
+        args='event_keys="|FACE_RECOGNIZER_START;face_recognizer_start;0
+                          |FACE_RECOGNIZER_STOP;face_recognizer_stop;0
+                          |FACE_RECOGNIZER_VIEWER_START;face_recognizer_viewer_start (also by face_detector_start);0
+                          |FACE_RECOGNIZER_VIEWER_STOP;face_recognizer_viewer_stop;0
+                          |FACE_RECOGNIZER_ADD_PICS_START;face_recognizer_add_pics_start;0
+                          |FACE_RECOGNIZER_ADD_PICS_STOP;face_recognizer_add_pics_stop;0"'/>
+
+  <!-- conversion to ROS rviz marker -->
+  <node pkg="people_utils" type="ppl2marker.exe"
+        output="screen" name="ppl2marker_face_recognizer_person"
+        args="_red:=1 _green:=0 _blue:=1 _input_topic:=face_recognizer_person/ppl" />
+  <node pkg="people_utils" type="ppl2marker.exe"
+        output="screen" name="ppl2marker_face_recognizer_gender"
+        args="_red:=1 _green:=1 _blue:=0 _input_topic:=face_recognizer_gender/ppl" />
+</group>
+</launch>
+
