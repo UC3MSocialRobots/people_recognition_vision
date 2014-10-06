@@ -30,11 +30,11 @@ ________________________________________________________________________________
 #include <opencv2/ml/ml.hpp>
 
 #include "person_histogram.h"
-#include "src/combinatorics/assignment_utils.h"
-#include <vision_utils/color/colormaps.h>
-#include <src/string/timestamp.h>
-#include <vision_utils/visu_utils/array_to_color.h>
-#include <vision_utils/visu_utils/mini_stage.h>
+#include "combinatorics/assignment_utils.h"
+#include <color/colormaps.h>
+#include <string/timestamp.h>
+#include <visu_utils/array_to_color.h>
+#include <visu_utils/mini_stage.h>
 
 
 ////////////////////////////////////////////////////////////////////////////////

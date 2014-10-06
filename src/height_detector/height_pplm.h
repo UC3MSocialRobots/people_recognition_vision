@@ -33,8 +33,8 @@ A PPLMatcherTemplate using the height of the users as a metric.
 #ifndef HEIGHT_PPLM_H
 #define HEIGHT_PPLM_H
 
-#include <src/templates/pplm_template.h>
-#include <src/height_detector/height_detector.h>
+#include <templates/pplm_template.h>
+#include <height_detector/height_detector.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 

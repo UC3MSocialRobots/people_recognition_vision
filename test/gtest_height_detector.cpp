@@ -26,9 +26,9 @@ Some tests for HeightDetector
 
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <src/map/map_utils.h>
-#include <src/time/timer.h>
-#include "src/height_detector/height_detector.h"
+#include <map/map_utils.h>
+#include <time/timer.h>
+#include "height_detector/height_detector.h"
 
 //#define DISPLAY
 
@@ -336,7 +336,7 @@ TEST(TestSuite, ref_skel) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#include <vision_utils/databases_io/g3d2imgs.h>
+#include <databases_io/g3d2imgs.h>
 #define G3D_DIR "/home/user/Downloads/0datasets/g3d_kingston/"
 TEST(TestSuite, g3d2imgs) {
   G3D2Imgs db;

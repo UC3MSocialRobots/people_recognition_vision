@@ -55,10 +55,10 @@ ________________________________________________________________________________
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 // ad_core
-#include <vision_utils/skill_templates/nano_skill.h>
+#include <skill_templates/nano_skill.h>
 // vision
-#include <vision_utils/image_utils/make_opencv_interface.h>
-#include <vision_utils/image_utils/drawing_utils.h>
+#include <image_utils/make_opencv_interface.h>
+#include <image_utils/drawing_utils.h>
 // people_msgs
 #include "face_recognizer.h"
 #include "people_msgs/PeoplePoseList.h"

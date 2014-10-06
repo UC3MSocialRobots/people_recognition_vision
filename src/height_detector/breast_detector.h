@@ -27,14 +27,14 @@ thanks to the size of his/her breast.
 #ifndef BREAST_DETECTOR_H
 #define BREAST_DETECTOR_H
 
-#include "src/height_detector/height_detector.h"
-#include <vision_utils/point_clouds/cloud_tilter.h>
-#include <vision_utils/visu_utils/mini_stage_plugins.h>
-#include <src/geom/Rect3.h>
-#include <src/string/find_and_replace.h>
-#include <src/string/string_split.h>
+#include "height_detector/height_detector.h"
+#include <point_clouds/cloud_tilter.h>
+#include <visu_utils/mini_stage_plugins.h>
+#include <geom/Rect3.h>
+#include <string/find_and_replace.h>
+#include <string/string_split.h>
 //#define DEBUG
-#include <src/debug/debug2.h>
+#include <debug/debug2.h>
 // opencv
 #include <opencv2/ml/ml.hpp>
 // ros
@@ -53,9 +53,9 @@ thanks to the size of his/her breast.
 
 //#define USE_PCL_VIEWER
 #ifdef USE_PCL_VIEWER
-//#include <vision_utils/point_clouds/cloud_viewer.h>
+//#include <point_clouds/cloud_viewer.h>
 #else
-#include <vision_utils/point_clouds/cloud_viewer_gnuplot.h>
+#include <point_clouds/cloud_viewer_gnuplot.h>
 #endif // no USE_PCL_VIEWER
 
 class IndexDoubleConverter {

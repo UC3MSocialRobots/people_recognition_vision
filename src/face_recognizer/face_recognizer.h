@@ -4,24 +4,24 @@
 // opencv
 #include <opencv2/highgui/highgui.hpp>
 // utils
-#include <src/geom/rect_utils.h>
-#include <src/xml/XmlDocument.h>
-#include <src/map/map_utils.h>
-#include <src/system/system_utils.h>
-#include <src/string/filename_handling.h>
-#include <src/time/timer.h>
+#include <geom/rect_utils.h>
+#include <xml/XmlDocument.h>
+#include <map/map_utils.h>
+#include <system/system_utils.h>
+#include <string/filename_handling.h>
+#include <time/timer.h>
 // vision
-#include <vision_utils/image_utils/opencv_face_detector.h>
-#include <vision_utils/image_utils/io.h>
-#include <vision_utils/image_utils/resize_utils.h>
+#include <image_utils/opencv_face_detector.h>
+#include <image_utils/io.h>
+#include <image_utils/resize_utils.h>
 
 // people_msgs
 #include "people_msgs/PeoplePoseList.h"
 
 // facerec - https://github.com/bytefish/libfacerec
 // http://www.bytefish.de/blog/pca_in_opencv
-//#include <vision_utils/third_parties/libfacerec/include/facerec.hpp>
-#include <vision_utils/image_utils/drawing_utils.h>
+//#include <third_parties/libfacerec/include/facerec.hpp>
+#include <image_utils/drawing_utils.h>
 #include <opencv2/contrib/contrib.hpp>
 #include <people_msgs/PeoplePose.h>
 

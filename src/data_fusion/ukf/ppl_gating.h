@@ -29,7 +29,7 @@ ________________________________________________________________________________
 
 
 #include <people_msgs/PeoplePoseList.h>
-#include <src/ppl_utils/costs2matchlist.h>
+#include <ppl_utils/costs2matchlist.h>
 #include "ukf_person_pose.h"
 
 namespace ppl_gating {

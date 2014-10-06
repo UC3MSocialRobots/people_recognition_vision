@@ -4,7 +4,8 @@ project(people_recognition_vision)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS people_utils people_msgs roscpp)
+find_package(catkin REQUIRED COMPONENTS people_utils people_msgs vision_utils roscpp)
+find_package(PCL REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -78,7 +79,7 @@ find_package(catkin REQUIRED COMPONENTS people_utils people_msgs roscpp)
 catkin_package(
   INCLUDE_DIRS src
   CATKIN_DEPENDS roscpp
-  DEPENDS people_utils people_msgs 
+  DEPENDS people_utils people_msgs vision_utils
 )
 
 ###########
@@ -91,6 +92,9 @@ include_directories(
   include src ${catkin_INCLUDE_DIRS}
   ${people_utils_INCLUDE_DIRS} 
   ${people_msgs_INCLUDE_DIRS}
+  ${vision_utils_INCLUDE_DIRS}
+  /usr/include/ni/
+  ${PCL_INCLUDE_DIRS}
 )
 
 SET(AD_USE_ROS 1)

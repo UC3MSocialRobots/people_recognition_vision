@@ -24,10 +24,10 @@ ________________________________________________________________________________
 // Bring in gtest
 #include <gtest/gtest.h>
 // people_msgs
-#include "src/person_histogram_set/person_histogram.h"
-#include <vision_utils/databases_io/test_person_histogram_set_variables.h>
-#include "src/time/timer.h"
-#include "src/test/matrix_testing.h"
+#include "person_histogram_set/person_histogram.h"
+#include <databases_io/test_person_histogram_set_variables.h>
+#include "time/timer.h"
+#include "test/matrix_testing.h"
 
 using namespace test_person_histogram_set_variables;
 //#define DISPLAY

@@ -36,8 +36,8 @@
 #include <sensor_msgs/LaserScan.h>
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_listener.h>
-#include "src/ros_utils/laser_utils.h"
-#include "vision_utils/color/color_utils.h"
+#include "ros_utils/laser_utils.h"
+#include "color/color_utils.h"
 // conditional_particle_filter
 #include "conditional_particle_filter_laser.h"
 

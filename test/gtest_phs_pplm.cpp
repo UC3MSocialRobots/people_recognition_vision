@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for PHSPPLM
  */
-#include <src/templates/pplm_testing.h>
-#include <src/person_histogram_set/phs_pplm.h>
+#include <templates/pplm_testing.h>
+#include <person_histogram_set/phs_pplm.h>
 
 TEST(TestSuite, create) {
   if (!rosmaster_alive()) return;

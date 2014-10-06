@@ -39,8 +39,8 @@ the tracks and the PPL detections.
 #ifndef ARTOOLKIT_PPLM_H
 #define ARTOOLKIT_PPLM_H
 
-#include <src/templates/pplm_template.h>
-#include <src/geom/distances.h>
+#include <templates/pplm_template.h>
+#include <geom/distances.h>
 
 class ARToolkitPPLM : public PPLMatcherTemplate {
 public:

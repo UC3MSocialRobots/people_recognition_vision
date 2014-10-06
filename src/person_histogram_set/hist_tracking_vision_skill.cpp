@@ -39,9 +39,9 @@ by subscribing to a topic supplying some \a PeoplePoseList .
 
  */
 // vision
-#include <vision_utils/skill_templates/rgb_depth_skill.h>
+#include <skill_templates/rgb_depth_skill.h>
 #include <people_msgs/PeoplePoseList.h>
-#include <src/cv_conversion_float_uchar.h>
+#include <cv_conversion_float_uchar.h>
 // people_msgs
 #include "hist_tracking_skill.h"
 

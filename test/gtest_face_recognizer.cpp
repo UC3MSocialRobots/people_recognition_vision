@@ -24,9 +24,9 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <src/time/timer.h>
+#include <time/timer.h>
 #include <vision_utils/img_path.h>
-#include "src/face_recognizer/face_recognizer.h"
+#include "face_recognizer/face_recognizer.h"
 
 #define FACES_DIR   IMG_DIR "faces/"
 

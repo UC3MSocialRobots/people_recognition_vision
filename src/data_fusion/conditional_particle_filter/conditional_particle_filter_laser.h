@@ -25,9 +25,9 @@
 #ifndef CONDITIONNAL_PARTICLE_FILTER_LASER_H
 #define CONDITIONNAL_PARTICLE_FILTER_LASER_H
 
-#include <conditional_particle_filter.h>
-#include <src/geom/geometry_utils.h>
-#include <src/combinatorics/combinatorics_utils.h>
+#include "conditional_particle_filter.h"
+#include <geom/geometry_utils.h>
+#include <combinatorics/combinatorics_utils.h>
 
 namespace conditional_particle_filter_laser {
 

@@ -34,9 +34,9 @@
 #define CONDITIONALPARTICLEFILTER_H
 
 // people_msgs
-#include "src/ros_utils/select_index_wth_probas.h"
-#include "src/ros_utils/odom_utils.h"
-#include "src/time/timer.h"
+#include "ros_utils/select_index_wth_probas.h"
+#include "ros_utils/odom_utils.h"
+#include "time/timer.h"
 
 namespace conditional_particle_filter_laser {
 

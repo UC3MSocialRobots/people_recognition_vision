@@ -23,11 +23,11 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <src/map/map_utils.h>
-#include "src/height_detector/breast_detector.h"
+#include <map/map_utils.h>
+#include "height_detector/breast_detector.h"
 #include <vision_utils/img_path.h>
-#include "vision_utils/image_utils/io.h"
-#include "vision_utils/databases_io/dgaitdb_filename.h"
+#include "image_utils/io.h"
+#include "databases_io/dgaitdb_filename.h"
 
 //#define DISPLAY
 

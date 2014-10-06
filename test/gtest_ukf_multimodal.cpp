@@ -24,10 +24,10 @@ Some tests for UkfMultiModal,
 using EuclideanPPLM as a PeoplePoseListMatcher.
  */
 #include <gtest/gtest.h>
-#include <src/data_fusion/ukf/ukf_multimodal.h>
-#include <src/ppl_utils/images2pp.h>
-#include <src/euclidean_pplm/euclidean_pplm.h>
-#include <src/ros_utils/rosmaster_alive.h>
+#include <data_fusion/ukf/ukf_multimodal.h>
+#include <ppl_utils/images2pp.h>
+#include <euclidean_pplm/euclidean_pplm.h>
+#include <ros_utils/rosmaster_alive.h>
 
 
 #define ASSERT_TRUE_TIMEOUT(cond, timeout) { Timer timer; while (timer.getTimeSeconds() < timeout && !(cond)) usleep(50 * 1000); } ASSERT_TRUE(cond)

@@ -1,7 +1,7 @@
 catkin_add_gtest(gtest_face_recognizer
   gtest_face_recognizer.cpp
   ../src/face_recognizer/face_recognizer.h)
-target_link_libraries(gtest_face_recognizer string_utils xml_document)
+target_link_libraries(gtest_face_recognizer string_utils xml_document ${catkin_LIBRARIES})
 
 catkin_add_gtest(gtest_head_finder
   gtest_head_finder.cpp

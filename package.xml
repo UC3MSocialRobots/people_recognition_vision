@@ -50,6 +50,7 @@
   <depend>people_utils</depend>
   <depend>openni_camera</depend>  
   <depend>camera</depend>  
+  <depend>vision_utils</depend>
    
 
   <!-- The export tag contains other, unspecified, tags -->

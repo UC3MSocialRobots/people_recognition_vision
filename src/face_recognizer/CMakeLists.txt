@@ -5,13 +5,13 @@
 #)
 
 add_executable(test_face_recognizer.exe test_face_recognizer.cpp face_recognizer.h)
-target_link_libraries(test_face_recognizer.exe string_utils xml_document)
+target_link_libraries(test_face_recognizer.exe string_utils xml_document ${catkin_LIBRARIES})
 
 add_executable(launcher_face_recognizer_ros.exe launcher_face_recognizer_ros.cpp)
-target_link_libraries(launcher_face_recognizer_ros.exe xml_document)
+target_link_libraries(launcher_face_recognizer_ros.exe xml_document ${catkin_LIBRARIES})
 
 add_executable(launcher_face_recognizer_add_pics.exe launcher_face_recognizer_add_pics.cpp)
-target_link_libraries(launcher_face_recognizer_add_pics.exe xml_document)
+target_link_libraries(launcher_face_recognizer_add_pics.exe xml_document ${catkin_LIBRARIES})
 
 add_executable(launcher_face_recognizer_viewer.exe launcher_face_recognizer_viewer.cpp)
-#target_link_libraries(test_args_parser.exe )
+target_link_libraries(launcher_face_recognizer_viewer.exe ${catkin_LIBRARIES})

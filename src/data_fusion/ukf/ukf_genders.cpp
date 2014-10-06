@@ -35,11 +35,11 @@ ________________________________________________________________________________
 
 #include <std_msgs/Int16.h>
 // AD
-#include <src/string/StringUtils.h>
-#include <src/combinatorics/combinatorics_utils.h>
-#include <src/data_filters/kalman/easykf-2.03/src/ukf.h>
-#include <src/gnuplot-cpp/gnuplot_i.hpp>
-#include <src/system/system_utils.h>
+#include <string/StringUtils.h>
+#include <combinatorics/combinatorics_utils.h>
+#include <data_filters/kalman/easykf-2.03/src/ukf.h>
+#include <gnuplot-cpp/gnuplot_i.hpp>
+#include <system/system_utils.h>
 using namespace ukf::state;
 // people_msgs
 #include "people_msgs/PeoplePoseList.h"

@@ -41,12 +41,12 @@ displays them overlaid on the camera frame.
 #include <ros/ros.h>
 #include <boost/thread/mutex.hpp>
 // utils
-#include <src/geom/rect_utils.h>
-#include <src/ros_utils/multi_subscriber.h>
+#include <geom/rect_utils.h>
+#include <ros_utils/multi_subscriber.h>
 // vision
-#include <vision_utils/skill_templates/rgb_skill.h>
-#include <vision_utils/color/color_utils.h>
-#include <vision_utils/image_utils/drawing_utils.h>
+#include <skill_templates/rgb_skill.h>
+#include <color/color_utils.h>
+#include <image_utils/drawing_utils.h>
 // people_msgs
 #include "people_msgs/PeoplePoseList.h"
 

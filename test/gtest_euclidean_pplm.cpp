@@ -21,9 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for EuclideanPPLM
  */
-#include <src/templates/pplm_testing.h>
-#include <src/euclidean_pplm/euclidean_pplm.h>
-#include <vision_utils/databases_io/filename_prefix2imgs.h>
+#include <templates/pplm_testing.h>
+#include <euclidean_pplm/euclidean_pplm.h>
+#include <databases_io/filename_prefix2imgs.h>
 
 TEST(TestSuite, create) {
   if (!rosmaster_alive()) return;

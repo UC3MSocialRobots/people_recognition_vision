@@ -24,11 +24,11 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <src/time/timer.h>
-#include <src/test/matrix_testing.h>
-#include <src/ros_utils/rosmaster_alive.h>
+#include <time/timer.h>
+#include <test/matrix_testing.h>
+#include <ros_utils/rosmaster_alive.h>
 #include <vision_utils/img_path.h>
-#include "src/person_histogram_set/hist_tracking_skill.h"
+#include "person_histogram_set/hist_tracking_skill.h"
 
 using namespace test_person_histogram_set_variables;
 //#define DISPLAY

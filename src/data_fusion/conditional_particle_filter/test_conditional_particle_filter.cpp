@@ -22,7 +22,7 @@
 
   */
 
-#include "src/debug/error.h"
+#include "debug/error.h"
 #include "conditional_particle_filter_laser_ros.h"
 
 void test_select_index_with_probas() {

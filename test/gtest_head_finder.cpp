@@ -24,9 +24,9 @@ Some tests for HeadFinder
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <src/time/timer.h>
+#include <time/timer.h>
 #include <vision_utils/img_path.h>
-#include "src/height_detector/head_finder.h"
+#include "height_detector/head_finder.h"
 
 // #define DISPLAY
 
