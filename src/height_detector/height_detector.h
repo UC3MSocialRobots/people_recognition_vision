@@ -30,7 +30,7 @@ A class for computing the height of a user in a mask.
 #include <kinect_utils/kinect_openni_utils.h>
 #include <image_utils/image_comparer.h>
 #include <vision_utils/img_path.h>
-#include "head_finder.h"
+#include <image_utils/head_finder.h>
 
 class HeightDetector {
 public:

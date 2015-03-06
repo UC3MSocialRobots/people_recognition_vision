@@ -91,34 +91,37 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs) {
+  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
+             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int ncurr_users = new_ppl.poses.size(),
         ntracks = tracks.poses.size();
     DEBUG_PRINT("PHSPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
+    // if there is only one track and one user, skip computation
+    if (ntracks == 1 && ncurr_users == 1) {
+      costs.clear();
+      costs.resize(1, 0);
+      return true;
+    }
     costs.resize(ntracks * ncurr_users, 1);
 
-    // compute heights
+    // convert PP -> person histograms
     std::vector<PH> new_ppl_heights(ncurr_users), track_heights(ntracks);
-    std::ostringstream desc;
-    desc << "New PPL:";
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
       if (!pp2phs(new_ppl.poses[curr_idx], new_ppl_heights[curr_idx])) {
         printf("curr_idx:%i returned an error\n", curr_idx);
         return false;
       }
-      desc << new_ppl_heights[curr_idx].description_sentence(curr_idx) << ",";
     } // end for (curr_idx)
-    desc << ";  tracks:";
     for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
       if (!pp2phs(tracks.poses[track_idx], track_heights[track_idx])) {
         printf("track_idx:%i returned an error\n", track_idx);
         return false;
       }
-      desc << track_heights[track_idx].description_sentence(track_idx) << ",";
     } // end for (track_idx)
 
-    // set diagonal costs to 0
+    // fill cost matrix using compare_to(), which is normalized in [0-1]
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
         int cost_idx = curr_idx * ntracks + track_idx;
@@ -126,15 +129,24 @@ public:
         costs[cost_idx] = delta_size;
       } // end for (track_idx)
     } // end for (curr_idx)
-    ROS_INFO_THROTTLE(10, "PHSPPLM:desc:%s, costs:\n%s\n", desc.str().c_str(),
-                costs_vec2string(costs, ncurr_users, ntracks).c_str());
+
+    bool display_sentence = false;
+    if (display_sentence) {
+      std::ostringstream desc;
+      desc << "Detection PPL:";
+      for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx)
+        desc << new_ppl_heights[curr_idx].description_sentence(curr_idx) << ",";
+      desc << ";  tracks PPL:";
+      for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx)
+        desc << track_heights[track_idx].description_sentence(track_idx) << ",";
+      DEBUG_PRINT("PHSPPLM:desc:%s, costs:\n%s\n", desc.str().c_str(),
+                  costs_vec2string(costs, ncurr_users, ntracks).c_str());
+    } // end if (display_sentence)
     return true;
   }
 private:
   cv_bridge::CvImageConstPtr _rgb_bridge, _depth_bridge, _user_bridge;
   image_geometry::PinholeCameraModel _default_depth_camera_model;
 }; // end class PHSPPLM
-
-
 
 #endif // PHS_PPLM_H

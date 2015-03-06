@@ -138,7 +138,7 @@ public:
 
   //! ctor
   BreastDetector(bool display_svm = false)
-    : _template_converter(TEMPLATE_xmin, TEMPLATE_xmax, TEMPLATE_NPTS) {
+    : _template_converter(-.25/*TEMPLATE_xmin*/, .25/*TEMPLATE_xmax*/, TEMPLATE_NPTS) {
     _best_slice_idx = 0;
     // WALK3D
     std::vector<std::string> models;

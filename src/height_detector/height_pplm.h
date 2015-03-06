@@ -76,11 +76,19 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs) {
+  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
+             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int ntracks = tracks.poses.size(),
         ncurr_users = new_ppl.poses.size();
     DEBUG_PRINT("HeightPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
+    // if there is only one track and one user, skip computation
+    if (ntracks == 1 && ncurr_users == 1) {
+      costs.clear();
+      costs.resize(1, 0);
+      return true;
+    }
     costs.resize(ntracks * ncurr_users, 1);
 
     // compute heights
@@ -93,16 +101,18 @@ public:
       if (!pp2height_meter(tracks.poses[track_idx], track_heights[track_idx]))
         return false;
     } // end for (track_idx)
-    ROS_INFO_THROTTLE(10, "HeightPPLM:new_ppl_heights:%s, track_heights:%s",
-                      StringUtils::iterable_to_string(new_ppl_heights).c_str(),
-                      StringUtils::iterable_to_string(track_heights).c_str());
+    DEBUG_PRINT("HeightPPLM:new_ppl_heights:%s, track_heights:%s",
+                StringUtils::iterable_to_string(new_ppl_heights).c_str(),
+                StringUtils::iterable_to_string(track_heights).c_str());
 
-    // set diagonal costs to 0
+    // compute height differences
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
         int cost_idx = curr_idx * ntracks + track_idx;
         double delta_size = fabs(new_ppl_heights[curr_idx] - track_heights[track_idx]);
-        costs[cost_idx] = delta_size;
+        // convert to [0-1] - octave:fplot ("1-exp(-3*x)", [0, .5])
+        double cost = 1. - exp(-delta_size * 3.);
+        costs[cost_idx] = cost;
       } // end for (track_idx)
     } // end for (curr_idx)
     return true;

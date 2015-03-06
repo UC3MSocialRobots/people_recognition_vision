@@ -6,6 +6,7 @@
 <!-- the PPL publisher and their GUIs -->
 <include file="$(find people_detection_vision)/launch/all_pplp.launch">
   <arg name="robot" value="$(arg robot)" />
+  <arg name="eventgui" value="$(arg eventgui)" />
 </include>
 
 <!-- the PPL matchers and their GUIs -->
@@ -13,25 +14,27 @@
   <arg name="robot" value="$(arg robot)" />
 </include>
 
-<include file="$(find people_recognition_vision)/launch/ukf_event_marker.launch">
-  <arg name="robot" value="$(arg robot)" />
-  <arg name="eventgui" value="$(arg eventgui)" />
-  <arg name="marker" value="$(arg marker)" />
-</include>
-
 <group ns="$(arg robot)">
-  <arg name="ppl_topics" default="nite_user_mask_pplp/ppl;hog_pplp/ppl;tabletop_pplp/ppl;ppm_pplp/ppl;face_detector_pplp/ppl;artoolkit_pplp/ppl;leg_pplp/ppl"/>
+  <arg name="pplp_topics" default="nite_user_mask_pplp/ppl;hog_pplp/ppl;tabletop_pplp/ppl;ppm_pplp/ppl;face_detector_pplp/ppl;artoolkit_pplp/ppl;leg_pplp/ppl"/>
+  <arg name="pplm_services" default="euclidean_pplm/match_ppl"/>
 
   <!-- the UKF (sensor fusion) -->
   <node pkg="people_recognition_vision" type="ukf_multimodal.exe" name="ukf_multimodal"
         output="screen" respawn="false"
         args="_static_frame_id:=/base_link
-              _ppl_input_topics:=$(arg ppl_topics)
-              _ppl_matcher_services:=euclidean_pplm/match_ppl"
+              _ppl_input_topics:=$(arg pplp_topics)
+              _ppl_matcher_services:=$(arg pplm_services)"
         />
 <!--
         launch-prefix="valgrind"
 -->
+  <node pkg="rostopic" type="rostopic" name="ukf_starter" output="screen"
+        args="pub UKF_MULTIMODAL_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
+
+  <!-- conversion UKF ppl to ROS rviz marker -->
+  <node if="$(arg marker)" pkg="people_utils" type="ppl2marker.exe"
+        output="screen" name="ppl2marker_ukf_multimodal"
+        args="_red:=0 _green:=1 _blue:=0 _input_topic:=ukf_multimodal/ppl" />
 </group>
 </launch>
 

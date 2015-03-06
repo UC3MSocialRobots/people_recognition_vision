@@ -185,7 +185,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool erase_by_label(const PersonLabel & label) {
-    for (unsigned int label_idx = 0; label_idx < _labels.size(); ++label_idx) {
+    for (int label_idx = 0; label_idx < (int) _labels.size(); ++label_idx) {
       if (_labels[label_idx] == label) {
         _labels.erase(_labels.begin() + label_idx);
         _phs.erase(_phs.begin() + label_idx);

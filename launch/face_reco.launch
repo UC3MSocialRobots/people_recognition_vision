@@ -28,7 +28,7 @@
  <!-- to add new pictures -->
   <node pkg="people_recognition_vision" type="launcher_face_recognizer_add_pics.exe"
         name="face_recognizer_add_pics"  output="screen"
-        args="_person_name:=irene
+        args="_person_name:=alberto
               _ppl_input_topic:=$(arg face_detector)/ppl
               _xml_filename:=$(find vision_utils)/data/images/faces/people_lab/index.xml
               _xml_filename_out:=$(find vision_utils)/data/images/faces/people_lab_out/index.xml" />

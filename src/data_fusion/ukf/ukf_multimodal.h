@@ -26,20 +26,40 @@ on the poses of the users detected by other methods
 This gives some more robust position detections.
 
 \section Parameters
-  - \b "static_frame_id"
+  - \b "~static_frame_id"
         [string] (default: "/base_link")
         The frame of the people.
 
-  - \b "track_timeout"
+  - \b "~track_timeout"
         [double, seconds] (default: ppl_gating::DEFAULT_TRACK_TIMEOUT)
         How long should we wait before cleaning a track.
 
-  - \b "ppl_input_topics"
+  - \b "~ppl_input_topics"
         [string] (default: "ppl")
         The list of topics where to get the detections of the users
         ( of types people_msgs/PeoplePoseList ).
         Topics must be separated by ";",
         for example "/foo;/bar".
+
+  - \b "~ppl_matcher_services"
+        [string] (default: "")
+        The list of services for matching detected PPL and tracks.
+        Topics must be separated by ";",
+        for example "/foo;/bar".
+        The weights for each PPL can be specified using ":".
+        For example "/foo:2;/bar:1".
+
+  - \b "~cost_matrices_display_timeout"
+        [double, seconds] (default: -1)
+        If >= 0, will display the cost matrices with this time period.
+
+  - \b "~use_gating"
+        [bool] (default: true)
+        Use gating?
+
+  - \b "~human_walking_speed"
+        [double, m/s] (default: ppl_gating::DEFAULT_HUMAN_WALKING_SPEED)
+        The size of the gate, in meters.
 
 \section Subscriptions
   - \b {ppl_input_topics}
@@ -59,6 +79,7 @@ This gives some more robust position detections.
 #include <time/timer.h>
 // people_msgs
 #include <people_msgs/MatchPPL.h>
+#include <ppl_utils/people_pose_list_utils.h>
 #include <ppl_utils/ppl_tf_utils.h>
 #include <ppl_utils/ppl_attributes.h>
 #include <templates/pplp_template.h>
@@ -72,50 +93,79 @@ public:
   static const unsigned int QUEUE_SIZE = 1;
 
   UkfMultiModal() : PPLPublisherTemplate("UKF_MULTIMODAL_START", "UKF_MULTIMODAL_STOP") {
-    // get params
-    _static_frame_id = "/base_link";
-    _nh_private.param("static_frame_id", _static_frame_id, _static_frame_id);
-    _ppl_input_topics = "ppl";
-    _nh_private.param("ppl_input_topics", _ppl_input_topics, _ppl_input_topics);
-    _nh_private.param("track_timeout", _track_timeout, ppl_gating::DEFAULT_TRACK_TIMEOUT);
-
-    std::string services = "";
-    _nh_private.param("ppl_matcher_services", services, services);
-    ros::MultiSubscriber::split_topics_list(services, _matcher_services);
-    if (_matcher_services.size() == 0) {
-      printf("UkfMultiModal: you didn't specify any matcher, "
-             "please set param '~ppl_matcher_services' and see doc.\n");
-      //ros::shutdown();
-    }
-    for (unsigned int i = 0; i < _matcher_services.size(); ++i)
-      _matcher_services[i] = _nh_public.resolveName(_matcher_services[i]);
-    _total_seen_tracks = 0;
   } // end ctor
 
   //////////////////////////////////////////////////////////////////////////////
 
   void create_subscribers_and_publishers() {
     DEBUG_PRINT("UkfMultiModal::create_subscribers_and_publishers()\n");
+
+    // get params
+    _static_frame_id = "/base_link";
+    _nh_private.param("static_frame_id", _static_frame_id, _static_frame_id);
+    _ppl_input_topics = "ppl";
+    _nh_private.param("ppl_input_topics", _ppl_input_topics, _ppl_input_topics);
+    _nh_private.param("track_timeout", _track_timeout,
+                      ppl_gating::DEFAULT_TRACK_TIMEOUT);
+    _nh_private.param("human_walking_speed", _human_walking_speed,
+                      ppl_gating::DEFAULT_HUMAN_WALKING_SPEED);
+    _nh_private.param("use_gating", _use_gating, true);
+    _nh_private.param("cost_matrices_display_timeout", _cost_matrices_display_timeout, -1.);
+    _total_seen_tracks = 0;
+
+    std::string services_str = "";
+    _nh_private.param("ppl_matcher_services", services_str, services_str);
+    ros::MultiSubscriber::split_topics_list(services_str, _matcher_services);
+    unsigned int nmatchers = _matcher_services.size();
+    if (nmatchers == 0) {
+      printf("UkfMultiModal: you didn't specify any matcher, "
+             "please set param '~ppl_matcher_services' and see doc.\n");
+      //ros::shutdown();
+    }
+
+    // parse weights
+    _matcher_weights.resize(nmatchers, 1.);
+    for (unsigned int i = 0; i < nmatchers; ++i) {
+      std::vector<std::string> words;
+      StringUtils::StringSplit(_matcher_services[i], ":", &words);
+      if (words.size() < 1 || words.size() > 2) {
+        printf("Error parsing service:'%s'\n", _matcher_services[i].c_str());
+        continue;
+      }
+      // resolve names
+      _matcher_services[i] = _nh_public.resolveName(words[0]);
+      // parse weight
+      if (words.size() == 1)
+        continue;
+      bool conv_success = false;
+      double weight = StringUtils::cast_from_string<double>(words[1], conv_success);
+      if (conv_success)
+        _matcher_weights[i] = weight;
+    } // end for service_idx
+
     // PPL subscribers
     _tf_listener = new tf::TransformListener();
     _ppl_subs = ros::MultiSubscriber::subscribe
-        (_nh_public, _ppl_input_topics, QUEUE_SIZE,
-         &UkfMultiModal::ppl_cb, this);
+                (_nh_public, _ppl_input_topics, QUEUE_SIZE,
+                 &UkfMultiModal::ppl_cb, this);
     // matchers
-    for (unsigned int topic_idx = 0; topic_idx < _matcher_services.size(); ++topic_idx)
+    for (unsigned int topic_idx = 0; topic_idx < nmatchers; ++topic_idx)
       _matchers.push_back(_nh_public.serviceClient<people_msgs::MatchPPL>
                           (_matcher_services[topic_idx]));
-    _matcher_services_concat = StringUtils::iterable_to_string(_matcher_services);
     _blobs_pub = _nh_public.advertise<PPL>("ukf_blobs", 1);
 
-    printf("UkfMultiModal: getting PeoplePoseList on %i topics (%s), "
-           "%i matchers on '%s', "
+    printf("UkfMultiModal: getting PeoplePoseList on %i topics '%s'', "
+           "%i matchers on '%s' (weights:%s), "
            "track timeout of %g sec, "
-           "publishing filtered PeoplePoseList on '%s', blobs on '%s'\n",
+           "publishing filtered PeoplePoseList on '%s', blobs on '%s'"
+           "and displaying cost matrices every %g seconds."
+           "use_gating:%i, human_walking_speed:%g m/s\n",
            _ppl_subs.nTopics(), _ppl_subs.getTopics().c_str(),
-           _matchers.size(), _matcher_services_concat.c_str(),
+           _matchers.size(), StringUtils::iterable_to_string(_matcher_services).c_str(),
+           StringUtils::iterable_to_string(_matcher_weights).c_str(),
            _track_timeout,
-           get_ppl_topic().c_str(), _blobs_pub.getTopic().c_str());
+           get_ppl_topic().c_str(), _blobs_pub.getTopic().c_str(),
+           _cost_matrices_display_timeout, _use_gating, _human_walking_speed);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -138,11 +188,12 @@ public:
   inline unsigned int nusers() const { return _tracks.poses.size(); }
   //! \return the number of blobs after last ppl_cb()
   inline unsigned int nblobs() const { return _blobs.poses.size(); }
+  //! \return the total number of publishers
+  inline unsigned int nb_total_pplp() const { return _ppl_subs.nTopics(); }
   //! \return the registered number of publishers
-  inline unsigned int nb_ppl_input_topics() const { return _ppl_subs.getNumPublishers(); }
+  inline unsigned int nb_available_pplp() const { return _ppl_subs.getNumPublishers(); }
   //! \return the registered number of PPL matchers
   inline unsigned int nb_total_matchers() const { return _matchers.size(); }
-
   //! \return the number of available PPL matchers (is <= nb_total_matchers() )
   inline unsigned int nb_available_matchers() {
     unsigned int ans = 0;
@@ -155,11 +206,11 @@ public:
   //! \return the position of each user
   template<class Pt3f>
   inline std::vector<Pt3f> get_user_positions() const {
-    std::vector<Pt3f> ans(nusers());
-    for (unsigned int user_idx = 0; user_idx < nusers(); ++user_idx)
-      pt_utils::copy3(_tracks.poses[user_idx].head_pose.position,
-                      ans[user_idx]);
-    return ans;
+    return ppl_utils::ppl2points<Pt3f>(_tracks);
+  }
+
+  inline std::vector<std::string> get_track_names() const {
+    return ppl_utils::ppl2names(_tracks);
   }
 
   //! \return the affectations between the last PPL and the tracks
@@ -176,10 +227,10 @@ public:
 
   /*! the callback when a user is detected. */
   void ppl_cb(const PPL & new_ppl_bad_tf) {
-    unsigned int nusers_detected = new_ppl_bad_tf.poses.size(), ntracks =  nusers();
+    unsigned int npps = new_ppl_bad_tf.poses.size(), ntracks =  nusers();
     ros::Time now_stamp = new_ppl_bad_tf.header.stamp;
-    DEBUG_PRINT("UkfMultiModal::ppl_cb(nusers_detected:%i, method:'%s')\n",
-                nusers_detected, new_ppl_bad_tf.method.c_str());
+    DEBUG_PRINT("UkfMultiModal::ppl_cb(npps:%i, method:'%s')\n",
+                npps, new_ppl_bad_tf.method.c_str());
     Timer timer;
 
     // convert to wanted frame
@@ -191,74 +242,90 @@ public:
       return;
     }
 
+    // gate if needed
+    std::vector<people_msgs::PeoplePose> unassociated_poses_from_new_ppl;
+    if (_use_gating)
+      ppl_gating::gate_ppl(new_ppl, _tracks, unassociated_poses_from_new_ppl,
+                           _human_walking_speed);
+    npps = new_ppl.poses.size();
 
     // compute cost matrix
-    if (!_avg_costs.resize(nusers_detected, ntracks)) {
+    if (!_avg_costs.resize(npps, ntracks)) {
       printf("UkfMultiModal:Could not allocate cost matrix to (%i, %i)\n",
-             nusers_detected, ntracks);
+             npps, ntracks);
       return;
     }
-
     _avg_costs.set_to_zero();
-    unsigned int costs_size = nusers_detected * ntracks;
+    unsigned int costs_size = npps * ntracks;
     unsigned int nmatchers = _matchers.size(), nmatches = 0;
     people_msgs::MatchPPLRequest req;
     people_msgs::MatchPPLResponse res;
     req.tracks = _tracks;
     req.new_ppl = new_ppl;
     // call matching services
+    bool display_cost_matrix =
+        (_cost_matrices_display_timeout >= 0
+         && _cost_matrices_display_timer.getTimeSeconds() > _cost_matrices_display_timeout);
     for (unsigned int matcher_idx = 0; matcher_idx < nmatchers; ++matcher_idx) {
+      // make the proper service call
+      std::string matcher_name = _matcher_services[matcher_idx];
+      res.costs.clear();
+      res.new_ppl_added_attributes.clear();
+      res.tracks_added_attributes.clear();
       if (!_matchers[matcher_idx].call(req, res)
           || !res.match_success) {
-        ROS_WARN_ONCE("gate_ppl(): client '%s' failed!\n",
-                      _matchers[matcher_idx].getService().c_str());
+        printf("UkfMultiModal::ppl_cb(): PPLM '%s' failed!\n", matcher_name.c_str());
         continue;
       }
+      // add attributes
+      ppl_utils::copy_attributes(res.new_ppl_added_attributes, new_ppl);
+      ppl_utils::copy_attributes(res.tracks_added_attributes, _tracks);
+
       // mix costs of results with avg_costs
       if (res.costs.size() != costs_size) {
-        printf("gate_ppl(): client '%s' returned a cost matrix with "
+        printf("UkfMultiModal::ppl_cb(): PPLM '%s' returned a cost matrix with "
                "wrong dimensions (expected %i values, got %i)\n",
-               _matchers[matcher_idx].getService().c_str(),
-               costs_size, res.costs.size());
+               matcher_name.c_str(), costs_size, res.costs.size());
         continue;
       }
-      int data_counter = 0;
-      for (unsigned int detec_idx = 0; detec_idx < nusers_detected; ++detec_idx) {
+      int data_counter = 0; // copy res.costs to _avg_costs
+      double matcher_weight = _matcher_weights[matcher_idx];
+      for (unsigned int detec_idx = 0; detec_idx < npps; ++detec_idx) {
         for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx)
-          _avg_costs[detec_idx][track_idx] += res.costs[data_counter++];
+          _avg_costs[detec_idx][track_idx] += matcher_weight * res.costs[data_counter++];
       } // end for (detec_idx)
       ++nmatches;
+      // display cost matrix if wanted
+      if (!display_cost_matrix)
+        continue;
+      _cost_matrices_display_timer.reset();
+      std::ostringstream out;
+      for (unsigned int i = 0; i < costs_size; ++i)
+        out << std::setprecision(3) << std::setw(5) << res.costs[i]
+               << (i < costs_size-1 && (i+1)%ntracks == 0 ? "\n" : " \t");
+      printf("UkfMultiModal::ppl_cb(): PPLM '%s', weight:%g, cost matrix:\n%s\n",
+             matcher_name.c_str(), matcher_weight, out.str().c_str());
     } // end for (matcher_idx)
 
     if (nmatches == 0) {
-      ROS_WARN_ONCE("UkfMultiModal: Could not estimate the cost matrix "
-                    "with any of the %i matchers ('%s')!",
-                    _matchers.size(),
-                    StringUtils::iterable_to_string(_matcher_services).c_str());
+      printf("UkfMultiModal: Could not estimate the cost matrix "
+             "with any of the %i matchers ('%s')!\n",
+             _matchers.size(), StringUtils::iterable_to_string(_matcher_services).c_str());
       return;
     }
-    // normalize avg_costs
-
-    double nmatches_inv = 1. / nmatchers;
-    for (unsigned int detec_idx = 0; detec_idx < nusers_detected; ++detec_idx) {
-      for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx)
-        _avg_costs[detec_idx][track_idx] *= nmatches_inv;
-    } // end for (detec_idx)
 
     // affect the detected PPs to each user
     // store them detec_idx -> track_idx
-
-    std::vector<people_msgs::PeoplePose> unassociated_poses_from_new_ppl;
-    if (!ppl_gating::gate_ppl
+    if (!ppl_gating::match_ppl2tracks_and_clean
         (new_ppl, _tracks, _avg_costs,
          unassociated_poses_from_new_ppl, _ppl2track_affectations))
       return;
-    DEBUG_PRINT("after gate_ppl(), "
-                "affectations:'%s', unassociated_poses_from_new_ppl:size:%i",
+    DEBUG_PRINT("after match_ppl2tracks_and_clean(), "
+                "affectations:'%s', unassociated_poses_from_new_ppl:size:%i\n",
                 assignment_utils::assignment_list_to_string(_ppl2track_affectations).c_str(),
                 unassociated_poses_from_new_ppl.size());
-    // compute UKF
 
+    // compute UKF
     for (unsigned int affec_idx = 0; affec_idx < _ppl2track_affectations.size(); ++affec_idx) {
       int detec_idx = _ppl2track_affectations[affec_idx].first;
       int track_idx = _ppl2track_affectations[affec_idx].second;
@@ -269,9 +336,14 @@ public:
       //             detec_idx, track_idx, new_ppl.poses.size(), tracks.size());
       geometry_msgs::Point track_pos = track->head_pose.position;
       double track_orien = 0, track_speed = 0;
-      ppl_utils::get_attribute(*track, "ukf_orien", track_orien, true);
-      ppl_utils::get_attribute(*track, "ukf_speed", track_speed, true);
-
+      if (!ppl_utils::get_attribute_readonly(*track, "ukf_orien", track_orien)) {
+        ppl_utils::set_attribute(*track, "ukf_orien", 0);
+        track_orien = 0;
+      }
+      if (!ppl_utils::get_attribute_readonly(*track, "ukf_speed", track_speed)) {
+        ppl_utils::set_attribute(*track, "ukf_speed", 0);
+        track_speed = 0;
+      }
       // call UKF
       double delta_t_sec = (detec->header.stamp - track->header.stamp).toSec();
       UkfPersonPose ukf_pp(track_pos, track_orien, track_speed);
@@ -284,6 +356,7 @@ public:
       ukf_pp.get_state(track->head_pose.position, track_orien, track_speed);
       ppl_utils::set_attribute(*track, "ukf_orien", track_orien);
       ppl_utils::set_attribute(*track, "ukf_speed", track_speed);
+      track->person_name = detec->person_name;
       track->std_dev = ukf_pp.get_std_dev();
       track->confidence = detec->confidence; // TODO improve that
       if (detec->rgb.width > 0 && detec->rgb.height > 0) { // copy images
@@ -293,30 +366,19 @@ public:
         track->images_offsetx = detec->images_offsetx;
         track->images_offsety = detec->images_offsety;
       }
+      // copy all other attributes
+      ppl_utils::copy_attributes(*detec, *track);
     } // end for affec_idx
 
-    ppl_gating::remove_old_tracks(_tracks, _track_timeout);
-    ppl_gating::create_new_tracks
-        (now_stamp, unassociated_poses_from_new_ppl, _unassociated_poses,
-         _blobs, _tracks, _total_seen_tracks);
+    ppl_gating::remove_old_tracks(now_stamp, _tracks, _track_timeout);
+    ppl_gating::remove_old_tracks(now_stamp, _blobs, ppl_gating::DEFAULT_BLOB_UNASSIGNED_TIMEOUT);
+    ppl_gating::update_blobs_and_create_new_tracks
+        (now_stamp, unassociated_poses_from_new_ppl, _blobs, _tracks,
+         _total_seen_tracks, _human_walking_speed);
 
     // print result
-    DEBUG_PRINT("UkfMultiModal: %i users, %i blobs, %i unassociated poses\n",
-                nusers(), nblobs(), _unassociated_poses.size());
-    for (unsigned int track_idx = 0; track_idx < nusers(); ++track_idx) {
-      double track_orien = 0, track_speed = 0;
-      ppl_utils::get_attribute(_tracks.poses[track_idx], "ukf_orien", track_orien);
-      ppl_utils::get_attribute(_tracks.poses[track_idx], "ukf_speed", track_speed);
-      DEBUG_PRINT("UkfMultiModal: track user #%i pt:%s, orien:%g, speed:%g\n", track_idx,
-                  geometry_utils::printP(_tracks.poses[track_idx].head_pose.position).c_str(),
-                  track_orien, track_speed);
-    } // end loop track_idx
-    for (unsigned int blob_idx = 0; blob_idx < nblobs(); ++blob_idx) {
-      DEBUG_PRINT("UkfMultiModal: Blob #%i pos:%s, confidence:%g\n", blob_idx,
-                  geometry_utils::printP(_blobs.poses[blob_idx].head_pose.position).c_str(),
-                  _blobs.poses[blob_idx].confidence);
-    } // end for (blob_idx)
-
+    DEBUG_PRINT("UkfMultiModal:tracks:%s\n", ppl_utils::ppl2string(_tracks).c_str());
+    DEBUG_PRINT("UkfMultiModal:blobs:%s\n", ppl_utils::ppl2string(_blobs).c_str());
 
     // publish message
     _tracks.header.stamp = ros::Time::now();
@@ -335,13 +397,13 @@ private:
   std::string _static_frame_id;
   tf::TransformListener* _tf_listener;
   PPL _tracks;
-  std::vector<people_msgs::PeoplePose> _unassociated_poses;
-  int _total_seen_tracks;
+  unsigned int _total_seen_tracks;
 
   // gating stuff
+  bool _use_gating;
   assignment_utils::MatchList _ppl2track_affectations;
   PPL _blobs;
-  double _track_timeout;
+  double _track_timeout, _human_walking_speed;
 
   // input PPls
   std::string _ppl_input_topics;
@@ -350,11 +412,13 @@ private:
   // matchers
   CMatrix<double> _avg_costs;
   std::vector<std::string> _matcher_services;
-  std::string _matcher_services_concat;
+  std::vector<double> _matcher_weights;
   std::vector<ros::ServiceClient> _matchers;
 
   // outputs
   ros::Publisher _blobs_pub;
+  double _cost_matrices_display_timeout;
+  Timer _cost_matrices_display_timer;
 }; // end class UkfMultiModal
 
 #endif // UKF_MULTIMODAL_H

@@ -44,14 +44,16 @@ the tracks and the PPL detections.
 
 class ARToolkitPPLM : public PPLMatcherTemplate {
 public:
-  static const double HIGH_COST = 100;
+  static const double HIGH_COST = 1;
 
   ARToolkitPPLM() : PPLMatcherTemplate("ARTOOLKIT_PPLM_START", "ARTOOLKIT_PPLM_STOP") {
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs) {
+  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
+             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int ntracks = tracks.poses.size(),
         ncurr_users = new_ppl.poses.size();
     if (new_ppl.method != "artoolkit") {
@@ -61,6 +63,12 @@ public:
     }
     DEBUG_PRINT("ARToolkitPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
+    // if there is only one track and one user, skip computation
+    if (ntracks == 1 && ncurr_users == 1) {
+      costs.clear();
+      costs.resize(1, 0);
+      return true;
+    }
     costs.resize(ncurr_users * ntracks, HIGH_COST);
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
       std::string curr_name = new_ppl.poses[curr_idx].person_name;

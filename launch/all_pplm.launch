@@ -4,21 +4,34 @@
    don't forget to add  its topic to
    ukf_multimodal.launch (in people_recognition_vision pkg) -->
 <arg name="robot"/>
+<arg name="eventgui" default="true"/>
+<arg name="face_recognizer_pplm_index_file"
+     default="$(find vision_utils)/data/images/faces/people_lab/index.xml"/>
+
 <group ns="$(arg robot)">
   <node pkg="people_recognition_vision" type="height_pplm.exe"
-  name="height_pplm"  output="screen"
+  name="height_pplm"  output="screen" respawn="true"
   args="" />
 
   <node pkg="people_recognition_vision" type="phs_pplm.exe"
-  name="phs_pplm"  output="screen"
+  name="phs_pplm"  output="screen" respawn="true"
   args="" />
 
   <node pkg="people_recognition_vision" type="euclidean_pplm.exe"
-  name="euclidean_pplm"  output="screen"
+  name="euclidean_pplm"  output="screen" respawn="true"
   args="" />
 
+  <node pkg="people_recognition_vision" type="nite_pplm.exe"
+  name="nite_pplm"  output="screen" respawn="true"
+  args="" />
+
+  <node pkg="people_recognition_vision" type="face_recognizer_pplm.exe"
+  name="face_recognizer_pplm"  output="screen" respawn="true"
+   args="_face_reco_xml_file:=$(arg face_recognizer_pplm_index_file)" />
+
   <!-- event GUI -->
-  <node pkg="ad_core" type="launcher_qt_event_sender_interface.exe"
+  <node if="$(arg eventgui)"
+        pkg="ad_core" type="launcher_qt_event_sender_interface.exe"
         name="pplm_event_gui"
         output="screen"
         args='event_keys="|HEIGHT_PPLM_START;HEIGHT_PPLM_START;0
@@ -26,6 +39,10 @@
                           |PHS_PPLM_START;PHS_PPLM_START;0
                           |PHS_PPLM_STOP;PHS_PPLM_STOP;0
                           |EUCLIDEAN_PPLM_START;EUCLIDEAN_PPLM_START;0
-                          |EUCLIDEAN_PPLM_STOP;EUCLIDEAN_PPLM_STOP;0"'/>
+                          |EUCLIDEAN_PPLM_STOP;EUCLIDEAN_PPLM_STOP;0
+                          |NITE_PPLM_START;NITE_PPLM_START;0
+                          |NITE_PPLM_STOP;NITE_PPLM_STOP;0
+                          |FACE_RECOGNIZER_PPLM_START;FACE_RECOGNIZER_PPLM_START;0
+                          |FACE_RECOGNIZER_PPLM_STOP;FACE_RECOGNIZER_PPLM_STOP;0"'/>
 </group>
 </launch>

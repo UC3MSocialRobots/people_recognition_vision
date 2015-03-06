@@ -1,8 +1,8 @@
 #!/bin/sh
 # External, ROS and system package dependencies
 
-PACKAGES="ros-groovy-openni-camera
-          ros-groovy-openni-tracker
-          ros-groovy-openni-launch"
+PACKAGES="ros-hydro-openni-camera
+          ros-hydro-openni-tracker
+          ros-hydro-openni-launch"
 
 sudo apt-get install $PACKAGES

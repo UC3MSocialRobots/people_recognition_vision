@@ -155,7 +155,7 @@ public:
 
     // build the laser data
     SensorMeasurement z_t;
-    laser_utils::convert_sensor_data_to_xy(laser_msg, z_t);
+    laser_utils::convert_sensor_data_to_xy(*laser_msg, z_t);
     // convert to static_frame
     geometry_msgs::PointStamped pt_stamped_in, pt_stamped_out;
     pt_stamped_in.point.z = 0;

@@ -15,3 +15,6 @@ target_link_libraries(launcher_face_recognizer_add_pics.exe xml_document ${catki
 
 add_executable(launcher_face_recognizer_viewer.exe launcher_face_recognizer_viewer.cpp)
 target_link_libraries(launcher_face_recognizer_viewer.exe ${catkin_LIBRARIES})
+
+add_executable(face_recognizer_pplm.exe face_recognizer_pplm.cpp face_recognizer_pplm.h)
+target_link_libraries(face_recognizer_pplm.exe xml_document ${catkin_LIBRARIES})

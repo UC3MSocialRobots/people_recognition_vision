@@ -90,9 +90,12 @@ void train_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
   kinect_openni_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
   // now train
   BreastDetector detector;
+  
+  const uchar USER_IDX_auxConst = DGaitDBFilename::USER_IDX;
+  
   bool ok = detector.train
             (f.all_filenames_train(),
-             std::vector<uchar> (nfiles, DGaitDBFilename::USER_IDX),
+             std::vector<uchar> (nfiles, USER_IDX_auxConst),
              std::vector<image_geometry::PinholeCameraModel> (nfiles, depth_camera_model),
              f.all_genders_train<BreastDetector::Gender>(BreastDetector::MALE, BreastDetector::FEMALE),
              method);
@@ -126,7 +129,10 @@ bool test_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
     if (!image_utils::read_rgb_depth_user_image_from_image_file
         (files[file_idx], &rgb, &depth, &user_mask))
       continue;
-    user_mask = (user_mask == DGaitDBFilename::USER_IDX);
+      
+    const uchar USER_IDX_auxConst = DGaitDBFilename::USER_IDX;  
+      
+    user_mask = (user_mask == USER_IDX_auxConst);
     Timer timer;
     BreastDetector::HeightBreast h = detector.detect_breast(depth, user_mask, depth_camera_model, method);
     if (h.gender == BreastDetector::ERROR) {

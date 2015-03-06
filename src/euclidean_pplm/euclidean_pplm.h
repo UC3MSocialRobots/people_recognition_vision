@@ -24,13 +24,7 @@ A matcher for PPL based on the Euclidean distance between
 the tracks and the PPL detections.
 
 \section Parameters
-  - \b "~use_gating"
-        [bool] (default: true)
-        Use gating?
-
-  - \b "~gate_size"
-        [double, meters] (default: 2)
-        The size of the gate, in meters.
+  None
 
 \section Subscriptions, publications
   None
@@ -49,41 +43,41 @@ the tracks and the PPL detections.
 
 class EuclideanPPLM : public PPLMatcherTemplate {
 public:
+  typedef geometry_msgs::Point Pt3;
+
   EuclideanPPLM() : PPLMatcherTemplate("EUCLIDEAN_PPLM_START", "EUCLIDEAN_PPLM_STOP") {
-    _nh_private.param("use_gating", _use_gating, true);
-    double gate_size = 2;
-    _nh_private.param("gate_size", gate_size, gate_size);
-    _gate_size_sq = gate_size * gate_size;
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
-  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs) {
-    unsigned int ntracks = tracks.poses.size(),
-        ncurr_users = new_ppl.poses.size();
+  bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
+             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
+    unsigned int ntracks = tracks.poses.size(), npps = new_ppl.poses.size();
     DEBUG_PRINT("EuclideanPPLM::match(%i new PP, %i tracks)\n",
-                ncurr_users, ntracks);
-    costs.resize(ncurr_users * ntracks);
-    for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
-      geometry_msgs::Point curr_user_pos =
-          new_ppl.poses[curr_idx].head_pose.position;
+                npps, ntracks);
+    // if there is only one track and one user, skip computation
+    if (ntracks == 1 && npps == 1) {
+      costs.clear();
+      costs.resize(1, 0);
+      return true;
+    }
+    costs.resize(npps * ntracks);
+    for (unsigned int pp_idx = 0; pp_idx < npps; ++pp_idx) {
+      const PP* pp = &(new_ppl.poses[pp_idx]);
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-        geometry_msgs::Point track_pos =
-            tracks.poses[track_idx].head_pose.position;
-        double curr_dist_sq = geometry_utils::distance_points3_squared
-            (track_pos, curr_user_pos);
-        // make the cost as infinite if outside of the gate
-        if (_use_gating && curr_dist_sq > _gate_size_sq)
-          curr_dist_sq = std::numeric_limits<double>::max() ;
-        int cost_idx = curr_idx * ntracks + track_idx;
-        costs[cost_idx] = curr_dist_sq;
+        const PP* track = &(tracks.poses[track_idx]);
+        double curr_dist = geometry_utils::distance_points3
+                           (pp->head_pose.position, track->head_pose.position);
+        // convert to [0-1] - octave:fplot ("1-exp(-3*x)", [0, .5])
+        double cost = 1. - exp(-curr_dist * 3.);
+        int cost_idx = pp_idx * ntracks + track_idx;
+        costs[cost_idx] = cost;
       } // end loop track_idx
-    } // end loop curr_detec_idx
+    } // end loop pp_detec_idx
     return true;
   }
 private:
-  double _gate_size_sq;
-  bool _use_gating;
 }; // end class EuclideanPPLM
 
 #endif // EUCLIDEAN_PPLM_H
