@@ -41,10 +41,20 @@ catkin_add_gtest(gtest_euclidean_pplm
   ../src/euclidean_pplm/euclidean_pplm.h)
 target_link_libraries(gtest_euclidean_pplm lap)
 
+catkin_add_gtest(gtest_face_recognizer_pplm
+  gtest_face_recognizer_pplm.cpp
+  ../src/face_recognizer/face_recognizer_pplm.h)
+target_link_libraries(gtest_face_recognizer_pplm lap)
+
 catkin_add_gtest(gtest_height_pplm
   gtest_height_pplm.cpp
   ../src/height_detector/height_pplm.h)
 target_link_libraries(gtest_height_pplm lap)
+
+catkin_add_gtest(gtest_nite_pplm
+  gtest_nite_pplm.cpp
+  ../src/nite/nite_pplm.h)
+target_link_libraries(gtest_nite_pplm lap disjoint_sets2)
 
 catkin_add_gtest(gtest_phs_pplm
   gtest_phs_pplm.cpp
