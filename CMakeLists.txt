@@ -90,7 +90,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
   include src ${catkin_INCLUDE_DIRS}
-  ${people_utils_INCLUDE_DIRS} 
+  ${people_utils_INCLUDE_DIRS}
   ${people_msgs_INCLUDE_DIRS}
   ${vision_utils_INCLUDE_DIRS}
   /usr/include/ni/
@@ -99,7 +99,6 @@ include_directories(
 
 SET(AD_USE_ROS 1)
 ADD_SUBDIRECTORY(src)
-ADD_SUBDIRECTORY(test)
 
 
 ## Declare a cpp library
@@ -166,3 +165,4 @@ install(DIRECTORY include/${PROJECT_NAME}/
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+ADD_SUBDIRECTORY(test)
