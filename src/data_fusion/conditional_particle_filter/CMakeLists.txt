@@ -3,4 +3,4 @@ add_executable(test_conditional_particle_filter.exe
                 conditional_particle_filter.h
                 conditional_particle_filter_laser.h
                 conditional_particle_filter_laser_ros.h)
-target_link_libraries(test_conditional_particle_filter.exe boost_signals)
+target_link_libraries(test_conditional_particle_filter.exe boost_signals  ${catkin_LIBRARIES})

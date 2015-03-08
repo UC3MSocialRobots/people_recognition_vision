@@ -61,16 +61,6 @@ catkin_add_gtest(gtest_phs_pplm
   ../src/person_histogram_set/phs_pplm.h)
 target_link_libraries(gtest_phs_pplm lap disjoint_sets2)
 
-catkin_add_gtest(gtest_nite_pplm
-  gtest_nite_pplm.cpp
-  ../src/nite/nite_pplm.h)
-target_link_libraries(gtest_nite_pplm lap)
-
-catkin_add_gtest(gtest_face_recognizer_pplm
-  gtest_face_recognizer_pplm.cpp
-  ../src/face_recognizer/face_recognizer_pplm.h)
-target_link_libraries(gtest_face_recognizer_pplm  lap xml_document)
-
 ######
 
 catkin_add_gtest(gtest_ppl_gating
