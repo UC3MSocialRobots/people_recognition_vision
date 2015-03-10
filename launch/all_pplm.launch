@@ -4,7 +4,8 @@
    don't forget to add  its topic to
    ukf_multimodal.launch (in people_recognition_vision pkg) -->
 <arg name="robot"/>
-<arg name="eventgui" default="true"/>
+<arg name="eventgui" default="false"/>
+<arg name="autostart" default="false"/>
 <arg name="face_recognizer_pplm_index_file"
      default="$(find vision_utils)/data/images/faces/people_lab/index.xml"/>
 
@@ -12,22 +13,32 @@
   <node pkg="people_recognition_vision" type="height_pplm.exe"
   name="height_pplm"  output="screen" respawn="true"
   args="" />
+  <node if="$(arg autostart)" pkg="rostopic" type="rostopic" name="height_pplm_starter" output="screen"
+        args="pub HEIGHT_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <node pkg="people_recognition_vision" type="phs_pplm.exe"
   name="phs_pplm"  output="screen" respawn="true"
   args="" />
+  <node if="$(arg autostart)" pkg="rostopic" type="rostopic" name="phs_pplm_starter" output="screen"
+        args="pub PHS_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <node pkg="people_recognition_vision" type="euclidean_pplm.exe"
   name="euclidean_pplm"  output="screen" respawn="true"
   args="" />
+  <node if="$(arg autostart)" pkg="rostopic" type="rostopic" name="euclidean_pplm_starter" output="screen"
+        args="pub EUCLIDEAN_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <node pkg="people_recognition_vision" type="nite_pplm.exe"
   name="nite_pplm"  output="screen" respawn="true"
   args="" />
+  <node if="$(arg autostart)" pkg="rostopic" type="rostopic" name="nite_pplm_starter" output="screen"
+        args="pub NITE_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <node pkg="people_recognition_vision" type="face_recognizer_pplm.exe"
   name="face_recognizer_pplm"  output="screen" respawn="true"
    args="_face_reco_xml_file:=$(arg face_recognizer_pplm_index_file)" />
+  <node if="$(arg autostart)" pkg="rostopic" type="rostopic" name="face_recognizer_pplm_starter" output="screen"
+        args="pub FACE_RECOGNIZER_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <!-- event GUI -->
   <node if="$(arg eventgui)"
