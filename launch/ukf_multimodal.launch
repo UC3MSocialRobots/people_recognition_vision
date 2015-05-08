@@ -30,6 +30,8 @@
 <!--
         launch-prefix="valgrind"
 -->
+
+  <!-- autostart for PPLP: publish starting event for skill then die -->
   <node if="$(arg autostart)" pkg="rostopic" type="rostopic" name="ukf_starter" output="screen"
         args="pub UKF_MULTIMODAL_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
