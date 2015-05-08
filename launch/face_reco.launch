@@ -1,6 +1,6 @@
 <launch>
 <arg name="robot"/>
-<arg name="eventgui" default="true"/>
+<arg name="eventgui" default="false"/>
 <arg name="face_detector" default="face_detector_pplp"/>
 
 <include file="$(find people_detection_vision)/launch/$(arg face_detector).launch">
