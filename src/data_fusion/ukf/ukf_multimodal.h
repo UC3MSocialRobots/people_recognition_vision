@@ -85,6 +85,8 @@ This gives some more robust position detections.
 #include <templates/pplp_template.h>
 // people_recognition_vision
 #include "ppl_gating.h"
+// ROS
+#include <ros/service_client.h>
 
 class UkfMultiModal : public PPLPublisherTemplate {
 public:
@@ -118,7 +120,7 @@ public:
     ros::MultiSubscriber::split_topics_list(services_str, _matcher_services);
     unsigned int nmatchers = _matcher_services.size();
     if (nmatchers == 0) {
-      printf("UkfMultiModal: you didn't specify any matcher, "
+      ROS_INFO("UkfMultiModal: you didn't specify any matcher, "
              "please set param '~ppl_matcher_services' and see doc.\n");
       //ros::shutdown();
     }
@@ -129,7 +131,7 @@ public:
       std::vector<std::string> words;
       StringUtils::StringSplit(_matcher_services[i], ":", &words);
       if (words.size() < 1 || words.size() > 2) {
-        printf("Error parsing service:'%s'\n", _matcher_services[i].c_str());
+        ROS_WARN("Error parsing service:'%s'\n", _matcher_services[i].c_str());
         continue;
       }
       // resolve names
@@ -143,18 +145,31 @@ public:
         _matcher_weights[i] = weight;
     } // end for service_idx
 
-    // PPL subscribers
+    // subscribe to PPLP clients
     _tf_listener = new tf::TransformListener();
     _ppl_subs = ros::MultiSubscriber::subscribe
                 (_nh_public, _ppl_input_topics, QUEUE_SIZE,
                  &UkfMultiModal::ppl_cb, this);
-    // matchers
+    // blobs publisher
+    _blobs_pub = _nh_public.advertise<PPL>("ukf_blobs", 1);
+    // subscribe to PPLM services
     for (unsigned int topic_idx = 0; topic_idx < nmatchers; ++topic_idx)
       _matchers.push_back(_nh_public.serviceClient<people_msgs::MatchPPL>
                           (_matcher_services[topic_idx]));
-    _blobs_pub = _nh_public.advertise<PPL>("ukf_blobs", 1);
+    // strip services that do not exist
+    sleep(1);
+    _ppl_subs.strip_non_connected();
+    for (int i = 0; i < _matchers.size(); ++i) {
+      if (_matchers[i].exists())
+        continue;
+      ROS_WARN("Stripping non-existing PPLM service '%s'",
+               _matchers[i].getService().c_str());
+      _matchers.erase(_matchers.begin() + i);
+      _matcher_services.erase(_matcher_services.begin() + i);
+      --i;
+    }
 
-    printf("UkfMultiModal: getting PeoplePoseList on %i topics '%s'', "
+    ROS_INFO("UkfMultiModal: getting PeoplePoseList on %i topics '%s'', "
            "%i matchers on '%s' (weights:%s), "
            "track timeout of %g sec, "
            "publishing filtered PeoplePoseList on '%s', blobs on '%s'"
@@ -237,7 +252,7 @@ public:
     people_msgs::PeoplePoseList new_ppl = new_ppl_bad_tf;
     if (!ppl_utils::convert_ppl_tf
         (new_ppl, _static_frame_id, *_tf_listener)) {
-      printf("UkfMultiModal:Could not convert new_ppl to tf '%s'\n",
+      ROS_WARN("UkfMultiModal:Could not convert new_ppl to tf '%s'\n",
              _static_frame_id.c_str());
       return;
     }
@@ -251,7 +266,7 @@ public:
 
     // compute cost matrix
     if (!_avg_costs.resize(npps, ntracks)) {
-      printf("UkfMultiModal:Could not allocate cost matrix to (%i, %i)\n",
+      ROS_WARN("UkfMultiModal:Could not allocate cost matrix to (%i, %i)\n",
              npps, ntracks);
       return;
     }
@@ -274,7 +289,7 @@ public:
       res.tracks_added_attributes.clear();
       if (!_matchers[matcher_idx].call(req, res)
           || !res.match_success) {
-        printf("UkfMultiModal::ppl_cb(): PPLM '%s' failed!\n", matcher_name.c_str());
+        ROS_WARN("UkfMultiModal::ppl_cb(): PPLM '%s' failed!\n", matcher_name.c_str());
         continue;
       }
       // add attributes
@@ -283,7 +298,7 @@ public:
 
       // mix costs of results with avg_costs
       if (res.costs.size() != costs_size) {
-        printf("UkfMultiModal::ppl_cb(): PPLM '%s' returned a cost matrix with "
+        ROS_WARN("UkfMultiModal::ppl_cb(): PPLM '%s' returned a cost matrix with "
                "wrong dimensions (expected %i values, got %i)\n",
                matcher_name.c_str(), costs_size, res.costs.size());
         continue;
@@ -303,12 +318,12 @@ public:
       for (unsigned int i = 0; i < costs_size; ++i)
         out << std::setprecision(3) << std::setw(5) << res.costs[i]
                << (i < costs_size-1 && (i+1)%ntracks == 0 ? "\n" : " \t");
-      printf("UkfMultiModal::ppl_cb(): PPLM '%s', weight:%g, cost matrix:\n%s\n",
+      ROS_INFO("UkfMultiModal::ppl_cb(): PPLM '%s', weight:%g, cost matrix:\n%s\n",
              matcher_name.c_str(), matcher_weight, out.str().c_str());
     } // end for (matcher_idx)
 
     if (nmatches == 0) {
-      printf("UkfMultiModal: Could not estimate the cost matrix "
+      ROS_WARN("UkfMultiModal: Could not estimate the cost matrix "
              "with any of the %i matchers ('%s')!\n",
              _matchers.size(), StringUtils::iterable_to_string(_matcher_services).c_str());
       return;

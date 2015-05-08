@@ -5,10 +5,14 @@
 <arg name="input_use_ktp" default="false"/>
 <arg name="rate" value="2"/> <!-- Hz -->
 
-<!-- the PPL matchers and their GUIs -->
-<include file="$(find people_recognition_vision)/launch/all_pplm.launch">
+<!-- spawn all PPLM -->
+<include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
   <arg name="robot" value="$(arg robot)" />
-  <arg name="eventgui" value="false"/>
+  <arg name="pplm_use_euclidean" value="true"/>
+  <arg name="pplm_use_face_rec"  value="true"/>
+  <arg name="pplm_use_height"    value="true"/>
+  <arg name="pplm_use_nite"      value="true"/>
+  <arg name="pplm_use_phs"       value="true"/>
   <!-- change face rec index file -->
   <arg name="face_recognizer_pplm_index_file"
        value="$(find vision_utils)/data/images/faces/people_lab/index_rlpd.xml"/>
@@ -94,6 +98,9 @@
         args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl:1;face_recognizer_pplm/match_ppl:1;height_pplm/match_ppl:1;nite_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
 -->
 
+  <!-- start all ukf_multimodal nodes -->
+  <node pkg="rostopic" type="rostopic" name="ukf_starter" output="screen"
+        args="pub UKF_MULTIMODAL_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <!-- PPL benchmarker -->
   <node pkg="people_detection_vision" type="pplp_benchmarker.exe"
@@ -119,20 +126,5 @@
           _reprojection_mode:=xy
           _xmin:=-3 _xmax:=3 _ymin:=-8 _ymax:=1" />
 -->
-
-  <!-- start UKF and all PPLMs -->
-  <node pkg="rostopic" type="rostopic" name="height_pplm_starter" output="screen"
-        args="pub HEIGHT_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
-  <node pkg="rostopic" type="rostopic" name="phs_pplm_starter" output="screen"
-        args="pub PHS_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
-  <node pkg="rostopic" type="rostopic" name="euclidean_pplm_starter" output="screen"
-        args="pub EUCLIDEAN_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
-  <node pkg="rostopic" type="rostopic" name="nite_pplm_starter" output="screen"
-        args="pub NITE_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
-  <node pkg="rostopic" type="rostopic" name="face_recognizer_pplm_starter" output="screen"
-        args="pub FACE_RECOGNIZER_PPLM_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
-  <node pkg="rostopic" type="rostopic" name="ukf_starter" output="screen"
-        args="pub UKF_MULTIMODAL_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 </group>
-
 </launch>
