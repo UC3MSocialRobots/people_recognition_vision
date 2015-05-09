@@ -371,7 +371,10 @@ public:
       ukf_pp.get_state(track->head_pose.position, track_orien, track_speed);
       ppl_utils::set_attribute(*track, "ukf_orien", track_orien);
       ppl_utils::set_attribute(*track, "ukf_speed", track_speed);
-      track->person_name = detec->person_name;
+      if (!detec->person_name.empty()
+          && detec->person_name != people_msgs::PeoplePose::NO_RECOGNITION_MADE
+          && detec->person_name != people_msgs::PeoplePose::RECOGNITION_FAILED)
+        track->person_name = detec->person_name;
       track->std_dev = ukf_pp.get_std_dev();
       track->confidence = detec->confidence; // TODO improve that
       if (detec->rgb.width > 0 && detec->rgb.height > 0) { // copy images

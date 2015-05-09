@@ -99,7 +99,7 @@ private:
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "hist_tracking_nite_skill");
-  HistTrackingNiteSkill receiver;
-  receiver.init();
+  HistTrackingNiteSkill skill;
+  skill.init();
   ros::spin();
 }

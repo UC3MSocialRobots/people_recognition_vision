@@ -27,6 +27,7 @@ A launcher for PHSPPLM.
 int main(int argc, char** argv) {
   ros::init(argc, argv, "PHSPPLM");
   PHSPPLM skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

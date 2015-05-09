@@ -27,6 +27,7 @@ A short launcher for ARToolkitPPLM.
 int main(int argc, char **argv) {
   ros::init(argc, argv, "ARToolkitPPLM");
   ARToolkitPPLM skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

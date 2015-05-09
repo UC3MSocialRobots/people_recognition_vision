@@ -27,6 +27,7 @@ A launcher for face_recognizerPPLM.
 int main(int argc, char** argv) {
   ros::init(argc, argv, "face_recognizerPPLM");
   FaceRecognizerPPLM skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

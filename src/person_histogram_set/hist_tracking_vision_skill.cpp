@@ -155,6 +155,7 @@ private:
 int main(int argc, char** argv) {
   ros::init(argc, argv, "launcher_foo_vision_skill");
   HistTrackingRgbDepthSkill skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

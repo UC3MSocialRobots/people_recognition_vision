@@ -25,6 +25,7 @@ Quick launcher for HeightPPLM
 int main(int argc, char** argv) {
   ros::init(argc, argv, "HeightPPLM");
   HeightPPLM skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

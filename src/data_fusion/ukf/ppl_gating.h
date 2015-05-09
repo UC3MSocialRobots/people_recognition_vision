@@ -237,7 +237,8 @@ inline bool update_blobs_and_create_new_tracks
       continue;
     // transfer blob from "blobs" to "tracks"
     if (blob->person_name.empty()
-        ||blob->person_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE) {
+        || blob->person_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE
+        || blob->person_name == people_msgs::PeoplePose::RECOGNITION_FAILED) {
       blob->person_name = std::string("track") + StringUtils::cast_to_string(total_seen_tracks);
       ++total_seen_tracks;
     }

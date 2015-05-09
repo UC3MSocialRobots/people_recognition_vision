@@ -25,6 +25,7 @@ int main(int argc, char** argv) {
   ros::init(argc, argv, "ukf_multimodal");
   srand(time(NULL));
   UkfMultiModal skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

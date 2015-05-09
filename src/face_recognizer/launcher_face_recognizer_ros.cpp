@@ -180,6 +180,7 @@ private:
 int main(int argc, char** argv) {
   ros::init(argc, argv, "launcher_face_recognizer_ros");
   FaceRecognizerRos skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

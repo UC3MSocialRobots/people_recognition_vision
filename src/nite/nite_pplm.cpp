@@ -27,6 +27,7 @@ A launcher for NitePPLM.
 int main(int argc, char** argv) {
   ros::init(argc, argv, "NitePPLM");
   NitePPLM skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

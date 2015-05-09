@@ -26,6 +26,7 @@ A short launcher for EuclideanPPLM.
 int main(int argc, char **argv) {
   ros::init(argc, argv, "EuclideanPPLM");
   EuclideanPPLM skill;
+  skill.check_autostart();
   ros::spin();
   return 0;
 }

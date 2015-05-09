@@ -75,8 +75,8 @@ private:
 }; // end class NiteBreastDetector
 
 void test_nite() {
-  NiteBreastDetector receiver;
-  receiver.init();
+  NiteBreastDetector skill;
+  skill.init();
   ros::spin();
 }
 
