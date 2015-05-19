@@ -119,11 +119,6 @@ public:
     _nh_private.param("ppl_matcher_services", services_str, services_str);
     ros::MultiSubscriber::split_topics_list(services_str, _matcher_services);
     unsigned int nmatchers = _matcher_services.size();
-    if (nmatchers == 0) {
-      ROS_INFO("UkfMultiModal: you didn't specify any matcher, "
-             "please set param '~ppl_matcher_services' and see doc.\n");
-      //ros::shutdown();
-    }
 
     // parse weights
     _matcher_weights.resize(nmatchers, 1.);
@@ -157,16 +152,38 @@ public:
       _matchers.push_back(_nh_public.serviceClient<people_msgs::MatchPPL>
                           (_matcher_services[topic_idx]));
     // strip services that do not exist
-    sleep(1);
+    sleep(2); // publishers and subscribers can need 1 sec to be ready
     _ppl_subs.strip_non_connected();
     for (int i = 0; i < _matchers.size(); ++i) {
       if (_matchers[i].exists())
         continue;
       ROS_WARN("Stripping non-existing PPLM service '%s'",
                _matchers[i].getService().c_str());
+      _matcher_weights.erase(_matcher_weights.begin() + i);
       _matchers.erase(_matchers.begin() + i);
       _matcher_services.erase(_matcher_services.begin() + i);
       --i;
+    }
+    // check we still have PPLPs and PPLMs
+    if (_ppl_subs.getNumPublishers() == 0) {
+      ROS_FATAL("UkfMultiModal: you didn't specify any valid PPLP"
+               "(_ppl_input_topics:=\"%s\"), "
+               "please set param '~ppl_input_topics', cf doc."
+                "If you use 'ukf_multimodal_lite.launch', "
+                "activate at least one PPLP using "
+                "<arg name=\"pplp_use_XXX\" value=\"true\"/>\n",
+                _ppl_input_topics.c_str());
+      ros::shutdown();
+    }
+    if (_matchers.empty()) {
+      ROS_FATAL("UkfMultiModal: you didn't specify any valid PPLM"
+               "(_ppl_matcher_services:=\"%s\"), "
+               "please set param '~ppl_matcher_services', cf doc."
+                "If you use 'ukf_multimodal_lite.launch', "
+                "activate at least one PPLM using "
+                "<arg name=\"pplm_use_XXX\" value=\"true\"/>\n",
+                services_str.c_str());
+      ros::shutdown();
     }
 
     ROS_INFO("UkfMultiModal: getting PeoplePoseList on %i topics '%s'', "

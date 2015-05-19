@@ -1,0 +1,256 @@
+<!--
+\file ukf_multimodal_lite.launch
+\author Arnaud Ramey ( arnaud.a.ramey@gmail.com )
+
+This is the main launcher for the user awareness architecture
+described in the PhD of Arnaud RAMEY,
+"Local user mapping via multi-modal fusion for social robots".
+It contains the three components of the architecture:
+* the PPLPs (People Pose List Publishers), which are user detectors
+  complying to a common interface
+* the PPLMs (People Pose List Matchers), which are user recognizers
+  complying to a common interface
+* the data fusion node, relying on both the PPLPs and PPLMs to detect and recognize
+  the users. It uses internally Unscented Kalman Filters to merge the results.
+
+In this launch file,
+each of the PPLPs, PPLMs and fusion node is disabled by default.
+To activate a given PPLP XXX, you must pass the param:
+  <arg name="pplp_use_XXX"          value="true"/>
+To activate a given PPLM XXX, you must pass the param:
+  <arg name="pplm_use_XXX"          value="true"/>
+To activate the data fusion node, you must pass the param:
+  <arg name="data_fusion_use_ukf"   value="true"/>
+The list of arguments is given and commented below.
+
+\example A minimalistic example that includes the two important components:
+* the  launcher for the robot.
+  It includes the kinect node, that supplies rgb + depth on topics
+  "/$(arg robot)/rgb" and "/$(arg robot)/depth"
+* The ukf_multimodal_lite launcher, spawning  the HOG PPLP, the Euclidean PPLM
+  and the data fusion node
+
+<launch>
+  <arg name="robot" value="kismet"/>
+  <include file="$(find main_control)/launch/$(arg robot)_start.launch"/>
+  <include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
+    <arg name="robot" value="$(arg robot)" />
+    <arg name="pplp_use_hog_detector" value="true"/>
+    <arg name="pplm_use_euclidean"    value="true"/>
+    <arg name="data_fusion_use_ukf"   value="true"/>
+  </include>
+</launch>
+
+\example Same thing from a terminal:
+roslaunch people_recognition_vision ukf_multimodal_lite.launch robot:=kismet pplp_use_hog_detector:=true  pplm_use_euclidean:=true  data_fusion_use_ukf:=true
+
+-->
+<launch>
+<!-- namespace for the user awareness architecture.
+    Allows its use in a multi-robot system. -->
+<arg name="robot"/>
+
+<!-- ***************************************************************************
+  list of arguments
+**************************************************************************** -->
+  <!-- the ARToolkit detector (needs RGB):
+  uses black and white square markers -->
+<arg name="pplp_use_artoolkit"              default="false"/>
+  <!-- the background substractor (needs RGB + depth):
+  detects users by comparing with a depth model of the environnement -->
+<arg name="pplp_use_bg_substractor"         default="false"/>
+  <!-- cluster detector (needs RGB + depth):
+  detects and eliminates the ground plane,
+  then compares the 3D clusters with human sizes -->
+<arg name="pplp_use_cluster_detector"       default="false"/>
+  <!-- 2D face detection (needs RGB):
+  detects faces in a RGB stream -->
+<arg name="pplp_use_face_detector2d"        default="false"/>
+  <!-- 3D face detection (needs RGB + depth):
+  detects faces in a RGB stream, then eliminates false positives with depth -->
+<arg name="pplp_use_face_detector3d"        default="false"/>
+  <!-- fast cluster detection (needs RGB + depth):
+  uses 2D blob techniques on the depth images -->
+<arg name="pplp_use_fast_cluster_detector"  default="false"/>
+  <!-- Histogram of Oriented Gradients (HOG) detector (needs RGB + depth):
+  detects people in the RGB stream, eliminates false positives with depth -->
+<arg name="pplp_use_hog_detector"           default="false"/>
+  <!-- leg detector (needs laser scans):
+  detect leg-like patterns in the laser scans -->
+<arg name="pplp_use_leg_detector"           default="false"/>
+  <!-- NiTE user mask (needs RGB + depth):
+  re-uses the user mask obtained by the NiTE algorithm of the Kinect driver  -->
+<arg name="pplp_use_nite_user_mask"         default="false"/>
+  <!-- Polar-Perspective map (needs RGB + depth):
+  projects the 3D cloud onto the ground plane and keeps the human shapes -->
+<arg name="pplp_use_ppm"                    default="false"/>
+  <!-- tabletop (needs RGB + depth):
+  uses the tabletop objet detector of the Point Cloud Library -->
+<arg name="pplp_use_tabletop"               default="false"/>
+
+  <!-- user matching thanks to Euclidean distance.
+  Works with any of the PPLPs. -->
+<arg name="pplm_use_euclidean"              default="false"/>
+  <!-- user matching thanks to face recognition results.
+  Works with the 3D face detection PPLP.
+  Modify the "face_recognizer_pplm_index_file" param to change the index file. -->
+<arg name="pplm_use_face_rec"               default="false"/>
+  <!-- user matching thanks to height computation.
+  Works with any of the RGB+depth PPLPs. (HOG, NiTE, tabletop, etc.) -->
+<arg name="pplm_use_height"                 default="false"/>
+  <!-- user matching thanks to the NiTE user map.
+  Works with the NiTE PPLP. -->
+<arg name="pplm_use_nite"                   default="false"/>
+  <!-- user matching thanks to the color of clothes (PersonHistogramSet)
+  Works with any of the RGB+depth PPLPs. (HOG, NiTE, tabletop, etc.) -->
+<arg name="pplm_use_phs"                    default="false"/>
+
+  <!-- data fusion node, based on Unscented Kalman Filters -->
+<arg name="data_fusion_use_ukf"             default="false"/>
+
+<!-- ***************************************************************************
+  the different PeoplePoseList publishers (PPLP).
+**************************************************************************** -->
+<!-- ARToolkit -->
+<include if="$(arg pplp_use_artoolkit)"
+         file="$(find people_detection_vision)/launch/artoolkit2ppl.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- bg_substractor -->
+<include if="$(arg pplp_use_bg_substractor)"
+         file="$(find people_detection_vision)/launch/bg_substractor_pplp.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- cluster detector -->
+<include if="$(arg pplp_use_cluster_detector)"
+         file="$(find people_detection_vision)/launch/cluster_detector.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- face detection (2D) algorithm -->
+<include if="$(arg pplp_use_face_detector2d)"
+         file="$(find people_detection_vision)/launch/face_detector2d_pplp.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- face detection (3D) algorithm -->
+<include if="$(arg pplp_use_face_detector3d)"
+         file="$(find people_detection_vision)/launch/face_detector_pplp.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- HOG detector -->
+<include if="$(arg pplp_use_hog_detector)"
+         file="$(find people_detection_vision)/launch/hog_detector.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- leg_pplp -->
+<include if="$(arg pplp_use_leg_detector)"
+         file="$(find people_detection_vision)/launch/leg_detector.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- NITE based detector -->
+<include if="$(arg pplp_use_nite_user_mask)"
+         file="$(find people_detection_vision)/launch/nite_user_mask_pplp.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- PPM detector -->
+<include if="$(arg pplp_use_ppm)"
+         file="$(find people_detection_vision)/launch/ppm_pplp.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- tabletop detector -->
+<include if="$(arg pplp_use_tabletop)"
+         file="$(find people_detection_vision)/launch/tabletop_pplp.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="autostart" value="true" />
+</include>
+
+<!-- ***************************************************************************
+  the different PeoplePoseList matchers (PPLM)
+**************************************************************************** -->
+<!-- Euclidean PPLM -->
+<group if="$(arg pplm_use_euclidean)" ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="euclidean_pplm.exe"
+        name="euclidean_pplm"  output="screen" respawn="true"
+        args="">
+    <!-- autostart param - must be before the XML tag of the skill (node) -->
+    <param name="autostart" value="true"/>
+  </node>
+</group>
+
+<!-- Face recognition PPLM -->
+<arg  name="face_recognizer_pplm_index_file"
+      default="$(find vision_utils)/data/images/faces/people_lab/index.xml"/>
+<group if="$(arg pplm_use_face_rec)" ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="face_recognizer_pplm.exe"
+        name="face_recognizer_pplm"  output="screen" respawn="true"
+        args="_face_reco_xml_file:=$(arg face_recognizer_pplm_index_file)">
+    <!-- autostart param - must be before the XML tag of the skill (node) -->
+    <param name="autostart" value="true"/>
+  </node>
+</group>
+
+<!-- height PPLM -->
+<group if="$(arg pplm_use_height)" ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="height_pplm.exe"
+  name="height_pplm"  output="screen" respawn="true"  args="">
+    <!-- autostart param - must be before the XML tag of the skill (node) -->
+    <param name="autostart" value="true"/>
+  </node>
+</group>
+
+<!-- NiTE PPLM -->
+<group if="$(arg pplm_use_nite)" ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="nite_pplm.exe"
+  name="nite_pplm"  output="screen" respawn="true" args="">
+    <!-- autostart param - must be before the XML tag of the skill (node) -->
+    <param name="autostart" value="true"/>
+  </node>
+</group>
+
+<!-- PHS PPLM -->
+<group if="$(arg pplm_use_phs)" ns="$(arg robot)">
+  <node pkg="people_recognition_vision" type="phs_pplm.exe"
+  name="phs_pplm"  output="screen" respawn="true" args="">
+    <!-- autostart param - must be before the XML tag of the skill (node) -->
+    <param name="autostart" value="true"/>
+  </node>
+</group>
+
+<!-- ***************************************************************************
+  the UKF (sensor fusion)
+**************************************************************************** -->
+<group if="$(arg data_fusion_use_ukf)" ns="$(arg robot)">
+  <!-- all input topics and services -->
+  <arg name="pplp_topics" value="artoolkit_pplp/ppl;face_detector2d_pplp/ppl;face_detector_pplp/ppl;hog_pplp/ppl;leg_pplp/ppl;nite_user_mask_pplp/ppl;ppm_pplp/ppl;tabletop_pplp/ppl"/>
+  <arg name="pplm_services" value="euclidean_pplm/match_ppl;face_recognizer_pplm/match_ppl;height_pplm/match_ppl;nite_pplm/match_ppl;phs_pplm/match_ppl"/>
+  <!-- the proper UKF node -->
+  <node pkg="people_recognition_vision" type="ukf_multimodal.exe" name="ukf_multimodal"
+        output="screen" respawn="false"
+        args="_autostart:=true
+              _static_frame_id:=/base_link
+              _ppl_input_topics:=$(arg pplp_topics)
+              _ppl_matcher_services:=$(arg pplm_services)"
+        />
+<!--
+        launch-prefix="valgrind"
+-->
+</group>
+</launch>
+
