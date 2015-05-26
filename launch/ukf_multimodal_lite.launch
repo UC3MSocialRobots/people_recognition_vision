@@ -44,6 +44,9 @@ The list of arguments is given and commented below.
 \example Same thing from a terminal:
 roslaunch people_recognition_vision ukf_multimodal_lite.launch robot:=kismet pplp_use_hog_detector:=true  pplm_use_euclidean:=true  data_fusion_use_ukf:=true
 
+\example Another example can be found in "user_awareness_sample.launch".
+This user awareness architecture uses HOG and 3D face detection for user detection,
+and Euclidean distance and face recognition for user recognition.
 -->
 <launch>
 <!-- namespace for the user awareness architecture.
@@ -107,6 +110,9 @@ roslaunch people_recognition_vision ukf_multimodal_lite.launch robot:=kismet ppl
 
   <!-- data fusion node, based on Unscented Kalman Filters -->
 <arg name="data_fusion_use_ukf"             default="false"/>
+
+  <!-- the static frame used for the UKF data fusion -->
+<arg name="data_fusion_static_frame_id" default="/base_link"/>
 
 <!-- ***************************************************************************
   the different PeoplePoseList publishers (PPLP).
@@ -244,7 +250,7 @@ roslaunch people_recognition_vision ukf_multimodal_lite.launch robot:=kismet ppl
   <node pkg="people_recognition_vision" type="ukf_multimodal.exe" name="ukf_multimodal"
         output="screen" respawn="false"
         args="_autostart:=true
-              _static_frame_id:=/base_link
+              _static_frame_id:=$(arg data_fusion_static_frame_id)
               _ppl_input_topics:=$(arg pplp_topics)
               _ppl_matcher_services:=$(arg pplm_services)"
         />

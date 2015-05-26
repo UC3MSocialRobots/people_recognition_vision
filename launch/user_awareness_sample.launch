@@ -1,0 +1,36 @@
+<!--
+\file user_awareness_sample.launch
+\author Arnaud Ramey ( arnaud.a.ramey@gmail.com )
+
+A self-contained sample for the user awareness architecture.
+This user awareness architecture uses HOG and 3D face detection for user detection,
+and Euclidean distance and face recognition for user recognition.
+-->
+<launch>
+<arg name="robot" value="kismet"/>
+<!-- launch the kinect node -->
+<include file="$(find kinect)/launch/kinect_node_local.launch">
+  <arg name="robot" value="$(arg robot)" />
+</include>
+<!-- launch the user detection and recognition -->
+<include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
+  <arg name="robot" value="$(arg robot)" />
+  <arg name="pplp_use_face_detector3d"     value="true"/>
+  <arg name="pplp_use_hog_detector"        value="true"/>
+  <arg name="pplm_use_euclidean"           value="true"/>
+  <arg name="pplm_use_face_rec"            value="true"/>
+  <arg name="data_fusion_use_ukf"          value="true"/>
+
+  <arg name="data_fusion_static_frame_id"  value="/kismet_camera_link"/>
+</include>
+
+<!-- the Kinect viewer, to view both RGB and depth frames -->
+<!--
+<include file="$(find kinect)/launch/kinect_viewer.launch">
+  <arg name="robot" value="$(arg robot)" />
+</include>
+-->
+<node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
+      args="_ppl_topics:=/$(arg robot)/face_detector_pplp/ppl;/$(arg robot)/ukf_multimodal/ppl
+      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>
+</launch>
