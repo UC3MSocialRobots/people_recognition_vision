@@ -37,9 +37,13 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
   <exec_depend>roscpp</exec_depend>
+  
+  <depend>openni_camera</depend>
+  <depend>openni-tracker</depend>
+  <depend>openni-launch</depend>
+  
   <depend>people_msgs</depend>
   <depend>people_utils</depend>
-  <depend>openni_camera</depend>
   <depend>camera</depend>
   <depend>vision_utils</depend>
 
