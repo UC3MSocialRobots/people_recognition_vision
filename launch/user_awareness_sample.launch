@@ -8,10 +8,30 @@ and Euclidean distance and face recognition for user recognition.
 -->
 <launch>
 <arg name="robot" value="maggie"/>
+
+
 <!-- launch the kinect node -->
 <include file="$(find kinect)/launch/kinect_node_local.launch">
   <arg name="robot" value="$(arg robot)" />
 </include> 
+
+
+
+<!--
+    TF
+    pitch=0 - straight (zero angle of the kinect,
+    obtained for instance with running glview)
+< 0 (f.ex -0.52 radians) - looking towards sky
+x:=towards scene,
+z>0 -> higher in the sky (small white lab table=0.75)
+-->
+<node pkg="tf" type="static_transform_publisher" name="base_link_tf_broadcaster"
+      args="0 0 0.75   0 0 0   odom  base_link   100"/>
+<node pkg="tf" type="static_transform_publisher" name="kinect_tf_broadcaster"
+    args="0 0 0   0 0 0   base_link   $(arg robot)_camera_link   100"/>
+
+
+
 <!-- launch the user detection and recognition -->
 <include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
   <arg name="robot" value="$(arg robot)" />
