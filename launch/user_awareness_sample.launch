@@ -16,22 +16,8 @@ and Euclidean distance and face recognition for user recognition.
 </include>
 
 
-  <!-- the publisher for the message gathering the state of all joints at once -->
-  <node name="joint_states_publisher"
-  pkg="dynamixel"
-  type="joint_states_publisher"
-  args="_wait_for_all_joints:=true _joints:=leftArm;rightArm;neck;head;base"
-  output="log" />
-  <!--args="_wait_for_all_joints:=true _joints:=base;leftArm;rightArm;neck;head"-->
-
-  <!-- the node commander, for commanding all the servos at once -->
-  <node name="joint_states_commander" pkg="dynamixel" type="joint_states_commander"
-  args="_input_topic:=joints_command" output="log" />
-
-
-
  <!--
-    TF
+    Added TF for Maggie
     pitch=0 - straight (zero angle of the kinect,
     obtained for instance with running glview)
 < 0 (f.ex -0.52 radians) - looking towards sky
