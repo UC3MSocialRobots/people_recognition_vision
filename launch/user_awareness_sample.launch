@@ -11,7 +11,7 @@ and Euclidean distance and face recognition for user recognition.
 <!-- launch the kinect node -->
 <include file="$(find kinect)/launch/kinect_node_local.launch">
   <arg name="robot" value="$(arg robot)" />
-</include>
+</include> 
 <!-- launch the user detection and recognition -->
 <include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
   <arg name="robot" value="$(arg robot)" />
@@ -19,19 +19,20 @@ and Euclidean distance and face recognition for user recognition.
   <arg name="pplp_use_hog_detector"        value="true"/>
   <arg name="pplp_use_leg_detector"        value="false"/>
   <arg name="pplm_use_euclidean"           value="true"/>
-  <arg name="pplm_use_face_rec"            value="false"/>
+  <arg name="pplm_use_face_rec"            value="true"/>
   <arg name="data_fusion_use_ukf"          value="true"/>
 
-  <arg name="data_fusion_static_frame_id"  value="/maggie_camera_link"/>
+  <arg name="data_fusion_static_frame_id"  value="/camera_link"/>
 </include>
 
 <!-- the Kinect viewer, to view both RGB and depth frames -->
 
-<!--<include file="$(find kinect)/launch/kinect_viewer.launch">
+<!-- <include file="$(find kinect)/launch/kinect_viewer.launch">
   <arg name="robot" value="$(arg robot)" />
-</include>-->
+</include> -->
 
-<node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
+
+<!-- <node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
       args="_ppl_topics:=/$(arg robot)/face_detector_pplp/ppl;/$(arg robot)/ukf_multimodal/ppl
-      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>
+      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>  -->
 </launch>
