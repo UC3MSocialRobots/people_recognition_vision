@@ -13,11 +13,24 @@ and Euclidean distance and face recognition for user recognition.
 <!-- launch the kinect node -->
 <include file="$(find kinect)/launch/kinect_node_local.launch">
   <arg name="robot" value="$(arg robot)" />
-</include> 
+</include>
+
+
+  <!-- the publisher for the message gathering the state of all joints at once -->
+  <node name="joint_states_publisher"
+  pkg="dynamixel"
+  type="joint_states_publisher"
+  args="_wait_for_all_joints:=true _joints:=leftArm;rightArm;neck;head;base"
+  output="log" />
+  <!--args="_wait_for_all_joints:=true _joints:=base;leftArm;rightArm;neck;head"-->
+
+  <!-- the node commander, for commanding all the servos at once -->
+  <node name="joint_states_commander" pkg="dynamixel" type="joint_states_commander"
+  args="_input_topic:=joints_command" output="log" />
 
 
 
-<!--
+ <!--
     TF
     pitch=0 - straight (zero angle of the kinect,
     obtained for instance with running glview)
@@ -39,20 +52,19 @@ z>0 -> higher in the sky (small white lab table=0.75)
   <arg name="pplp_use_hog_detector"        value="true"/>
   <arg name="pplp_use_leg_detector"        value="false"/>
   <arg name="pplm_use_euclidean"           value="true"/>
-  <arg name="pplm_use_face_rec"            value="true"/>
+  <arg name="pplm_use_face_rec"            value="false"/>
   <arg name="data_fusion_use_ukf"          value="true"/>
 
-  <arg name="data_fusion_static_frame_id"  value="/camera_link"/>
+  <arg name="data_fusion_static_frame_id"  value="base_link"/>
 </include>
 
 <!-- the Kinect viewer, to view both RGB and depth frames -->
 
-<!-- <include file="$(find kinect)/launch/kinect_viewer.launch">
+<!--<include file="$(find kinect)/launch/kinect_viewer.launch">
   <arg name="robot" value="$(arg robot)" />
-</include> -->
+</include>-->
 
-
-<!-- <node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
+<node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
       args="_ppl_topics:=/$(arg robot)/face_detector_pplp/ppl;/$(arg robot)/ukf_multimodal/ppl
-      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>  -->
+      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>
 </launch>
