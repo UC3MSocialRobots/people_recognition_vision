@@ -7,7 +7,7 @@ This user awareness architecture uses HOG and 3D face detection for user detecti
 and Euclidean distance and face recognition for user recognition.
 -->
 <launch>
-<arg name="robot" value="maggie"/>
+<arg name="robot" default="maggie"/>
 
 
 <!-- launch the kinect node -->
@@ -16,8 +16,15 @@ and Euclidean distance and face recognition for user recognition.
 </include>
 
 
- <!--
-    Added TF for Maggie
+ <!-- launch the TF's
+
+static_transform_publisher x y z yaw pitch roll frame_id child_frame_id period_in_ms
+
+    Publish a static coordinate transform to tf using an x/y/z offset in meters and yaw/pitch/roll in radians.
+    (yaw is rotation about Z, pitch is rotation about Y, and roll is rotation about X).
+    The period, in milliseconds, specifies how often to send a transform. 100ms (10hz) is a good value.
+
+
     pitch=0 - straight (zero angle of the kinect,
     obtained for instance with running glview)
 < 0 (f.ex -0.52 radians) - looking towards sky
@@ -31,12 +38,11 @@ z>0 -> higher in the sky (small white lab table=0.75)
 
 
 
-<!-- launch the user detection and recognition -->
+<!-- launch the user detection, recognition, and fusion -->
 <include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
   <arg name="robot" value="$(arg robot)" />
   <arg name="pplp_use_face_detector3d"     value="true"/>
   <arg name="pplp_use_hog_detector"        value="true"/>
-  <arg name="pplp_use_leg_detector"        value="false"/>
   <arg name="pplm_use_euclidean"           value="true"/>
   <arg name="pplm_use_face_rec"            value="false"/>
   <arg name="data_fusion_use_ukf"          value="true"/>
@@ -44,13 +50,16 @@ z>0 -> higher in the sky (small white lab table=0.75)
   <arg name="data_fusion_static_frame_id"  value="base_link"/>
 </include>
 
+
+
 <!-- the Kinect viewer, to view both RGB and depth frames -->
 
 <!--<include file="$(find kinect)/launch/kinect_viewer.launch">
   <arg name="robot" value="$(arg robot)" />
 </include>-->
 
+<!--
 <node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
       args="_ppl_topics:=/$(arg robot)/face_detector_pplp/ppl;/$(arg robot)/ukf_multimodal/ppl
       _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>
-</launch>
+</launch> -->
