@@ -61,5 +61,5 @@ z>0 -> higher in the sky (small white lab table=0.75)
 <!--
 <node pkg="people_utils" type="ppl_viewer.exe" name="ppl_viewer"
       args="_ppl_topics:=/$(arg robot)/face_detector_pplp/ppl;/$(arg robot)/ukf_multimodal/ppl
-      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/>
-</launch> -->
+      _reprojection_mode:=yx _ymin:=0 _xmin:=-4 _xmax:=4 _width:=600 _height:=500"/> -->
+</launch>
