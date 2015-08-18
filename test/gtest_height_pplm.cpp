@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for HeightPPLM
  */
-#include <templates/pplm_testing.h>
-#include <height_detector/height_pplm.h>
+#include "people_utils/pplm_testing.h"
+#include "people_recognition_vision/height_detector.h"
 
 TEST(TestSuite, create) {
   if (!rosmaster_alive()) return;

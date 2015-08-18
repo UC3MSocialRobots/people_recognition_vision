@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 A short launcher for EuclideanPPLM.
  */
-#include "euclidean_pplm.h"
+#include "people_recognition_vision/euclidean_pplm.h"
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "EuclideanPPLM");

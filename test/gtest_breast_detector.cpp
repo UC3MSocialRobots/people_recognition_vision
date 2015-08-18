@@ -24,7 +24,7 @@ ________________________________________________________________________________
 // Bring in gtest
 #include <gtest/gtest.h>
 #include <map/map_utils.h>
-#include "height_detector/breast_detector.h"
+#include "people_recognition_vision/breast_detector.h"
 #include <vision_utils/img_path.h>
 #include "vision_utils/io.h"
 #include "vision_utils/dgaitdb_filename.h"

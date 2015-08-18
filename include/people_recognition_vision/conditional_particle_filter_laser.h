@@ -25,7 +25,7 @@
 #ifndef CONDITIONNAL_PARTICLE_FILTER_LASER_H
 #define CONDITIONNAL_PARTICLE_FILTER_LASER_H
 
-#include "conditional_particle_filter.h"
+#include "people_recognition_vision/conditional_particle_filter.h"
 #include <geom/geometry_utils.h>
 #include <combinatorics/combinatorics_utils.h>
 

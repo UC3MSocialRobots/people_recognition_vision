@@ -28,7 +28,7 @@ ________________________________________________________________________________
 #include <test/matrix_testing.h>
 #include <ros_utils/rosmaster_alive.h>
 #include <vision_utils/img_path.h>
-#include "person_histogram_set/hist_tracking_skill.h"
+#include "people_recognition_vision/hist_tracking_skill.h"
 
 using namespace test_person_histogram_set_variables;
 //#define DISPLAY

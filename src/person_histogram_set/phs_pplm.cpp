@@ -23,7 +23,7 @@ ________________________________________________________________________________
 A launcher for PHSPPLM.
  */
 
-#include "phs_pplm.h"
+#include "people_recognition_vision/phs_pplm.h"
 int main(int argc, char** argv) {
   ros::init(argc, argv, "PHSPPLM");
   PHSPPLM skill;

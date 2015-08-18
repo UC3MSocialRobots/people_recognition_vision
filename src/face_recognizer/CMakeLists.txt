@@ -1,4 +1,4 @@
-add_executable(test_face_recognizer.exe test_face_recognizer.cpp face_recognizer.h)
+add_executable(test_face_recognizer.exe test_face_recognizer.cpp )
 target_link_libraries(test_face_recognizer.exe string_utils xml_document ${catkin_LIBRARIES})
 
 add_executable(launcher_face_recognizer_ros.exe launcher_face_recognizer_ros.cpp)
@@ -10,5 +10,5 @@ target_link_libraries(launcher_face_recognizer_add_pics.exe xml_document ${catki
 add_executable(launcher_face_recognizer_viewer.exe launcher_face_recognizer_viewer.cpp)
 target_link_libraries(launcher_face_recognizer_viewer.exe ${catkin_LIBRARIES})
 
-add_executable(face_recognizer_pplm.exe face_recognizer_pplm.cpp face_recognizer_pplm.h)
+add_executable(face_recognizer_pplm.exe face_recognizer_pplm.cpp )
 target_link_libraries(face_recognizer_pplm.exe xml_document ${catkin_LIBRARIES})

@@ -1,4 +1,4 @@
-#include "face_recognizer.h"
+#include "people_recognition_vision/face_recognizer.h"
 
 #define FACES_DIR   IMG_DIR "faces/"
 

@@ -77,7 +77,7 @@ find_package(PCL REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS src
+  INCLUDE_DIRS include
   CATKIN_DEPENDS roscpp
   DEPENDS people_utils people_msgs vision_utils
 )
@@ -89,7 +89,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-  include src ${catkin_INCLUDE_DIRS}
+  include ${catkin_INCLUDE_DIRS}
   ${people_utils_INCLUDE_DIRS}
   ${people_msgs_INCLUDE_DIRS}
   ${vision_utils_INCLUDE_DIRS}

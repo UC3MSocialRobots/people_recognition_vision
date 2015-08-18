@@ -24,7 +24,7 @@ ________________________________________________________________________________
 // Bring in gtest
 #include <gtest/gtest.h>
 // people_msgs
-#include "person_histogram_set/person_histogram.h"
+#include "people_recognition_vision/person_histogram.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "time/timer.h"
 #include "test/matrix_testing.h"

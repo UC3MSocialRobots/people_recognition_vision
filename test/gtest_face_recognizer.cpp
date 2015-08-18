@@ -26,7 +26,7 @@ ________________________________________________________________________________
 #include <gtest/gtest.h>
 #include <time/timer.h>
 #include <vision_utils/img_path.h>
-#include "face_recognizer/face_recognizer.h"
+#include "people_recognition_vision/face_recognizer.h"
 
 #define FACES_DIR   IMG_DIR "faces/"
 

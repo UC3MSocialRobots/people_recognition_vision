@@ -52,7 +52,7 @@ A bunch of functions doing that with different kind of inputs are available,
 #include "vision_utils/content_processing.h"
 #include "kinect/user_image_to_rgb.h"
 // people_msgs
-#include "person_histogram_set.h"
+#include "people_recognition_vision/person_histogram_set.h"
 
 class HistTrackingSkill {
 public:

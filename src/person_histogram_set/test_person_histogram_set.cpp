@@ -29,7 +29,7 @@ ________________________________________________________________________________
 #include "kinect/user_image_to_rgb.h"
 #include "time/timer.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
-#include "person_histogram_set.h"
+#include "people_recognition_vision/person_histogram_set.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -1,8 +1,8 @@
 /*!
-  \file        artoolkit_pplm.h
+  \file        euclidean_pplm.h
   \author      Arnaud Ramey <arnaud.a.ramey@gmail.com>
                 -- Robotics Lab, University Carlos III of Madrid
-  \date        2014/2/4
+  \date        2014/2/2
 
 ________________________________________________________________________________
 
@@ -20,8 +20,7 @@ You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 
-\todo Description of the file
-A matcher for PPL based on the ARToolkit distance between
+A matcher for PPL based on the Euclidean distance between
 the tracks and the PPL detections.
 
 \section Parameters
@@ -36,17 +35,17 @@ the tracks and the PPL detections.
         Match a detected PPL against a reference one.
  */
 
-#ifndef ARTOOLKIT_PPLM_H
-#define ARTOOLKIT_PPLM_H
+#ifndef EUCLIDEAN_PPLM_H
+#define EUCLIDEAN_PPLM_H
 
-#include <templates/pplm_template.h>
+#include "people_utils/pplm_template.h"
 #include <geom/distances.h>
 
-class ARToolkitPPLM : public PPLMatcherTemplate {
+class EuclideanPPLM : public PPLMatcherTemplate {
 public:
-  static const double HIGH_COST = 1;
+  typedef geometry_msgs::Point Pt3;
 
-  ARToolkitPPLM() : PPLMatcherTemplate("ARTOOLKIT_PPLM_START", "ARTOOLKIT_PPLM_STOP") {
+  EuclideanPPLM() : PPLMatcherTemplate("EUCLIDEAN_PPLM_START", "EUCLIDEAN_PPLM_STOP") {
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -54,36 +53,31 @@ public:
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
              std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
              std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
-    unsigned int ntracks = tracks.poses.size(),
-        ncurr_users = new_ppl.poses.size();
-    if (new_ppl.method != "artoolkit") {
-      DEBUG_PRINT("ARToolkitPPLM::match() with method '%s'!='artoolkit'",
-                  new_ppl.method.c_str());
-      return false;
-    }
-    DEBUG_PRINT("ARToolkitPPLM::match(%i new PP, %i tracks)\n",
-                ncurr_users, ntracks);
+    unsigned int ntracks = tracks.poses.size(), npps = new_ppl.poses.size();
+    DEBUG_PRINT("EuclideanPPLM::match(%i new PP, %i tracks)\n",
+                npps, ntracks);
     // if there is only one track and one user, skip computation
-    if (ntracks == 1 && ncurr_users == 1) {
+    if (ntracks == 1 && npps == 1) {
       costs.clear();
       costs.resize(1, 0);
       return true;
     }
-    costs.resize(ncurr_users * ntracks, HIGH_COST);
-    for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
-      std::string curr_name = new_ppl.poses[curr_idx].person_name;
+    costs.resize(npps * ntracks);
+    for (unsigned int pp_idx = 0; pp_idx < npps; ++pp_idx) {
+      const PP* pp = &(new_ppl.poses[pp_idx]);
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-        std::string track_name = tracks.poses[curr_idx].person_name;
-        if (curr_name != track_name)
-          continue;
-        // set a low cost
-        int cost_idx = curr_idx * ntracks + track_idx;
-        costs[cost_idx] = 0;
+        const PP* track = &(tracks.poses[track_idx]);
+        double curr_dist = geometry_utils::distance_points3
+                           (pp->head_pose.position, track->head_pose.position);
+        // convert to [0-1] - octave:fplot ("1-exp(-3*x)", [0, .5])
+        double cost = 1. - exp(-curr_dist * 3.);
+        int cost_idx = pp_idx * ntracks + track_idx;
+        costs[cost_idx] = cost;
       } // end loop track_idx
-    } // end loop curr_detec_idx
+    } // end loop pp_detec_idx
     return true;
   }
 private:
-}; // end class ARToolkitPPLM
+}; // end class EuclideanPPLM
 
-#endif // ARTOOLKIT_PPLM_H
+#endif // EUCLIDEAN_PPLM_H

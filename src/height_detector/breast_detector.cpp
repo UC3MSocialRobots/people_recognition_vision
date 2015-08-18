@@ -40,7 +40,7 @@ ________________________________________________________________________________
  */
 
 #include "vision_utils/nite_subscriber_template.h"
-#include "breast_detector.h"
+#include "people_recognition_vision/breast_detector.h"
 #include "vision_utils/dgaitdb_filename.h"
 
 class NiteBreastDetector : public NiteSubscriberTemplate {

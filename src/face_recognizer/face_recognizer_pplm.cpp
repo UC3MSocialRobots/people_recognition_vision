@@ -23,7 +23,7 @@ ________________________________________________________________________________
 A launcher for face_recognizerPPLM.
  */
 
-#include "face_recognizer_pplm.h"
+#include "people_recognition_vision/face_recognizer_pplm.h"
 int main(int argc, char** argv) {
   ros::init(argc, argv, "face_recognizerPPLM");
   FaceRecognizerPPLM skill;

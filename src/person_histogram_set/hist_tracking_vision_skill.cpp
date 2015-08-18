@@ -44,7 +44,7 @@ by subscribing to a topic supplying some \a PeoplePoseList .
 #include "vision_utils/cv_conversion_float_uchar.h"
 
 // people_msgs
-#include "hist_tracking_skill.h"
+#include "people_recognition_vision/hist_tracking_skill.h"
 
 class HistTrackingRgbDepthSkill : public RgbDepthSkill, public HistTrackingSkill {
 public:

@@ -27,7 +27,7 @@ thanks to the size of his/her breast.
 #ifndef BREAST_DETECTOR_H
 #define BREAST_DETECTOR_H
 
-#include "height_detector/height_detector.h"
+#include "people_recognition_vision/height_detector.h"
 #include "vision_utils/cloud_tilter.h"
 #include "vision_utils/mini_stage_plugins.h"
 #include <geom/Rect3.h>

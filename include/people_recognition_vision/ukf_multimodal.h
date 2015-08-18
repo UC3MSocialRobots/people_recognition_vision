@@ -79,12 +79,12 @@ This gives some more robust position detections.
 #include <time/timer.h>
 // people_msgs
 #include <people_msgs/MatchPPL.h>
-#include <ppl_utils/people_pose_list_utils.h>
-#include <ppl_utils/ppl_tf_utils.h>
-#include <ppl_utils/ppl_attributes.h>
-#include <templates/pplp_template.h>
+#include "people_utils/people_pose_list_utils.h"
+#include "people_utils/ppl_tf_utils.h"
+#include "people_utils/ppl_attributes.h"
+#include "people_utils/pplp_template.h"
 // people_recognition_vision
-#include "ppl_gating.h"
+#include "people_recognition_vision/ppl_gating.h"
 // ROS
 #include <ros/service_client.h>
 

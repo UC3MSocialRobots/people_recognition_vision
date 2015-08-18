@@ -39,7 +39,7 @@
 #include "ros_utils/laser_utils.h"
 #include "vision_utils/color_utils.h"
 // conditional_particle_filter
-#include "conditional_particle_filter_laser.h"
+#include "people_recognition_vision/conditional_particle_filter_laser.h"
 
 namespace conditional_particle_filter_laser {
 

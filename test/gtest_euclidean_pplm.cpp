@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for EuclideanPPLM
  */
-#include <templates/pplm_testing.h>
-#include <euclidean_pplm/euclidean_pplm.h>
+#include "people_utils/pplm_testing.h"
+#include "people_recognition_vision/euclidean_pplm.h"
 #include "vision_utils/filename_prefix2imgs.h"
 
 TEST(TestSuite, create) {

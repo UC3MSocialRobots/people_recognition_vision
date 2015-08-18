@@ -60,7 +60,7 @@ ________________________________________________________________________________
 #include "vision_utils/make_opencv_interface.h"
 #include "vision_utils/drawing_utils.h"
 // people_msgs
-#include "face_recognizer.h"
+#include "people_recognition_vision/face_recognizer.h"
 #include "people_msgs/PeoplePoseList.h"
 
 class FaceRecognizerAddPics : public NanoSkill {

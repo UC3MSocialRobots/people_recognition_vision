@@ -23,7 +23,7 @@ ________________________________________________________________________________
 A launcher for NitePPLM.
  */
 
-#include "nite_pplm.h"
+#include "people_recognition_vision/nite_pplm.h"
 int main(int argc, char** argv) {
   ros::init(argc, argv, "NitePPLM");
   NitePPLM skill;

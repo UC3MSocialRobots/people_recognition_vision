@@ -22,7 +22,7 @@ ________________________________________________________________________________
 
 A short launcher for ARToolkitPPLM.
  */
-#include "artoolkit_pplm.h"
+#include "people_recognition_vision/artoolkit_pplm.h"
 
 int main(int argc, char **argv) {
   ros::init(argc, argv, "ARToolkitPPLM");

@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for FaceRecognizerPPLM
  */
-#include <templates/pplm_testing.h>
-#include <face_recognizer/face_recognizer_pplm.h>
+#include "people_utils/pplm_testing.h"
+#include "people_recognition_vision/face_recognizer_pplm.h"
 
 TEST(TestSuite, create) {
   ros::NodeHandle nh_private("~");

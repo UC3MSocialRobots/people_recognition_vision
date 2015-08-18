@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Quick launcher for HeightPPLM
  */
-#include "height_pplm.h"
+#include "people_recognition_vision/height_pplm.h"
 int main(int argc, char** argv) {
   ros::init(argc, argv, "HeightPPLM");
   HeightPPLM skill;

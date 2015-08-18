@@ -29,7 +29,7 @@ ________________________________________________________________________________
 
 #include <opencv2/ml/ml.hpp>
 
-#include "person_histogram.h"
+#include "people_recognition_vision/person_histogram.h"
 #include "combinatorics/assignment_utils.h"
 #include "vision_utils/colormaps.h"
 #include <string/timestamp.h>

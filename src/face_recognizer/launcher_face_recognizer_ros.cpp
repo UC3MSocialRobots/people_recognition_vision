@@ -58,7 +58,7 @@ it will recognizes (put a name on) the faces that the latter finds.
 #include "vision_utils/nano_skill.h"
 // vision
 // people_msgs
-#include "face_recognizer.h"
+#include "people_recognition_vision/face_recognizer.h"
 #include <people_msgs/PeoplePoseList.h>
 
 class FaceRecognizerRos : public NanoSkill {
