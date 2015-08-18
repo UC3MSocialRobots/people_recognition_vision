@@ -26,7 +26,7 @@ ________________________________________________________________________________
 // OpenCV
 #include <opencv2/highgui/highgui.hpp>
 // AD
-#include "kinect_utils/user_image_to_rgb.h"
+#include "kinect/user_image_to_rgb.h"
 #include "time/timer.h"
 #include <databases_io/test_person_histogram_set_variables.h>
 #include "person_histogram_set.h"

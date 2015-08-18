@@ -34,7 +34,7 @@ http://www.embeddedheaven.com/ros-nodelet.htm
 
  */
 
-#include "kinect_utils/skeleton_utils.h"
+#include "kinect/skeleton_utils.h"
 // #include "skill_templates/nite/nite_ROS_subscriber_template.h"
 #include "skill_templates/nite/nite_subscriber_template.h"
 #include "hist_tracking_skill.h"

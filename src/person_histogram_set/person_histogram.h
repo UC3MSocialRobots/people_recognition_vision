@@ -28,7 +28,7 @@ A structured representation of the colors in a person.
 
 // AD
 #include <cmatrix/cmatrix.h>
-#include <kinect_utils/kinect_openni_utils.h>
+#include "kinect/kinect_openni_utils.h"
 #include <visu_utils/histogram_utils.h>
 #include <image_utils/content_processing.h>
 #include <image_utils/drawing_utils.h>

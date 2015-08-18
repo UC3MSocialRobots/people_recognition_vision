@@ -39,7 +39,7 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 #include <person_histogram_set/person_histogram.h>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include <kinect_utils/user_image_to_rgb.h>
+#include "kinect/user_image_to_rgb.h"
 
 class PHSPPLM : public PPLMatcherTemplate {
 public:

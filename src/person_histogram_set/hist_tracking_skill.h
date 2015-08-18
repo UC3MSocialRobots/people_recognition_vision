@@ -50,7 +50,7 @@ A bunch of functions doing that with different kind of inputs are available,
 #include <skill_templates/nano_etts_api.h>
 #include <databases_io/test_person_histogram_set_variables.h>
 #include "image_utils/content_processing.h"
-#include "kinect_utils/user_image_to_rgb.h"
+#include "kinect/user_image_to_rgb.h"
 // people_msgs
 #include "person_histogram_set.h"
 

@@ -27,7 +27,7 @@ A class for computing the height of a user in a mask.
 #ifndef HEIGHT_DETECTOR_H
 #define HEIGHT_DETECTOR_H
 
-#include <kinect_utils/kinect_openni_utils.h>
+#include "kinect/kinect_openni_utils.h"
 #include <image_utils/image_comparer.h>
 #include <vision_utils/img_path.h>
 #include <image_utils/head_finder.h>
