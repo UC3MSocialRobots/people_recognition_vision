@@ -39,9 +39,9 @@ ________________________________________________________________________________
 
  */
 
-#include "skill_templates/nite/nite_subscriber_template.h"
+#include "vision_utils/nite_subscriber_template.h"
 #include "breast_detector.h"
-#include <databases_io/dgaitdb_filename.h>
+#include "vision_utils/dgaitdb_filename.h"
 
 class NiteBreastDetector : public NiteSubscriberTemplate {
 public:

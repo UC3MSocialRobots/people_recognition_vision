@@ -28,8 +28,8 @@ thanks to the size of his/her breast.
 #define BREAST_DETECTOR_H
 
 #include "height_detector/height_detector.h"
-#include <point_clouds/cloud_tilter.h>
-#include <visu_utils/mini_stage_plugins.h>
+#include "vision_utils/cloud_tilter.h"
+#include "vision_utils/mini_stage_plugins.h"
 #include <geom/Rect3.h>
 #include <string/find_and_replace.h>
 #include <string/string_split.h>
@@ -53,9 +53,9 @@ thanks to the size of his/her breast.
 
 //#define USE_PCL_VIEWER
 #ifdef USE_PCL_VIEWER
-//#include <point_clouds/cloud_viewer.h>
+//#include "vision_utils/cloud_viewer.h"
 #else
-#include <point_clouds/cloud_viewer_gnuplot.h>
+#include "vision_utils/cloud_viewer_gnuplot.h"
 #endif // no USE_PCL_VIEWER
 
 class IndexDoubleConverter {

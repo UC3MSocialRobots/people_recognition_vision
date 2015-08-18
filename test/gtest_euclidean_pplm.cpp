@@ -23,7 +23,7 @@ Some tests for EuclideanPPLM
  */
 #include <templates/pplm_testing.h>
 #include <euclidean_pplm/euclidean_pplm.h>
-#include <databases_io/filename_prefix2imgs.h>
+#include "vision_utils/filename_prefix2imgs.h"
 
 TEST(TestSuite, create) {
   if (!rosmaster_alive()) return;

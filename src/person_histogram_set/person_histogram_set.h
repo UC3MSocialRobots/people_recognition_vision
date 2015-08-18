@@ -31,10 +31,10 @@ ________________________________________________________________________________
 
 #include "person_histogram.h"
 #include "combinatorics/assignment_utils.h"
-#include <color/colormaps.h>
+#include "vision_utils/colormaps.h"
 #include <string/timestamp.h>
-#include <visu_utils/array_to_color.h>
-#include <visu_utils/mini_stage.h>
+#include "vision_utils/array_to_color.h"
+#include "vision_utils/mini_stage.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

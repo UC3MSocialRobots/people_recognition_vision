@@ -29,10 +29,10 @@ A structured representation of the colors in a person.
 // AD
 #include <cmatrix/cmatrix.h>
 #include "kinect/kinect_openni_utils.h"
-#include <visu_utils/histogram_utils.h>
-#include <image_utils/content_processing.h>
-#include <image_utils/drawing_utils.h>
-#include <point_clouds/blob_segmenter.h>
+#include "vision_utils/histogram_utils.h"
+#include "vision_utils/content_processing.h"
+#include "vision_utils/drawing_utils.h"
+#include "vision_utils/blob_segmenter.h"
 
 #define SVM_USE_STD_DEV_HIST
 

@@ -26,8 +26,8 @@ ________________________________________________________________________________
 #include <map/map_utils.h>
 #include "height_detector/breast_detector.h"
 #include <vision_utils/img_path.h>
-#include "image_utils/io.h"
-#include "databases_io/dgaitdb_filename.h"
+#include "vision_utils/io.h"
+#include "vision_utils/dgaitdb_filename.h"
 
 //#define DISPLAY
 

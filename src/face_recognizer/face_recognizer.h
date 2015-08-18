@@ -11,9 +11,9 @@
 #include <string/filename_handling.h>
 #include <time/timer.h>
 // vision
-#include <image_utils/opencv_face_detector.h>
-#include <image_utils/io.h>
-#include <image_utils/resize_utils.h>
+#include "vision_utils/opencv_face_detector.h"
+#include "vision_utils/io.h"
+#include "vision_utils/resize_utils.h"
 
 // people_msgs
 #include "people_msgs/PeoplePoseList.h"
@@ -21,7 +21,7 @@
 // facerec - https://github.com/bytefish/libfacerec
 // http://www.bytefish.de/blog/pca_in_opencv
 //#include <third_parties/libfacerec/include/facerec.hpp>
-#include <image_utils/drawing_utils.h>
+#include "vision_utils/drawing_utils.h"
 #include <opencv2/contrib/contrib.hpp>
 #include <people_msgs/PeoplePose.h>
 

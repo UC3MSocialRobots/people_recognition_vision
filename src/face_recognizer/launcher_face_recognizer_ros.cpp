@@ -55,7 +55,7 @@ it will recognizes (put a name on) the faces that the latter finds.
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 // ad_core
-#include <skill_templates/nano_skill.h>
+#include "vision_utils/nano_skill.h"
 // vision
 // people_msgs
 #include "face_recognizer.h"

@@ -28,7 +28,7 @@ ________________________________________________________________________________
 // AD
 #include "kinect/user_image_to_rgb.h"
 #include "time/timer.h"
-#include <databases_io/test_person_histogram_set_variables.h>
+#include "vision_utils/test_person_histogram_set_variables.h"
 #include "person_histogram_set.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,7 +222,7 @@ inline void test_multi_hist(const std::vector<std::string> & filename_prefixes,
   image_utils::imwrite_debug("/tmp/dist_matrix_illus_caption.png", phset.get_dist_matrix_illus_caption1());
 }
 
-#include <image_utils/io.h>
+#include "vision_utils/io.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -292,7 +292,7 @@ inline void test_structured_person_histogram_set_reco() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <databases_io/dgaitdb_filename.h>
+#include "vision_utils/dgaitdb_filename.h"
 void benchmark_gait_train() {
   std::string input_folder = "/home/user/Downloads/0datasets/DGaitDB_imgs/";
   DGaitDBFilename f(input_folder);

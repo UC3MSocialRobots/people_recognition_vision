@@ -44,9 +44,9 @@ displays them overlaid on the camera frame.
 #include <geom/rect_utils.h>
 #include <ros_utils/multi_subscriber.h>
 // vision
-#include <skill_templates/rgb_skill.h>
-#include <color/color_utils.h>
-#include <image_utils/drawing_utils.h>
+#include "vision_utils/rgb_skill.h"
+#include "vision_utils/color_utils.h"
+#include "vision_utils/drawing_utils.h"
 // people_msgs
 #include "people_msgs/PeoplePoseList.h"
 
