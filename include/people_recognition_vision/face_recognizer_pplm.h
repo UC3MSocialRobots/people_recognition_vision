@@ -35,13 +35,13 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 
 // #define DISPLAY
 
-#include "people_utils/pplm_template.h"
+#include "vision_utils/pplm_template.h"
 #include "vision_utils/opencv_face_detector.h"
 #include "people_recognition_vision/face_recognizer.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include "people_utils/ppl_attributes.h"
-#include "people_utils/people_pose_list_utils.h"
+#include "vision_utils/ppl_attributes.h"
+#include "vision_utils/people_pose_list_utils.h"
 
 class FaceRecognizerPPLM : public PPLMatcherTemplate {
 public:

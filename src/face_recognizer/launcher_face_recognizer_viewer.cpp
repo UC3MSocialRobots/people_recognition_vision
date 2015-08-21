@@ -41,8 +41,8 @@ displays them overlaid on the camera frame.
 #include <ros/ros.h>
 #include <boost/thread/mutex.hpp>
 // utils
-#include <geom/rect_utils.h>
-#include <ros_utils/multi_subscriber.h>
+#include "vision_utils/utils/rect_utils.h"
+#include "vision_utils/utils/multi_subscriber.h"
 // vision
 #include "vision_utils/rgb_skill.h"
 #include "vision_utils/color_utils.h"

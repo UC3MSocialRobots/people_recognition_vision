@@ -34,8 +34,8 @@ ________________________________________________________________________________
 #ifndef NITE_PPLM_H
 #define NITE_PPLM_H
 
-#include "people_utils/pplm_template.h"
-#include "people_utils/ppl_attributes.h"
+#include "vision_utils/pplm_template.h"
+#include "vision_utils/ppl_attributes.h"
 #include "ros/ros.h"
 #include <ros/package.h>
 

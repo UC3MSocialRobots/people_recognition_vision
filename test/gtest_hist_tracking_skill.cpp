@@ -24,7 +24,7 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <time/timer.h>
+#include "vision_utils/utils/timer.h"
 #include <test/matrix_testing.h>
 #include <ros_utils/rosmaster_alive.h>
 #include <vision_utils/img_path.h>

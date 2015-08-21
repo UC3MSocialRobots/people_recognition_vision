@@ -9,17 +9,16 @@
   <license>LGPLv3</license>
   <url type="website">http://ros.org/wiki/people_recognition_vision</url>
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
-  <exec_depend>roscpp</exec_depend>
-
+  <!-- dependencies -->
+  <depend>roscpp</depend>
   <depend>openni_camera</depend>
   <depend>openni_tracker</depend>
   <depend>openni_launch</depend>
 
+  <!-- AD -->
   <depend>people_msgs</depend>
-  <depend>people_utils</depend>
-  <depend>camera</depend>
   <depend>vision_utils</depend>
+  <depend>kinect</depend>
 
   <export>
     <!-- nodelet plugin="${prefix}/nodelets.xml" /-->

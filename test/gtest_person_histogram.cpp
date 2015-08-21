@@ -26,7 +26,7 @@ ________________________________________________________________________________
 // people_msgs
 #include "people_recognition_vision/person_histogram.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
-#include "time/timer.h"
+#include "vision_utils/utils/timer.h"
 #include "test/matrix_testing.h"
 
 using namespace test_person_histogram_set_variables;

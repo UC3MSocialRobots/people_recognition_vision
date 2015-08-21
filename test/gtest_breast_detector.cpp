@@ -23,7 +23,7 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <map/map_utils.h>
+#include "vision_utils/utils/map_utils.h"
 #include "people_recognition_vision/breast_detector.h"
 #include <vision_utils/img_path.h>
 #include "vision_utils/io.h"

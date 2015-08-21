@@ -74,15 +74,15 @@ This gives some more robust position detections.
 #ifndef UKF_MULTIMODAL_H
 #define UKF_MULTIMODAL_H
 
-#include <ros_utils/pt_utils.h>
-#include <ros_utils/multi_subscriber.h>
-#include <time/timer.h>
+#include "vision_utils/utils/pt_utils.h"
+#include "vision_utils/utils/multi_subscriber.h"
+#include "vision_utils/utils/timer.h"
 // people_msgs
 #include <people_msgs/MatchPPL.h>
-#include "people_utils/people_pose_list_utils.h"
-#include "people_utils/ppl_tf_utils.h"
-#include "people_utils/ppl_attributes.h"
-#include "people_utils/pplp_template.h"
+#include "vision_utils/people_pose_list_utils.h"
+#include "vision_utils/ppl_tf_utils.h"
+#include "vision_utils/ppl_attributes.h"
+#include "vision_utils/pplp_template.h"
 // people_recognition_vision
 #include "people_recognition_vision/ppl_gating.h"
 // ROS

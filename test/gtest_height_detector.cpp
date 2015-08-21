@@ -26,8 +26,8 @@ Some tests for HeightDetector
 
 // Bring in gtest
 #include <gtest/gtest.h>
-#include <map/map_utils.h>
-#include <time/timer.h>
+#include "vision_utils/utils/map_utils.h"
+#include "vision_utils/utils/timer.h"
 #include "people_recognition_vision/height_detector.h"
 
 //#define DISPLAY

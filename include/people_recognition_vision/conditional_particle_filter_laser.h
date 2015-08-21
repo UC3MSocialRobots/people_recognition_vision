@@ -26,8 +26,8 @@
 #define CONDITIONNAL_PARTICLE_FILTER_LASER_H
 
 #include "people_recognition_vision/conditional_particle_filter.h"
-#include <geom/geometry_utils.h>
-#include <combinatorics/combinatorics_utils.h>
+#include "vision_utils/utils/geometry_utils.h"
+#include "vision_utils/utils/combinatorics_utils.h"
 
 namespace conditional_particle_filter_laser {
 

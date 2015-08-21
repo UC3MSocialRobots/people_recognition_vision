@@ -35,11 +35,11 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 
 // #define DISPLAY
 
-#include "people_utils/pplm_template.h"
+#include "vision_utils/pplm_template.h"
 #include "people_recognition_vision/person_histogram.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include "kinect/user_image_to_rgb.h"
+#include "vision_utils/user_image_to_rgb.h"
 
 class PHSPPLM : public PPLMatcherTemplate {
 public:

@@ -27,8 +27,8 @@ A structured representation of the colors in a person.
 #define PERSON_HISTOGRAM_H
 
 // AD
-#include <cmatrix/cmatrix.h>
-#include "kinect/kinect_openni_utils.h"
+#include "vision_utils/utils/cmatrix.h"
+#include "vision_utils/kinect_openni_utils.h"
 #include "vision_utils/histogram_utils.h"
 #include "vision_utils/content_processing.h"
 #include "vision_utils/drawing_utils.h"

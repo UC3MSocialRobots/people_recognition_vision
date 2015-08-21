@@ -38,8 +38,8 @@ the tracks and the PPL detections.
 #ifndef EUCLIDEAN_PPLM_H
 #define EUCLIDEAN_PPLM_H
 
-#include "people_utils/pplm_template.h"
-#include <geom/distances.h>
+#include "vision_utils/pplm_template.h"
+#include "vision_utils/utils/distances.h"
 
 class EuclideanPPLM : public PPLMatcherTemplate {
 public:

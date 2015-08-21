@@ -43,14 +43,14 @@ A bunch of functions doing that with different kind of inputs are available,
 #define HIST_TRACKING_SKILL_H
 
 // AD
-#include "string/StringUtils.h"
+#include "vision_utils/utils/StringUtils.h"
 #include "vision_utils/color_utils.h"
-#include "time/timer.h"
+#include "vision_utils/utils/timer.h"
 #include "std_msgs/String.h"
 #include "vision_utils/nano_etts_api.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "vision_utils/content_processing.h"
-#include "kinect/user_image_to_rgb.h"
+#include "vision_utils/user_image_to_rgb.h"
 // people_msgs
 #include "people_recognition_vision/person_histogram_set.h"
 

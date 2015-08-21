@@ -27,9 +27,9 @@ ________________________________________________________________________________
 #ifndef PEOPLE_POSE_LIST_GATING_H
 #define PEOPLE_POSE_LIST_GATING_H
 
-#include <combinatorics/assignment_utils.h>
-#include "people_utils/ppl_attributes.h"
-#include "people_utils/people_pose_list_utils.h"
+#include "vision_utils/utils/assignment_utils.h"
+#include "vision_utils/ppl_attributes.h"
+#include "vision_utils/people_pose_list_utils.h"
 #include "people_recognition_vision/ukf_person_pose.h"
 
 #ifndef DEBUG_PRINT

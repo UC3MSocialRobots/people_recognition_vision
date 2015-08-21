@@ -23,7 +23,7 @@ ________________________________________________________________________________
 Some tests for ppl_gating namespace
  */
 #include <gtest/gtest.h>
-#include "people_utils/ppl_testing.h"
+#include "vision_utils/ppl_testing.h"
 #include "people_recognition_vision/ppl_gating.h"
 
 typedef people_msgs::PeoplePose PP;

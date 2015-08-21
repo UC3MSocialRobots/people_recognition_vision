@@ -30,9 +30,9 @@ ________________________________________________________________________________
 #include <opencv2/ml/ml.hpp>
 
 #include "people_recognition_vision/person_histogram.h"
-#include "combinatorics/assignment_utils.h"
+#include "vision_utils/utils/assignment_utils.h"
 #include "vision_utils/colormaps.h"
-#include <string/timestamp.h>
+#include "vision_utils/utils/timestamp.h"
 #include "vision_utils/array_to_color.h"
 #include "vision_utils/mini_stage.h"
 

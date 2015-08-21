@@ -24,7 +24,7 @@ A benchmark for our homebrew HeightDetector vs other
 state-of-the-art height detectors.
  */
 #include "people_recognition_vision/height_detector.h"
-#include <geom/Rect3.h>
+#include "vision_utils/utils/Rect3.h"
 typedef double Height;
 typedef cv::Point3f Pt3f;
 typedef geometry_utils::Rect3f Rect3f;

@@ -22,7 +22,7 @@
 
   */
 
-#include "debug/error.h"
+#include "vision_utils/utils/error.h"
 #include "people_recognition_vision/conditional_particle_filter_laser_ros.h"
 
 void test_select_index_with_probas() {

@@ -39,7 +39,7 @@ ________________________________________________________________________________
 
  */
 
-#include "vision_utils/nite_subscriber_template.h"
+#include "kinect/nite_subscriber_template.h"
 #include "people_recognition_vision/breast_detector.h"
 #include "vision_utils/dgaitdb_filename.h"
 

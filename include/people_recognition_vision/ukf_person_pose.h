@@ -26,8 +26,8 @@ thanks to Unscented Kalman Filters.
 #ifndef UKF_PERSON_POSE_H
 #define UKF_PERSON_POSE_H
 
-#include <data_filters/kalman/easykf-2.03/src/ukf.h>
-#include <combinatorics/combinatorics_utils.h>
+#include <easykf-2.03/src/ukf.h>
+#include "vision_utils/utils/combinatorics_utils.h"
 
 using namespace ukf::state;
 

@@ -30,11 +30,11 @@ thanks to the size of his/her breast.
 #include "people_recognition_vision/height_detector.h"
 #include "vision_utils/cloud_tilter.h"
 #include "vision_utils/mini_stage_plugins.h"
-#include <geom/Rect3.h>
-#include <string/find_and_replace.h>
-#include <string/string_split.h>
+#include "vision_utils/utils/Rect3.h"
+#include "vision_utils/utils/find_and_replace.h"
+#include "vision_utils/utils/string_split.h"
 //#define DEBUG
-#include <debug/debug2.h>
+#include "vision_utils/utils/debug2.h"
 // opencv
 #include <opencv2/ml/ml.hpp>
 // ros
