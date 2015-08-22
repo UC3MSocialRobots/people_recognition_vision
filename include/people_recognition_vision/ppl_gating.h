@@ -239,7 +239,7 @@ inline bool update_blobs_and_create_new_tracks
     if (blob->person_name.empty()
         || blob->person_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE
         || blob->person_name == people_msgs::PeoplePose::RECOGNITION_FAILED) {
-      blob->person_name = std::string("track") + StringUtils::cast_to_string(total_seen_tracks);
+      blob->person_name = std::string("track") + string_utils::cast_to_string(total_seen_tracks);
       ++total_seen_tracks;
     }
     DEBUG_PRINT("update_blobs_and_create_new_tracks(): Creating track '%s' in %s\n",

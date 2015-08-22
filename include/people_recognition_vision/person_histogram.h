@@ -729,7 +729,7 @@ private:
     // write nb of images
     if (_input_images_nb != 1) {
       cv::Rect text_roi = image_utils::putTextBackground
-                          (_illus_color_img, StringUtils::cast_to_string(_input_images_nb),
+                          (_illus_color_img, string_utils::cast_to_string(_input_images_nb),
                            cv::Point(_illus_color_img.cols / 2, _illus_color_img.rows - 5),
                            CV_FONT_HERSHEY_PLAIN, 2.f,
                            CV_RGB(255, 255, 255), CV_RGB(120, 0, 0), 1, 2);

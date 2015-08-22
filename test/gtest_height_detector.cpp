@@ -286,11 +286,11 @@ void test_height_all_values(const std::string filename_prefix,
     correct_keys.push_back(i+1);
   map_utils::map_keys_to_container(heights, out_keys);
   ASSERT_TRUE(out_keys == correct_keys)
-      << "heights:" << StringUtils::map_to_string(heights);
+      << "heights:" << string_utils::map_to_string(heights);
 #else
   ASSERT_TRUE(heights.size() == exp_nusers)
       << "exp_nusers:" << exp_nusers
-      << ", heights:" << StringUtils::map_to_string(heights);
+      << ", heights:" << string_utils::map_to_string(heights);
 #endif
   std::map<int, HeightDetector::Height>::const_iterator h_it = heights.begin();
   while(h_it != heights.end()) {
@@ -354,7 +354,7 @@ TEST(TestSuite, g3d2imgs) {
   bool ok = detec.height_meters_all_values
             (db.get_depth(), db.get_user(), depth_camera_model, heights, true, true, &illus);
   timer.printTime("height_meters_all_values()");
-  printf("heights:'%s'\n", StringUtils::map_to_string(heights).c_str());
+  printf("heights:'%s'\n", string_utils::map_to_string(heights).c_str());
   ASSERT_TRUE(ok);
 #ifdef DISPLAY
   db.display();

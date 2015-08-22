@@ -565,7 +565,7 @@ public:
 
   inline void save_back_up_file() const {
     std::ostringstream xml_filename_stream;
-    xml_filename_stream << "/tmp/PersonHistogramSet_backup_" << StringUtils::timestamp();
+    xml_filename_stream << "/tmp/PersonHistogramSet_backup_" << string_utils::timestamp();
     to_yaml(xml_filename_stream.str());
   }
 
@@ -589,7 +589,7 @@ public:
     for (unsigned int hist_idx = 0; hist_idx < nhists(); ++hist_idx) {
       PersonLabel curr_label = label(hist_idx);
       counts[curr_label] = counts[curr_label]+1;
-      std::string header = labels2letter[curr_label] + StringUtils::cast_to_string(counts[curr_label]);
+      std::string header = labels2letter[curr_label] + string_utils::cast_to_string(counts[curr_label]);
       ans.push_back(header);
     } // end loop hist_idx
     return true;

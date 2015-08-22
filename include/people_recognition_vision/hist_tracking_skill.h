@@ -43,7 +43,6 @@ A bunch of functions doing that with different kind of inputs are available,
 #define HIST_TRACKING_SKILL_H
 
 // AD
-#include "vision_utils/utils/StringUtils.h"
 #include "vision_utils/color_utils.h"
 #include "vision_utils/utils/timer.h"
 #include "std_msgs/String.h"

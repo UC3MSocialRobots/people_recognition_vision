@@ -102,8 +102,8 @@ public:
         return false;
     } // end for (track_idx)
     DEBUG_PRINT("HeightPPLM:new_ppl_heights:%s, track_heights:%s",
-                StringUtils::iterable_to_string(new_ppl_heights).c_str(),
-                StringUtils::iterable_to_string(track_heights).c_str());
+                string_utils::iterable_to_string(new_ppl_heights).c_str(),
+                string_utils::iterable_to_string(track_heights).c_str());
 
     // compute height differences
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {

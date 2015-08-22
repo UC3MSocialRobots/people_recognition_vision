@@ -151,10 +151,10 @@ TEST(TestSuite, assign_n_users) {
     PersonHistogramSet::LabelMatch label_assign = skill.get_best_label_assign();
     unsigned int exp_nlabels = skill.get_curr_phset().nlabels();
     ASSERT_TRUE(label_assign.size()  == exp_nlabels)
-        << "label_assign:" << StringUtils::map_to_string(label_assign);
+        << "label_assign:" << string_utils::map_to_string(label_assign);
     for (unsigned int label_idx = 1; label_idx <= exp_nlabels; ++label_idx)
       ASSERT_TRUE(label_assign[label_idx] == (int) label_idx)
-          << "label_assign:" << StringUtils::map_to_string(label_assign);
+          << "label_assign:" << string_utils::map_to_string(label_assign);
   } // end loop nusers_curr
 }
 

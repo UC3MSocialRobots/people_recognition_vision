@@ -140,14 +140,14 @@ inline void test_generate_headers(const std::vector<T1> & arg1,
   std::vector<std::string> headers;
   phset.generate_headers(titlemaps::int_to_uppercase_letter, headers);
   ASSERT_TRUE(headers == exp_headers)
-      << "exp_headers:" << StringUtils::iterable_to_string(exp_headers)
-      << ", labels:" << StringUtils::iterable_to_string(headers);
+      << "exp_headers:" << string_utils::iterable_to_string(exp_headers)
+      << ", labels:" << string_utils::iterable_to_string(headers);
 }
 
 TEST(TestSuite, generate_headers_david) {
   std::vector<std::string> exp_headers;
   for (unsigned int i = 0; i < david_hists_nb; ++i)
-    exp_headers.push_back("A" + StringUtils::cast_to_string(i+1));
+    exp_headers.push_back("A" + string_utils::cast_to_string(i+1));
   test_generate_headers(david_filename_prefixes, david_user_idx,
                         david_kinect_serials, david_labels, exp_headers);
 }
@@ -157,7 +157,7 @@ TEST(TestSuite, generate_headers_david) {
 TEST(TestSuite, generate_headers_juggling) {
   std::vector<std::string> exp_headers;
   for (unsigned int i = 0; i < juggling_hists_nb; ++i)
-    exp_headers.push_back("A" + StringUtils::cast_to_string(i+1));
+    exp_headers.push_back("A" + string_utils::cast_to_string(i+1));
   test_generate_headers(juggling_filename_prefixes, juggling_seeds,
                         juggling_kinect_serials, juggling_labels, exp_headers);
 }
@@ -167,11 +167,11 @@ TEST(TestSuite, generate_headers_juggling) {
 TEST(TestSuite, generate_headers_all) {
   std::vector<std::string> exp_headers;
   for (unsigned int i = 0; i < juggling_hists_nb; ++i)
-    exp_headers.push_back("A" + StringUtils::cast_to_string(i+1));
+    exp_headers.push_back("A" + string_utils::cast_to_string(i+1));
   for (unsigned int i = 0; i < alberto_hists_nb; ++i)
-    exp_headers.push_back("B" + StringUtils::cast_to_string(i+1));
+    exp_headers.push_back("B" + string_utils::cast_to_string(i+1));
   for (unsigned int i = 0; i < alvaro_hists_nb; ++i)
-    exp_headers.push_back("C" + StringUtils::cast_to_string(i+1));
+    exp_headers.push_back("C" + string_utils::cast_to_string(i+1));
   test_generate_headers(refset_filename_prefixes, refset_seeds,
                         refset_kinect_serials, refset_labels(), exp_headers);
 }

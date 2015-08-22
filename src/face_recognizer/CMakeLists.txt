@@ -1,5 +1,5 @@
 add_executable(test_face_recognizer.exe test_face_recognizer.cpp )
-target_link_libraries(test_face_recognizer.exe string_utils  ${catkin_LIBRARIES})
+target_link_libraries(test_face_recognizer.exe   ${catkin_LIBRARIES})
 
 add_executable(launcher_face_recognizer_ros.exe launcher_face_recognizer_ros.cpp)
 target_link_libraries(launcher_face_recognizer_ros.exe  ${catkin_LIBRARIES})

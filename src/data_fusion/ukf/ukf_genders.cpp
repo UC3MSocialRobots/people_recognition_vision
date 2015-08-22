@@ -34,8 +34,8 @@ ________________________________________________________________________________
 
 
 #include <std_msgs/Int16.h>
+#include <ros/ros.h>
 // AD
-#include "vision_utils/utils/StringUtils.h"
 #include "vision_utils/utils/combinatorics_utils.h"
 #include <easykf-2.03/src/ukf.h>
 #include <gnuplot-cpp/gnuplot_i.hpp>

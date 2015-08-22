@@ -268,7 +268,7 @@ public:
            << training_mat.at<float>(sample_idx, 1) << ' '
            << training_mat.at<float>(sample_idx, 2) << ' '
            << labels_mat.at<float>(sample_idx) << std::endl;
-    StringUtils::save_file("/tmp/BreastDetector.data", data.str());
+    string_utils::save_file("/tmp/BreastDetector.data", data.str());
     instr << "gnuplot -e \""
           << "set palette rgb 33,13,10; "
           << "splot '/tmp/BreastDetector.data' using 1:2:3:4 with points palette title 'Gender'; "
@@ -548,7 +548,7 @@ protected:
     } // end loop pt_idx
     // display bins
     for (unsigned int bin_idx = 0; bin_idx < NBINS; ++bin_idx) {
-      debugPrintf("bin %i:'%s'\n", bin_idx, StringUtils::iterable_to_string(binsZ[bin_idx]).c_str());
+      debugPrintf("bin %i:'%s'\n", bin_idx, string_utils::iterable_to_string(binsZ[bin_idx]).c_str());
     }
 
     // find the median point along the Z axis
@@ -564,9 +564,9 @@ protected:
         _feature[bin_idx] = -avgZ + median(bin_values->begin(), bin_values->end());
       //_feature[bin_idx] = -avgZ + *std::max_element(bin_values->begin(), bin_values->end());
     } // end loop bin_idx
-    debugPrintf("feature:'%s'\n", StringUtils::iterable_to_string(_feature).c_str());
+    debugPrintf("feature:'%s'\n", string_utils::iterable_to_string(_feature).c_str());
     normalize(_feature);
-    debugPrintf("feature:'%s'\n", StringUtils::iterable_to_string(_feature).c_str());
+    debugPrintf("feature:'%s'\n", string_utils::iterable_to_string(_feature).c_str());
 
     return predict_svm(method);
   } // end convert_head2feet_path_to_feature()
@@ -1115,8 +1115,8 @@ protected:
           _best_template = t;
           // printf("New best! best_dist:%g, a:%g, b:%g, s:%g\n", best_dist, a, b, s);
           //      printf("tvec:'%s', _slices[slice_idx]:'%s'\n",
-          //             StringUtils::iterable_to_string(tvec).c_str(),
-          //             StringUtils::iterable_to_string(_slices[slice_idx]).c_str());
+          //             string_utils::iterable_to_string(tvec).c_str(),
+          //             string_utils::iterable_to_string(_slices[slice_idx]).c_str());
         }
       } // end loop slice_idx
     } // end loop template_idx
@@ -1151,9 +1151,9 @@ protected:
     // call octave (system call)
     //printf("instr:'%s'\n", instr.str().c_str());
     std::string octave_output = system_utils::exec_system_get_output(instr.str().c_str());
-    while (StringUtils::find_and_replace(octave_output, " =", "=")) {}
-    while (StringUtils::find_and_replace(octave_output, "\n", " ")) {}
-    while (StringUtils::find_and_replace(octave_output, "  ", " ")) {}
+    while (string_utils::find_and_replace(octave_output, " =", "=")) {}
+    while (string_utils::find_and_replace(octave_output, "\n", " ")) {}
+    while (string_utils::find_and_replace(octave_output, "  ", " ")) {}
     //printf("octave_output:'%s'\n", octave_output.c_str());
 
     // default values
@@ -1162,22 +1162,22 @@ protected:
     _best_template = &(_precomputed_templates.front());
     // parse results
     std::vector<std::string> words;
-    StringUtils::StringSplit(octave_output, " ", &words);
+    string_utils::StringSplit(octave_output, " ", &words);
     int nwords = words.size(), success_idx = nwords-1;
     while (success_idx >= 0 && words[success_idx] != "success=")
       --success_idx;
     if (success_idx < 0
         || success_idx + 13 > nwords-1 // we read 13 values
-        || StringUtils::cast_from_string<int>(words[success_idx+1]) <= 0) {
+        || string_utils::cast_from_string<int>(words[success_idx+1]) <= 0) {
       printf("Octave failed in optimizing!\n");
       return false;
     }
-    _best_template->a = StringUtils::cast_from_string<double>(words[success_idx+3]);
-    _best_template->b = StringUtils::cast_from_string<double>(words[success_idx+4]);
-    _best_template->s = StringUtils::cast_from_string<double>(words[success_idx+5]);
-    _best_slice_idx = StringUtils::cast_from_string<int>(words[success_idx+7]);
-    double best_error = StringUtils::cast_from_string<double>(words[success_idx+9]);
-    double time = 1000 * StringUtils::cast_from_string<double>(words[success_idx+13]);
+    _best_template->a = string_utils::cast_from_string<double>(words[success_idx+3]);
+    _best_template->b = string_utils::cast_from_string<double>(words[success_idx+4]);
+    _best_template->s = string_utils::cast_from_string<double>(words[success_idx+5]);
+    _best_slice_idx = string_utils::cast_from_string<int>(words[success_idx+7]);
+    double best_error = string_utils::cast_from_string<double>(words[success_idx+9]);
+    double time = 1000 * string_utils::cast_from_string<double>(words[success_idx+13]);
     BreastDetector::template_matching_fn(*_best_template, false);
     printf("after octave: time:%g s, a:%g, b:%g, c:%g, best_error:%g\n",
            time, _best_template->a, _best_template->b, _best_template->s, best_error);

@@ -49,7 +49,7 @@ void ASSERT_SOUND_PH(const PersonHistogram & ph,
   ASSERT_TRUE(values.size() == PersonHistogram::BODY_PARTS);
   for (unsigned int i = 1; i <= PersonHistogram::BODY_PARTS; ++i)
     ASSERT_TRUE(std::find(values.begin(), values.end(), (uchar) i)
-                != values.end()) << "values:" << StringUtils::iterable_to_int_string(values);
+                != values.end()) << "values:" << string_utils::iterable_to_int_string(values);
 
   // check illus images
   int cols = ph.get_illus_color_img().cols, rows = ph.get_illus_color_img().rows;

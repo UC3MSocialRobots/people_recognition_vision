@@ -83,7 +83,7 @@ public:
     wait_key();
     ROS_WARN_THROTTLE(1, "user_labels:'%s' (size:%i), time for "
                       "compute_vector_of_histograms(): %g ms, total callback:%g ms",
-                      StringUtils::accessible_to_string(user_labels).c_str(),
+                      string_utils::accessible_to_string(user_labels).c_str(),
                       nusers,
                       time_compute_vector_of_histograms, timer_callback.getTimeMilliseconds());
 

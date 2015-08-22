@@ -124,7 +124,7 @@ public:
     _matcher_weights.resize(nmatchers, 1.);
     for (unsigned int i = 0; i < nmatchers; ++i) {
       std::vector<std::string> words;
-      StringUtils::StringSplit(_matcher_services[i], ":", &words);
+      string_utils::StringSplit(_matcher_services[i], ":", &words);
       if (words.size() < 1 || words.size() > 2) {
         ROS_WARN("Error parsing service:'%s'\n", _matcher_services[i].c_str());
         continue;
@@ -135,7 +135,7 @@ public:
       if (words.size() == 1)
         continue;
       bool conv_success = false;
-      double weight = StringUtils::cast_from_string<double>(words[1], conv_success);
+      double weight = string_utils::cast_from_string<double>(words[1], conv_success);
       if (conv_success)
         _matcher_weights[i] = weight;
     } // end for service_idx
@@ -193,8 +193,8 @@ public:
            "and displaying cost matrices every %g seconds."
            "use_gating:%i, human_walking_speed:%g m/s\n",
            _ppl_subs.nTopics(), _ppl_subs.getTopics().c_str(),
-           _matchers.size(), StringUtils::iterable_to_string(_matcher_services).c_str(),
-           StringUtils::iterable_to_string(_matcher_weights).c_str(),
+           _matchers.size(), string_utils::iterable_to_string(_matcher_services).c_str(),
+           string_utils::iterable_to_string(_matcher_weights).c_str(),
            _track_timeout,
            get_ppl_topic().c_str(), _blobs_pub.getTopic().c_str(),
            _cost_matrices_display_timeout, _use_gating, _human_walking_speed);
@@ -342,7 +342,7 @@ public:
     if (nmatches == 0) {
       ROS_WARN("UkfMultiModal: Could not estimate the cost matrix "
              "with any of the %i matchers ('%s')!\n",
-             _matchers.size(), StringUtils::iterable_to_string(_matcher_services).c_str());
+             _matchers.size(), string_utils::iterable_to_string(_matcher_services).c_str());
       return;
     }
 

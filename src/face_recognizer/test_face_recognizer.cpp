@@ -82,9 +82,9 @@ inline std::vector<std::string> create_google_genders_images_filenames() {
 
 inline std::vector<std::string> create_yale_images_filenames() {
   std::vector<std::string> images_filenames;
-  StringUtils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/index.txt",
+  string_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/index.txt",
                                    images_filenames);
-  //ROS_WARN("n_pics:%i", images_filenames.size());
+  //printf("n_pics:%i", images_filenames.size());
   return images_filenames;
 }
 
@@ -166,19 +166,19 @@ void train_yale_small_face_recognizer() {
   std::vector<std::string> filenames_big = create_yale_images_filenames(),
       filenames_small, training_set_filenames, test_set_filenames;
   decimate_vector(filenames_big, filenames_small, 1.f / 10);
-  ROS_WARN("filenames size:%i -> %i", filenames_big.size(), filenames_small.size());
+  printf("filenames size:%i -> %i", filenames_big.size(), filenames_small.size());
 
   // make both sets
   split_vector_in_two(filenames_small, training_set_filenames, test_set_filenames, 1 / 2.f);
-  ROS_WARN("training_set size:%i, test_set size:%i",
+  printf("training_set size:%i, test_set size:%i",
            training_set_filenames.size(), test_set_filenames.size());
-  StringUtils::save_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
+  string_utils::save_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
                                training_set_filenames);
-  StringUtils::save_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
+  string_utils::save_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
                                test_set_filenames);
 #else
   std::vector<std::string> training_set_filenames;
-  StringUtils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
+  string_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
                                    training_set_filenames);
 #endif
 
@@ -205,7 +205,7 @@ void test_people_lab_face_recognizer() {
         CV_LOAD_IMAGE_COLOR);
   face_recognition::PersonName predict_result =
       reco.predict_non_preprocessed_face(test);
-  ROS_WARN("predict_result:'%s'", predict_result.c_str());
+  printf("predict_result:'%s'", predict_result.c_str());
 
   // add a new face
   cv::Mat3b new_pic = cv::imread(IMG_DIR "arnaud001.png", CV_LOAD_IMAGE_COLOR);
@@ -226,7 +226,7 @@ void test_google_genders_face_recognizer() {
   cv::Mat3b test = cv::imread(IMG_DIR "arnaud001.png", CV_LOAD_IMAGE_COLOR);
   face_recognition::PersonName predict_result =
       reco.predict_color_image(test);
-  ROS_WARN("predict_result:'%s'", predict_result.c_str());
+  printf("predict_result:'%s'", predict_result.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -245,7 +245,7 @@ void test_google_genders_face_recognizer_varying_size() {
     cv::resize(test, test_small, cv::Size(), ratio, ratio, CV_INTER_LANCZOS4);
     face_recognition::PersonName predict_result =
         reco.predict_color_image(test_small);
-    ROS_WARN("predict_result:'%s'", predict_result.c_str());
+    printf("predict_result:'%s'", predict_result.c_str());
   } // end loop ratio
 }
 
@@ -283,7 +283,7 @@ void benchmark_yale_small_with_yale_small2() {
   reco.from_xml_file(FACES_DIR "Yale_B_small/index.xml");
 
   std::vector<std::string> test_filenames;
-  StringUtils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
+  string_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
                                    test_filenames);
   reco.benchmark_color_images_filenames
       (test_filenames, image_filenames_to_names(test_filenames, &yale_is_woman));
@@ -293,8 +293,6 @@ void benchmark_yale_small_with_yale_small2() {
 
 int main(/*int argc, char** argv*/) {
   maggieDebug2("test_face_recognizer()");
-  ros::Time::init();
-
   int idx = 1;
   printf("%i: train_google_genders_face_recognizer();\n", idx++);
   printf("%i: train_yale_face_recognizer();\n", idx++);

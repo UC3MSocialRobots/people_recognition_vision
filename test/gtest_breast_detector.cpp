@@ -60,7 +60,7 @@ TEST(TestSuite, test_template_fn) {
     ms.draw_axes();
     // plot shape
     BreastDetector::template_matching_fn_x(tvec, a, b, s);
-    //      printf("tvec:'%s'\n", StringUtils::iterable_to_string(tvec).c_str());
+    //      printf("tvec:'%s'\n", string_utils::iterable_to_string(tvec).c_str());
     mini_stage_plugins::plot_xy(ms, tvec, CV_RGB(0,0,0), 2);
     cv::imshow(_window_name, ms.get_viz());
     char c = cv::waitKey(50);

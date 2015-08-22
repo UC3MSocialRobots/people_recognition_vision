@@ -96,9 +96,9 @@ int main(int argc, char**argv) {
   if (argc != 2)
     print_help_and_exit(argc, argv);
   std::string input_file(argv[1]),
-      folder = StringUtils::extract_folder_from_full_path(input_file);
+      folder = string_utils::extract_folder_from_full_path(input_file);
   std::vector<std::string> lines;
-  StringUtils::retrieve_file_split(input_file, lines, true);
+  string_utils::retrieve_file_split(input_file, lines, true);
   unsigned int nlines = lines.size();
   if (nlines == (unsigned int) 0)
     print_help_and_exit(argc, argv);
@@ -111,7 +111,7 @@ int main(int argc, char**argv) {
     if (line.size() >= 2 && line.substr(0, 2) == "//") // comment line
       continue;
     std::vector<std::string> words;
-    StringUtils::StringSplit(line, " ", &words);
+    string_utils::StringSplit(line, " ", &words);
     if (words.size() < 2 || words.size() > 4) {
       printf("Line #%i '%s' does not respect the syntax! Skipping.\n",
              i, line.c_str());
@@ -138,9 +138,9 @@ int main(int argc, char**argv) {
       printf("Could not read file '%s'\n", filename_prefix.c_str());
       continue;
     }
-    Height ground_truth_height_m = StringUtils::cast_from_string<Height>(words[1]);
+    Height ground_truth_height_m = string_utils::cast_from_string<Height>(words[1]);
     if (words.size() == 3) {
-      unsigned char user_value = StringUtils::cast_from_string<int>(words[2]);
+      unsigned char user_value = string_utils::cast_from_string<int>(words[2]);
       // printf("Applying user value %i\n", (int) user_value);
       user_mask = (user_mask == user_value);
       //cv::imshow("user_mask", user_mask); cv::waitKey(0);
