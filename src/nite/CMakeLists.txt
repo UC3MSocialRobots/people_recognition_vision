@@ -1,3 +1,3 @@
-add_executable(nite_pplm.exe 
-				nite_pplm.cpp  )
+add_executable(nite_pplm.exe nite_pplm.cpp  )
 target_link_libraries(nite_pplm.exe ${catkin_LIBRARIES})
+add_dependencies(nite_pplm.exe        ${people_msgs_EXPORTED_TARGETS})
