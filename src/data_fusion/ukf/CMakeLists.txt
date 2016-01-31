@@ -1,4 +1,7 @@
-add_executable(ukf_multimodal.exe ukf_multimodal.cpp  )
+add_executable(ukf_multimodal.exe ukf_multimodal.cpp
+  ../../../include/people_recognition_vision/ppl_gating.h
+  ../../../include/people_recognition_vision/ukf_multimodal.h
+)
 target_link_libraries(ukf_multimodal.exe  gsl blas lap_vision_utils  ${catkin_LIBRARIES})
 add_dependencies(ukf_multimodal.exe       ${people_msgs_EXPORTED_TARGETS})
 

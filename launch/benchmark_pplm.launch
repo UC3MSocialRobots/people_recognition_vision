@@ -1,10 +1,9 @@
 <launch>
 <arg name="robot" value="hal"/>
-<arg name="viewer" default="false"/>
-<arg name="input_use_rlpd" default="true"/>
-<arg name="input_use_ktp" default="false"/>
-<arg name="rate" value="2"/> <!-- Hz -->
-
+<!-- the RGB files to be played - the folder is, by default, ~/.ros/ -->
+<arg name="rgbfiles" default="/media/disk/Datasets/rlpd/frames/*rgb*"/>
+<!-- true to see all images and rviz -->
+<arg name="display" default="true"/>
 <!-- spawn all PPLM -->
 <include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
   <arg name="robot" value="$(arg robot)" />
@@ -18,113 +17,15 @@
        value="$(find vision_utils)/data/images/faces/people_lab/index_rlpd.xml"/>
 </include>
 
-<!-- input data and truth PPL publisher -->
-<group ns="$(arg robot)">
-  <node if="$(arg input_use_ktp)"
-    pkg="vision_utils" type="KTP2PPL.exe"
-    name="KTP2PPL"  output="screen" required="true"
-    args="/media/disk/Datasets/KTP_dataset_images/ground_truth/Still_gt2D.txt
-          _display:=true" />
-</group>
-
-<include  if="$(arg input_use_rlpd)"
-          file="$(find vision_utils)/launch/database_player.launch">
-  <arg name="robot" value="$(arg robot)" />
-  <arg name="display" value="false" />
-  <arg name="rate" value="$(arg rate)"/>
-</include>
-
-<group ns="$(arg robot)">
-  <!-- TF converter /openni_rgb_optical_frame -> /base_link
-        - cf Kinect2baseLink_TF.txt -->
-  <node pkg="tf" type="static_transform_publisher" name="base_link_tf_broadcaster"
-        args="-0.27 1.271 0.002    0 0.735 -0.678 0    /openni_rgb_optical_frame  /base_link   100"/>
-
+  <!-- PPLM benchmarker -->
+<remap from="match_ppl" to="$(arg robot)/euclidean_pplm/match_ppl"/>
 <!--
-  <arg name="pplp_topic" default="anon_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/face_recognizer_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/height_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/nite_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/phs_pplm/match_ppl"/>
 -->
-  <arg name="pplp_topic" default="ground_truth_ppl"/>
-  <arg name="ukfs_topics" default="ukf_E/ppl;ukf_F/ppl;ukf_H/ppl;ukf_N/ppl;ukf_P/ppl;ukf_EF/ppl;ukf_EH/ppl;ukf_EP/ppl;ukf_EN/ppl;ukf_EFP/ppl;ukf_EFHPN/ppl"/>
-  <arg name="common_ukf_args" default="_static_frame_id:=/openni_rgb_optical_frame
-                                       _track_timeout:=20  _cost_matrices_display_timeout:=-1
-                                       _ppl_input_topics:=$(arg pplp_topic)"/>
-
-  <!-- all the PPLM configurations -->
-<!--
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_E"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=euclidean_pplm/match_ppl" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_F"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=face_recognizer_pplm/match_ppl" />
--->
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_H"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=height_pplm/match_ppl" />
-
-<!--
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_N"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=nite_pplm/match_ppl" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_P"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_EF"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=face_recognizer_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_EH"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=euclidean_pplm/match_ppl:1;height_pplm/match_ppl:1" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_EP"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_EN"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=nite_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_EFP"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl:1;face_recognizer_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
-
-  <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
-        output="screen" respawn="false" name="ukf_EFHPN"
-        args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl:1;face_recognizer_pplm/match_ppl:1;height_pplm/match_ppl:1;nite_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
--->
-
-  <!-- start all ukf_multimodal nodes -->
-  <node pkg="rostopic" type="rostopic" name="ukf_starter" output="screen"
-        args="pub UKF_MULTIMODAL_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
-
-  <!-- PPL benchmarker -->
-  <node pkg="vision_utils" type="pplp_benchmarker.exe"
-    name="pplp_benchmarker"  output="screen"
-    args="_ppl_topics:=$(arg ukfs_topics)
-          _errors_display_timeout:=2
-          _verbose_output:=false
-          _results_filename:=$(find people_recognition_vision)/pplp_benchmarker_results.txt" />
-
-  <!-- PPL viewer -->
-  <node if="$(arg viewer)" pkg="vision_utils" type="ppl_viewer.exe"
-    name="ppl_viewer"  output="screen"
-    args="_ppl_topics:='ground_truth_ppl;$(arg ukfs_topics)'
-          _width:=600 _height:=800
-          _draw_track_trails:=true
-          _track_history_size:=30
-          _draw_track_images:=true
-          _reprojection_mode:=xz
-          _xmin:=-3 _xmax:=3 _ymin:=0 _ymax:=4" />
-<!--
-    args="_ppl_topics:='ukf_F/ppl'
-          _save_images:=true
-          _reprojection_mode:=xy
-          _xmin:=-3 _xmax:=3 _ymin:=-8 _ymax:=1" />
--->
-</group>
+<node pkg="people_recognition_vision" type="pplm_benchmarker.exe"
+  name="pplm_benchmarker"  output="screen"
+  args=" $(arg rgbfiles) _display:=$(arg display)" />
 </launch>

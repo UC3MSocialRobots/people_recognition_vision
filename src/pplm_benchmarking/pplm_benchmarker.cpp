@@ -22,10 +22,119 @@ ________________________________________________________________________________
 
 \todo Description of the file
  */
+#include "vision_utils/rlpd2imgs.h"
+#include "vision_utils/images2ppl.h"
+#include "vision_utils/utils/timer.h"
+#include "vision_utils/utils/assignment_utils.h"
+// people_msgs
+#include <people_msgs/MatchPPL.h>
 #include <ros/ros.h>
 
 int main(int argc, char** argv) {
   ros::init(argc, argv, "pplm_benchmarker");
-  ros::spin();
+  // get input files
+  if (argc < 2) {
+    ROS_WARN("Synopsis: %s [RGB files]", argv[0]);
+    return -1;
+  }
+  std::ostringstream files;
+  for (int argi = 1; argi < argc; ++argi) // 0 is the name of the exe
+    files << argv[argi]<< ";";
+  RLPD2Imgs reader;
+  bool repeat = false;
+  if (!reader.from_file(files.str(), repeat)) {
+    ROS_ERROR("Could not parse files '%s'", files.str().c_str());
+    return -1;
+  }
+
+  // get params
+  ros::NodeHandle nh_public, nh_private("~");
+  bool display = false;
+  nh_private.param("display", display, display);
+
+  // service
+  ros::ServiceClient matcher = nh_public.serviceClient<people_msgs::MatchPPL>("match_ppl");
+
+  // start the loop
+  ppl_utils::Images2PPL ground_truth_ppl_conv;
+  people_msgs::MatchPPLRequest req;
+  people_msgs::MatchPPLResponse res;
+  std_msgs::Header curr_header;
+  curr_header.frame_id = "openni_rgb_optical_frame";
+  curr_header.stamp = ros::Time::now();
+  while (ros::ok()) {
+    Timer timer;
+    if (!reader.go_to_next_frame()) {
+      ROS_ERROR("pplm_benchmarker: couldn't go_to_next_frame()!");
+      break;
+    }
+    ROS_INFO_THROTTLE(10, "Time for go_to_next_frame(): %g ms.", timer.getTimeMilliseconds());
+
+    // transform to PPL
+    curr_header.stamp += ros::Duration(.2); // 5 Hz
+    if (!ground_truth_ppl_conv.convert(reader.get_bgr(),
+                                       reader.get_depth(),
+                                       reader.get_ground_truth_user(),
+                                       NULL,
+                                       &curr_header)) {
+      ROS_WARN("ground_truth_ppl_conv.convert() failed!");
+      continue;
+    }
+
+    // call "MatchPPL" service
+    req.tracks = req.new_ppl;
+    req.new_ppl = ground_truth_ppl_conv.get_ppl();
+    unsigned int ntracks = req.tracks.poses.size(), nppl = req.new_ppl.poses.size();
+    if (nppl < 2) {
+      ROS_WARN_THROTTLE(5, "Only %i users, no recognition to be made!", nppl);
+      continue;
+    }
+
+    if (!matcher.call(req, res) || !res.match_success) {
+      ROS_WARN("Service '%s' failed!", matcher.getService().c_str());
+      continue;
+    }
+    // mix costs of results with avg_costs
+    unsigned int costs_size = nppl * ntracks;
+    if (res.costs.size() != costs_size) {
+      ROS_WARN("pplm_benchmarker::ppl_cb(): PPLM '%s' returned a cost matrix with "
+             "wrong dimensions (expected %i values, got %i)",
+             matcher.getService().c_str(), costs_size, res.costs.size());
+      continue;
+    }
+
+    // compute assignment
+    assignment_utils::Cost best_cost;
+    assignment_utils::MatchList ppl2track_affectations;
+    if (!assignment_utils::linear_assign_from_cost_vec
+        (res.costs, nppl, ntracks, ppl2track_affectations, best_cost)) {
+      ROS_WARN("linear_assign_from_cost_vec() failed!");
+      continue;
+    }
+
+    // check if the recognition is correct
+    unsigned int nassigns = ppl2track_affectations.size();
+    for (int i = 0; i < nassigns; ++i) {
+      int ppli = ppl2track_affectations[i].first, tracki  = ppl2track_affectations[i].second;
+      if (ppli == assignment_utils::UNASSIGNED || tracki == assignment_utils::UNASSIGNED) {
+        ROS_WARN_THROTTLE(5, "Uncomplete assignment! '%s'",
+                 assignment_utils::assignment_list_to_string(ppl2track_affectations).c_str());
+        continue;
+      }
+      //std::string track = req.tracks[], ppl;
+      std::string ppl_name,track_name;
+      if (!ppl_utils::get_attribute_readonly(req.new_ppl.poses[ppli], "user_multimap_name", ppl_name)
+          || !ppl_utils::get_attribute_readonly(req.tracks.poses[tracki], "user_multimap_name", track_name)) {
+        ROS_WARN("Couldn't get names!");
+        continue;
+      }
+      printf("Match %i: PPL '%s' <-> track '%s'\n", i, ppl_name.c_str(), track_name.c_str());
+    } // end for i
+
+    // display
+    if (display)
+      reader.display();
+    ros::spinOnce();
+  } // end while(ros::ok())
   return 0;
 }
