@@ -60,10 +60,10 @@
                           |FACE_RECOGNIZER_ADD_PICS_STOP;face_recognizer_add_pics_stop;0"'/>
 
   <!-- conversion to ROS rviz marker -->
-  <node pkg="people_utils" type="ppl2marker.exe"
+  <node pkg="vision_utils" type="ppl2marker.exe"
         output="screen" name="ppl2marker_face_recognizer_person"
         args="_red:=1 _green:=0 _blue:=1 _input_topic:=face_recognizer_person/ppl" />
-  <node pkg="people_utils" type="ppl2marker.exe"
+  <node pkg="vision_utils" type="ppl2marker.exe"
         output="screen" name="ppl2marker_face_recognizer_gender"
         args="_red:=1 _green:=1 _blue:=0 _input_topic:=face_recognizer_gender/ppl" />
 </group>
