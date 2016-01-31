@@ -21,7 +21,7 @@
 <!-- input data and truth PPL publisher -->
 <group ns="$(arg robot)">
   <node if="$(arg input_use_ktp)"
-    pkg="people_detection_vision" type="KTP2PPL.exe"
+    pkg="vision_utils" type="KTP2PPL.exe"
     name="KTP2PPL"  output="screen" required="true"
     args="/media/disk/Datasets/KTP_dataset_images/ground_truth/Still_gt2D.txt
           _display:=true" />
@@ -103,7 +103,7 @@
         args="pub UKF_MULTIMODAL_START std_msgs/Int16 '{data: 0}' --latch  -1"/>
 
   <!-- PPL benchmarker -->
-  <node pkg="people_detection_vision" type="pplp_benchmarker.exe"
+  <node pkg="vision_utils" type="pplp_benchmarker.exe"
     name="pplp_benchmarker"  output="screen"
     args="_ppl_topics:=$(arg ukfs_topics)
           _errors_display_timeout:=2
