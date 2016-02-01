@@ -3,7 +3,7 @@
 <!-- the RGB files to be played - the folder is, by default, ~/.ros/ -->
 <arg name="rgbfiles" default="/media/disk/Datasets/rlpd/frames/*rgb*"/>
 <!-- true to see all images and rviz -->
-<arg name="display" default="true"/>
+<arg name="display" default="false"/>
 <!-- spawn all PPLM -->
 <include file="$(find people_recognition_vision)/launch/ukf_multimodal_lite.launch">
   <arg name="robot" value="$(arg robot)" />
@@ -18,14 +18,14 @@
 </include>
 
   <!-- PPLM benchmarker -->
-<remap from="match_ppl" to="$(arg robot)/euclidean_pplm/match_ppl"/>
-<!--
-<remap from="match_ppl" to="$(arg robot)/face_recognizer_pplm/match_ppl"/>
 <remap from="match_ppl" to="$(arg robot)/height_pplm/match_ppl"/>
+<!--
+<remap from="match_ppl" to="$(arg robot)/euclidean_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/face_recognizer_pplm/match_ppl"/>
 <remap from="match_ppl" to="$(arg robot)/nite_pplm/match_ppl"/>
 <remap from="match_ppl" to="$(arg robot)/phs_pplm/match_ppl"/>
 -->
 <node pkg="people_recognition_vision" type="pplm_benchmarker.exe"
-  name="pplm_benchmarker"  output="screen"
-  args=" $(arg rgbfiles) _display:=$(arg display)" />
+  name="pplm_benchmarker"  output="screen"  required="true"
+  args="_display:=$(arg display) _names:='1;2;3' $(arg rgbfiles)" />
 </launch>

@@ -22,10 +22,12 @@ ________________________________________________________________________________
 
 \todo Description of the file
  */
-#include "vision_utils/rlpd2imgs.h"
 #include "vision_utils/images2ppl.h"
-#include "vision_utils/utils/timer.h"
+#include "vision_utils/rlpd2imgs.h"
 #include "vision_utils/utils/assignment_utils.h"
+#include "vision_utils/utils/map_utils.h"
+#include "vision_utils/utils/string_casts_stl.h"
+#include "vision_utils/utils/timer.h"
 // people_msgs
 #include <people_msgs/MatchPPL.h>
 #include <ros/ros.h>
@@ -51,21 +53,38 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh_public, nh_private("~");
   bool display = false;
   nh_private.param("display", display, display);
+  std::string names_str = "";
+  nh_private.param("names", names_str, names_str);
+  if (names_str.empty()) {
+    ROS_ERROR("Parameter 'names' must be defined, for instance 'joe;jane'");
+    return -1;
+  }
+  std::map<std::string, int> name2idx;
+  std::vector<std::string> names;
+  string_utils::StringSplit(names_str, ";", &names);
+  unsigned int nnames = names.size();
+  for (int i = 0; i < nnames; ++i)
+    name2idx.insert(std::pair<std::string, unsigned int>(names[i], name2idx.size()));
 
   // service
   ros::ServiceClient matcher = nh_public.serviceClient<people_msgs::MatchPPL>("match_ppl");
 
   // start the loop
+  cv::Mat1d confusion_matrix(nnames, nnames);
+  confusion_matrix.setTo(0);
   ppl_utils::Images2PPL ground_truth_ppl_conv;
   people_msgs::MatchPPLRequest req;
   people_msgs::MatchPPLResponse res;
   std_msgs::Header curr_header;
+  ROS_INFO("pplm_benchmarker: service '%s', names: '%s'",
+           matcher.getService().c_str(), string_utils::map_to_string(name2idx).c_str());
+
   curr_header.frame_id = "openni_rgb_optical_frame";
   curr_header.stamp = ros::Time::now();
   while (ros::ok()) {
     Timer timer;
     if (!reader.go_to_next_frame()) {
-      ROS_ERROR("pplm_benchmarker: couldn't go_to_next_frame()!");
+      ROS_WARN("pplm_benchmarker: couldn't go_to_next_frame()!");
       break;
     }
     ROS_INFO_THROTTLE(10, "Time for go_to_next_frame(): %g ms.", timer.getTimeMilliseconds());
@@ -111,6 +130,7 @@ int main(int argc, char** argv) {
       ROS_WARN("linear_assign_from_cost_vec() failed!");
       continue;
     }
+    std::cout << assignment_utils::assignment_list_to_string(ppl2track_affectations) << std::endl;
 
     // check if the recognition is correct
     unsigned int nassigns = ppl2track_affectations.size();
@@ -121,20 +141,37 @@ int main(int argc, char** argv) {
                  assignment_utils::assignment_list_to_string(ppl2track_affectations).c_str());
         continue;
       }
-      //std::string track = req.tracks[], ppl;
       std::string ppl_name,track_name;
       if (!ppl_utils::get_attribute_readonly(req.new_ppl.poses[ppli], "user_multimap_name", ppl_name)
           || !ppl_utils::get_attribute_readonly(req.tracks.poses[tracki], "user_multimap_name", track_name)) {
         ROS_WARN("Couldn't get names!");
         continue;
       }
-      printf("Match %i: PPL '%s' <-> track '%s'\n", i, ppl_name.c_str(), track_name.c_str());
+      //printf("Match %i: PPL '%s' <-> track '%s'\n", i, ppl_name.c_str(), track_name.c_str());
+      // store in confusion matrix
+      if (!name2idx.count(ppl_name) || !name2idx.count(track_name)) {
+        ROS_WARN("Unknown PPL '%s' or track '%s'", ppl_name.c_str(), track_name.c_str());
+        continue;
+      }
+      unsigned int col = name2idx[ppl_name] , row = name2idx[track_name];
+      //printf("('%s', '%s') -> (%i, %i)\n", track_name.c_str(), ppl_name.c_str(), col, row);
+      ++(confusion_matrix.at<double>(row, col)); // img.at<uchar>(y, x)
     } // end for i
+    // print confusion matrix
+    std::cout << confusion_matrix << std::endl;
 
     // display
     if (display)
       reader.display();
     ros::spinOnce();
   } // end while(ros::ok())
+  // normalize confusion matrix
+  // http://www.marcovanetti.com/pages/cfmatrix/?noc=3
+  // https://en.wikipedia.org/wiki/Confusion_matrix
+  // rows: tracks (true labels), cols: detections (matching result)
+  // -> we need to normalize by row
+  for (int i = 0; i < nnames; ++i)
+    cv::normalize(confusion_matrix.row(i), confusion_matrix.row(i));
+  std::cout << confusion_matrix << std::endl;
   return 0;
 }
