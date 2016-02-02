@@ -18,12 +18,12 @@
 </include>
 
   <!-- PPLM benchmarker -->
-<remap from="match_ppl" to="$(arg robot)/height_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/phs_pplm/match_ppl"/>
 <!--
 <remap from="match_ppl" to="$(arg robot)/euclidean_pplm/match_ppl"/>
 <remap from="match_ppl" to="$(arg robot)/face_recognizer_pplm/match_ppl"/>
-<remap from="match_ppl" to="$(arg robot)/nite_pplm/match_ppl"/>
-<remap from="match_ppl" to="$(arg robot)/phs_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/height_pplm/match_ppl"/>
+<remap from="match_ppl" to="$(arg robot)/nite_pplm/match_ppl"/><param name="pplm_benchmarker/eval_nite" value="true"/>
 -->
 <node pkg="people_recognition_vision" type="pplm_benchmarker.exe"
   name="pplm_benchmarker"  output="screen"  required="true"

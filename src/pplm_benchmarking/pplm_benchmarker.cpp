@@ -53,6 +53,8 @@ int main(int argc, char** argv) {
   ros::NodeHandle nh_public, nh_private("~");
   bool display = false;
   nh_private.param("display", display, display);
+  bool eval_nite = false;
+  nh_private.param("eval_nite", eval_nite, eval_nite);
   std::string names_str = "";
   nh_private.param("names", names_str, names_str);
   if (names_str.empty()) {
@@ -72,12 +74,13 @@ int main(int argc, char** argv) {
   // start the loop
   cv::Mat1d confusion_matrix(nnames, nnames);
   confusion_matrix.setTo(0);
-  ppl_utils::Images2PPL ground_truth_ppl_conv;
+  ppl_utils::Images2PPL gt_img2ppl, nite_img2ppl;
   people_msgs::MatchPPLRequest req;
   people_msgs::MatchPPLResponse res;
   std_msgs::Header curr_header;
-  ROS_INFO("pplm_benchmarker: service '%s', names: '%s'",
-           matcher.getService().c_str(), string_utils::map_to_string(name2idx).c_str());
+  ROS_INFO("pplm_benchmarker: service '%s', names: '%s', eval_nite:%i",
+           matcher.getService().c_str(), string_utils::map_to_string(name2idx).c_str(),
+           eval_nite);
 
   curr_header.frame_id = "openni_rgb_optical_frame";
   curr_header.stamp = ros::Time::now();
@@ -91,18 +94,41 @@ int main(int argc, char** argv) {
 
     // transform to PPL
     curr_header.stamp += ros::Duration(.2); // 5 Hz
-    if (!ground_truth_ppl_conv.convert(reader.get_bgr(),
-                                       reader.get_depth(),
-                                       reader.get_ground_truth_user(),
-                                       NULL,
-                                       &curr_header)) {
-      ROS_WARN("ground_truth_ppl_conv.convert() failed!");
+    if (!gt_img2ppl.convert(reader.get_bgr(),
+                            reader.get_depth(),
+                            reader.get_ground_truth_user(),
+                            NULL,
+                            &curr_header)) {
+      ROS_WARN("gt_img2ppl.convert() failed!");
       continue;
     }
+    people_msgs::PeoplePoseList *gtppl = &(gt_img2ppl.get_ppl()), *niteppl = NULL;
+    if (eval_nite) {
+      if (!nite_img2ppl.convert(reader.get_bgr(),
+                                reader.get_depth(),
+                                reader.get_user(),
+                                NULL,
+                                &curr_header)) {
+        ROS_WARN("nite_img2ppl.convert() failed!");
+        continue;
+      }
+      niteppl = &(nite_img2ppl.get_ppl());
+      // copy "user_multimap_name" --> "gt_user_multimap_name"
+      unsigned int gtsize = gtppl->poses.size(), nite_size = niteppl->poses.size();
+      if (gtsize != nite_size) {
+        ROS_WARN("gtsize=%i != nite_size=%i", gtsize, nite_size);
+        continue;
+      }
+      for (int i = 0; i < nite_size; ++i) {
+        std::string gtname = "";
+        ppl_utils::get_attribute_readonly(gtppl->poses[i], "user_multimap_name", gtname);
+        ppl_utils::set_attribute(niteppl->poses[i], "gt_user_multimap_name", gtname);
+      }
+    } // end if (eval_nite)
 
     // call "MatchPPL" service
     req.tracks = req.new_ppl;
-    req.new_ppl = ground_truth_ppl_conv.get_ppl();
+    req.new_ppl = (eval_nite ? *niteppl: *gtppl);
     unsigned int ntracks = req.tracks.poses.size(), nppl = req.new_ppl.poses.size();
     if (nppl < 2) {
       ROS_WARN_THROTTLE(5, "Only %i users, no recognition to be made!", nppl);
@@ -117,8 +143,8 @@ int main(int argc, char** argv) {
     unsigned int costs_size = nppl * ntracks;
     if (res.costs.size() != costs_size) {
       ROS_WARN("pplm_benchmarker::ppl_cb(): PPLM '%s' returned a cost matrix with "
-             "wrong dimensions (expected %i values, got %i)",
-             matcher.getService().c_str(), costs_size, res.costs.size());
+               "wrong dimensions (expected %i values, got %i)",
+               matcher.getService().c_str(), costs_size, res.costs.size());
       continue;
     }
 
@@ -138,16 +164,17 @@ int main(int argc, char** argv) {
       int ppli = ppl2track_affectations[i].first, tracki  = ppl2track_affectations[i].second;
       if (ppli == assignment_utils::UNASSIGNED || tracki == assignment_utils::UNASSIGNED) {
         ROS_WARN_THROTTLE(5, "Uncomplete assignment! '%s'",
-                 assignment_utils::assignment_list_to_string(ppl2track_affectations).c_str());
+                          assignment_utils::assignment_list_to_string(ppl2track_affectations).c_str());
         continue;
       }
       std::string ppl_name,track_name;
-      if (!ppl_utils::get_attribute_readonly(req.new_ppl.poses[ppli], "user_multimap_name", ppl_name)
-          || !ppl_utils::get_attribute_readonly(req.tracks.poses[tracki], "user_multimap_name", track_name)) {
+      std::string attr = (eval_nite ? "gt_user_multimap_name" : "user_multimap_name");
+      if (!ppl_utils::get_attribute_readonly(req.new_ppl.poses[ppli], attr, ppl_name)
+          || !ppl_utils::get_attribute_readonly(req.tracks.poses[tracki], attr, track_name)) {
         ROS_WARN("Couldn't get names!");
         continue;
       }
-      //printf("Match %i: PPL '%s' <-> track '%s'\n", i, ppl_name.c_str(), track_name.c_str());
+      // printf("Match %i: PPL '%s' <-> track '%s'\n", i, ppl_name.c_str(), track_name.c_str());
       // store in confusion matrix
       if (!name2idx.count(ppl_name) || !name2idx.count(track_name)) {
         ROS_WARN("Unknown PPL '%s' or track '%s'", ppl_name.c_str(), track_name.c_str());
@@ -165,13 +192,22 @@ int main(int argc, char** argv) {
       reader.display();
     ros::spinOnce();
   } // end while(ros::ok())
+
+  // http://www.yale.edu/ceo/OEFS/Accuracy_Assessment.pdf
+  double overall_accuracy = 0;
+  for (int i = 0; i < nnames; ++i)
+    overall_accuracy += confusion_matrix.at<double>(i, i);
+  overall_accuracy /= cv::sum(confusion_matrix)[0];
+  ROS_INFO("overall_accuracy:%g", overall_accuracy);
+
   // normalize confusion matrix
+  cv::Mat1d confusion_matrix_norm = confusion_matrix.clone();
   // http://www.marcovanetti.com/pages/cfmatrix/?noc=3
   // https://en.wikipedia.org/wiki/Confusion_matrix
   // rows: tracks (true labels), cols: detections (matching result)
   // -> we need to normalize by row
   for (int i = 0; i < nnames; ++i)
-    cv::normalize(confusion_matrix.row(i), confusion_matrix.row(i));
-  std::cout << confusion_matrix << std::endl;
+    cv::normalize(confusion_matrix.row(i), confusion_matrix_norm.row(i), 1, 0, cv::NORM_L1);
+  std::cout << confusion_matrix_norm << std::endl;
   return 0;
 }
