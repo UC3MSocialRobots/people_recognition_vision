@@ -130,8 +130,9 @@ int main(int argc, char** argv) {
     req.tracks = req.new_ppl;
     req.new_ppl = (eval_nite ? *niteppl: *gtppl);
     unsigned int ntracks = req.tracks.poses.size(), nppl = req.new_ppl.poses.size();
-    if (nppl < 2) {
-      ROS_WARN_THROTTLE(5, "Only %i users, no recognition to be made!", nppl);
+    if (nppl < 2 && ntracks < 2) {
+      ROS_WARN_THROTTLE(5, "Only %i users and %i tracks, no recognition to be made!",
+                        nppl, ntracks);
       continue;
     }
 
