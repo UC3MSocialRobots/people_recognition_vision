@@ -67,16 +67,15 @@
         output="screen" respawn="false" name="ukf_N"
         args="$(arg common_ukf_args)  _ppl_matcher_services:=nite_pplm/match_ppl" />
 
--->
   <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
         output="screen" respawn="false" name="ukf_P"
         args="$(arg common_ukf_args)  _ppl_matcher_services:=phs_pplm/match_ppl" />
 
-<!--
+-->
   <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
         output="screen" respawn="false" name="ukf_EF"
         args="$(arg common_ukf_args)  _ppl_matcher_services:=face_recognizer_pplm/match_ppl:1;euclidean_pplm/match_ppl:1" />
-
+<!--
   <node pkg="people_recognition_vision" type="ukf_multimodal.exe"
         output="screen" respawn="false" name="ukf_EH"
         args="$(arg common_ukf_args)  _ppl_matcher_services:=euclidean_pplm/match_ppl:1;height_pplm/match_ppl:1" />
@@ -114,17 +113,17 @@
   <node if="$(arg viewer)" pkg="vision_utils" type="ppl_viewer.exe"
     name="ppl_viewer"  output="screen"
     args="_width:=600 _height:=800
-          _track_history_size:=30
+          _ppl_topics:='$(arg ukfs_topics)'
           _draw_track_images:=true
           _reprojection_mode:=xz
           _draw_track_trails:=true
+          _trail_history_size:=30
           _method2trail_color:=false
-          _ppl_topics:='$(arg ukfs_topics)'
+          _save_images:=true
           _xmin:=-3 _xmax:=3 _ymin:=0 _ymax:=4" />
 <!--
           _ppl_topics:='ground_truth_ppl;$(arg ukfs_topics)'
           _ppl_topics:='ukf_F/ppl'
-          _save_images:=true
           _reprojection_mode:=xy
           _xmin:=-3 _xmax:=3 _ymin:=-8 _ymax:=1" />
 -->
