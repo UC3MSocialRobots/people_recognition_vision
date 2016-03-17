@@ -17,7 +17,31 @@ modular, expandable and fast architecture. This results in a local user
 mapping thanks to multi-modal fusion.
 
 In this package,
-we integrate the different user recognition algorithms.
+we integrate the different user recognition algorithms:
+
+* **Euclidean distance PPLM**:
+  the simplest method to
+  estimate the likeliness of a track against a detected PP is
+  to compare their 3D position.
+
+* **Face recognition-based PPLM**:
+  the visual appearance of the face is key information that the humans use extensively to discriminate between people. For this reason, a face recognition algorithm was integrated. The algorithm used is ”Fisherfaces” [Belhumeur, 1997]
+
+* **Height-based PPLM**:
+  We used a novel method for estimating the height of
+  the user [Ramey, 2015], based on the depth map and the user mask.
+
+* **NiTE multi-map-based PPLM**
+  The raw output of the NiTE algorithm is shaped as a user multimap. The cost
+  of matching a given detected PP with the set of tracks is defined as
+  follows: this cost is equal to zero if two NiTE user identifiers are equal,
+  and equal to one otherwise.
+
+* **PersonHistogramSets**:
+  We developed a novel method for user recognition based on color
+  histograms [Ramey, 2015], by generating a set of Hue histograms structured
+  so as to represented a natural segmentation of the human body. We call
+  this set of Hue histograms a PersonHistogramSet (PHS).
 
 For more information, check out
 [Arnaud Ramey's PhD](https://sites.google.com/site/rameyarnaud/research/phd).
@@ -48,3 +72,14 @@ Use the following BiB entry
  author = {Ramey, Arnaud}
 }
 ```
+
+References
+==========
+
+* [Belhumeur, 1997]
+Belhumeur, P. (1997). Eigenfaces vs. fisherfaces: Recognition using class
+specific linear projection. Pattern Analysis and Machine Intelligence, IEEE
+Transactions on.
+
+* [Ramey, 2015]
+Cf above "How to cite this work"
