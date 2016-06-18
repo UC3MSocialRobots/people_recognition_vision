@@ -1,9 +1,6 @@
 # `people_recognition_vision`
 
-<p align="center">
-<img src="https://6aaedb30-a-62cb3a1a-s-sites.googlegroups.com/site/rameyarnaud/research/phd/divulgacion.png"
-   alt="PhD" style="width: 300px"/>
-</p>
+![foo](doc/divulgacion.png)
 
 User detection, recognition and tracking is at the heart of Human Robot
 Interaction, and yet, to date, no universal robust method exists for being
@@ -46,6 +43,15 @@ we integrate the different user recognition algorithms:
 For more information, check out
 [Arnaud Ramey's PhD](https://sites.google.com/site/rameyarnaud/research/phd).
 
+How to install
+==============
+
+Dependencies: please run the ```rosdep.sh``` script:
+
+```bash
+$ roscd people_recognition_vision
+$ sudo sh rosdep.sh
+```
 
 How to cite this work
 =====================
