@@ -12,6 +12,7 @@
   <!-- Ubuntu packages dependencies:
        get the keys using "rosdep db"  -->
   <depend>libgsl</depend>
+  <depend>libblas-dev</depend>
   <!-- AD:
       these should be in the dependencies.rosinstall of the package -->
   <depend>vision_utils</depend>
