@@ -1,5 +1,7 @@
 # `people_recognition_vision`
 
+[![Build Status](https://travis-ci.org/UC3MSocialRobots/people_recognition_vision.svg)](https://travis-ci.org/UC3MSocialRobots/people_recognition_vision)
+
 ![foo](doc/divulgacion.png)
 
 User detection, recognition and tracking is at the heart of Human Robot
@@ -22,7 +24,10 @@ we integrate the different user recognition algorithms:
   to compare their 3D position.
 
 * **Face recognition-based PPLM**:
-  the visual appearance of the face is key information that the humans use extensively to discriminate between people. For this reason, a face recognition algorithm was integrated. The algorithm used is ”Fisherfaces” [Belhumeur, 1997]
+  the visual appearance of the face is key information that the humans use
+  extensively to discriminate between people. For this reason, a face
+  recognition algorithm was integrated. The algorithm used is ”Fisherfaces”
+  [Belhumeur, 1997]
 
 * **Height-based PPLM**:
   We used a novel method for estimating the height of
@@ -46,11 +51,36 @@ For more information, check out
 How to install
 ==============
 
-Dependencies: please run the ```rosdep.sh``` script:
+## 1. Dependencies from sources
+
+Dependencies handling is based on the [wstool](http://wiki.ros.org/wstool) tool.
+Run the following instructions:
 
 ```bash
-$ roscd people_recognition_vision
-$ sudo sh rosdep.sh
+$ sudo apt-get install python-wstool
+$ sudo wstool init
+$ wstool merge `rospack find people_recognition_vision`/dependencies.rosinstall
+$ roscd ; cd src
+$ wstool update
+```
+
+## 2. Dependencies included in the Ubuntu packages
+
+Please run the [rosdep](http://docs.ros.org/independent/api/rosdep/html/) utility:
+
+```bash
+$ sudo apt-get install python-rosdep
+$ sudo rosdep init
+$ rosdep install people_recognition_vision --ignore-src
+```
+
+## 3. Compile
+
+Use [catkin_make](http://wiki.ros.org/catkin/commands/catkin_make):
+
+```bash
+$ roscd
+$ catkin_make
 ```
 
 How to cite this work

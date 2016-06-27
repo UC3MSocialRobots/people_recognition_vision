@@ -3,10 +3,17 @@
 
 // opencv
 #include <opencv2/highgui/highgui.hpp>
+
 // facerec - https://github.com/bytefish/libfacerec
 // http://www.bytefish.de/blog/pca_in_opencv
-//#include <third_parties/libfacerec/include/facerec.hpp>
+#if CV_MAJOR_VERSION > 2
+#include <opencv2/face/facerec.hpp>
+namespace cv_face = cv::face;
+#else // OpenCV < 3.0
 #include <opencv2/contrib/contrib.hpp>
+namespace cv_face = cv;
+#endif
+
 // utils
 #include "vision_utils/utils/rect_utils.h"
 #include "vision_utils/utils/XmlDocument.h"
@@ -44,9 +51,9 @@ public:
   /*! constructor */
   FaceRecognizer() {
     classifier = image_utils::create_face_classifier();
-    //_model = cv::createEigenFaceRecognizer();
-    _model = cv::createFisherFaceRecognizer(); // best, cf Robocity paper
-    //_model = cv::createLBPHFaceRecognizer();
+    //_model = cv_face::createEigenFaceRecognizer();
+    _model = cv_face::createFisherFaceRecognizer(); // best, cf Robocity paper
+    //_model = cv_face::createLBPHFaceRecognizer();
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -668,7 +675,7 @@ private:
   //! the associations PersonLabel <-> PersonName
   std::map<PersonLabel, PersonName> _person_labels_map;
   //! the trained model
-  cv::Ptr<cv::FaceRecognizer> _model;
+  cv::Ptr<cv_face::FaceRecognizer> _model;
 }; // end class FaceRecognizer
 
 } // end namespace face_recognition

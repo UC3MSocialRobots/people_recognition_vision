@@ -28,6 +28,11 @@ ________________________________________________________________________________
 #define PERSON_HISTOGRAM_SET_H
 
 #include <opencv2/ml/ml.hpp>
+#if CV_MAJOR_VERSION > 2
+typedef cv::Ptr<cv::ml::SVM> MySVMPtr;
+#else // OpenCV < 3.0
+typedef cv::Ptr<cv::SVM> MySVMPtr;
+#endif
 
 #include "people_recognition_vision/person_histogram.h"
 #include "vision_utils/utils/assignment_utils.h"
@@ -178,7 +183,7 @@ public:
     _phs.clear();
     _labels.clear();
     refresh_unique_labels();
-    _SVM.clear();
+    _SVM->clear();
     return true;
   } // end ctor
 
@@ -260,6 +265,19 @@ public:
       return false;
     }
 
+#if CV_MAJOR_VERSION > 2 // OpenCV 3.0+
+    // https://stackoverflow.com/questions/27114065/opencv-3-svm-training
+    _SVM = cv::ml::SVM::create();
+    // edit: the params struct got removed,
+    // we use setter/getter now:
+    _SVM->setType(cv::ml::SVM::C_SVC);
+    _SVM->setKernel(cv::ml::SVM::RBF);
+    _SVM->setC(10);
+    _SVM->setGamma(5E-2);
+    cv::TermCriteria crit(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 1000, 1E-6);
+    _SVM->setTermCriteria(crit);
+    return (_SVM->train( labels_mat, cv::ml::ROW_SAMPLE , labels_mat ));
+#else // OpenCV < 3.0
     // Set up SVM's parameters
     // from http://bytefish.de/blog/machine_learning_opencv/
     // cf also http://docs.opencv.org/modules/ml/doc/support_vector_machines.html#cvsvmparams
@@ -273,10 +291,10 @@ public:
     param.term_crit.type = CV_TERMCRIT_ITER +CV_TERMCRIT_EPS;
     param.term_crit.max_iter = 1000;
     param.term_crit.epsilon = 1e-6;
-
     // Train the SVM
-    return _SVM.train(_training_mat, labels_mat, cv::Mat(), cv::Mat(), param);
-    //return _SVM.train_auto(training_mat, _labels_mat, cv::Mat(), cv::Mat(), param);
+    return _SVM->train(_training_mat, labels_mat, cv::Mat(), cv::Mat(), param);
+    //return _SVM->train_auto(training_mat, _labels_mat, cv::Mat(), cv::Mat(), param);
+#endif
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -305,7 +323,7 @@ public:
           query.at<float>(0, 2*body_part  ) = meand_stddev.x;
           query.at<float>(0, 2*body_part+1) = meand_stddev.y;
           // use the SVM
-          int label = _SVM.predict(query);
+          int label = _SVM->predict(query);
           //    if (rand() % 100000 == 0)
           //      printf("mean:%g, std_dev:%g, label:%i\n",
           //             meand_stddev.x, meand_stddev.y, label);
@@ -340,7 +358,7 @@ public:
     cv::Mat ph_mat(1, MAT_COLS, CV_32FC1);
     if (!ph.to_mat(ph_mat))
       return false;
-    float out_label_float = _SVM.predict(ph_mat);
+    float out_label_float = _SVM->predict(ph_mat);
     // printf("out_label_float:%g\n", out_label_float);
     out_label = out_label_float;
     return true;
@@ -537,7 +555,7 @@ public:
       return false;
     image_utils::write(_phs, fs, "phs");
     //fs << "SVM" << _SVM;
-    //_SVM.write(&fs, "SVM");
+    //_SVM->write(&fs, "SVM");
     fs << "labels" << _labels;
     fs << "training_mat" << _training_mat;
     fs.release();
@@ -639,7 +657,7 @@ private:
   std::vector<PersonLabel> _labels;
   std::vector<PersonLabel> _unique_labels; // _labels without repetition
   cv::Mat1f _training_mat;
-  cv::SVM _SVM;
+  MySVMPtr _SVM;
 
   // viz stuff
   MiniStage _ms;

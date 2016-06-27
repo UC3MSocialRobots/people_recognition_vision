@@ -37,6 +37,11 @@ thanks to the size of his/her breast.
 #include "vision_utils/utils/debug2.h"
 // opencv
 #include <opencv2/ml/ml.hpp>
+#if CV_MAJOR_VERSION > 2
+typedef cv::Ptr<cv::ml::SVM> MySVMPtr;
+#else // OpenCV < 3.0
+typedef cv::Ptr<cv::SVM> MySVMPtr;
+#endif
 // ros
 #include <ros/package.h>
 
@@ -573,24 +578,24 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
 
-  inline bool svm_ptr(Method method, cv::SVM* & ptr, SvmStatus* & status) {
+  inline bool svm_ptr(Method method, MySVMPtr & ptr, SvmStatus* & status) {
     if (method == WALK3D) {
-      ptr = &_svm_walk_3d;
+      ptr = _svm_walk_3d;
       status = &_svm_walk_3d_status;
       return true;
     }
     if (method == REPROJECT) {
-      ptr = &_svm_reproject;
+      ptr = _svm_reproject;
       status = &_svm_reproject_status;
       return true;
     }
     if (method == TEMPLATE_MATCHING) {
-      ptr = &_svm_template_matching;
+      ptr = _svm_template_matching;
       status = &_svm_template_matching_status;
       return true;
     }
     printf("Unknown method %i\n", method);
-    ptr = NULL;
+    //ptr = ;
     status = NULL;
     return false;
   }
@@ -601,7 +606,7 @@ protected:
   inline bool load_svm(Method method,
                        bool display_svm = false) {
     printf("load_svm(%i)\n", method);
-    cv::SVM* SVM_ptr;
+    MySVMPtr SVM_ptr;
     SvmStatus* status;
     if (!svm_ptr(method, SVM_ptr, status))
       return false;
@@ -641,12 +646,29 @@ protected:
     printf("train(method:%i): training SVM from %i samples...\n",
            method, labels_mat.rows);
 
-    cv::SVM* SVM_ptr;
+    MySVMPtr SVM_ptr;
     SvmStatus* status;
     if (!svm_ptr(method, SVM_ptr, status))
       return false;
 
     // Set up SVM's parameters
+#if CV_MAJOR_VERSION > 2 // OpenCV 3.0+
+    // https://stackoverflow.com/questions/27114065/opencv-3-svm-training
+    SVM_ptr = cv::ml::SVM::create();
+    // edit: the params struct got removed,
+    // we use setter/getter now:
+    SVM_ptr->setType(cv::ml::SVM::C_SVC);
+    SVM_ptr->setKernel(cv::ml::SVM::RBF);
+    SVM_ptr->setC(1);
+    SVM_ptr->setGamma(1E-1);
+    cv::TermCriteria crit(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 1000, 1E-6);
+    SVM_ptr->setTermCriteria(crit);
+    if (!SVM_ptr->train( training_mat, cv::ml::ROW_SAMPLE , labels_mat )) {
+      printf("train(method:%i): training SVM returned an error\n", method);
+      *status = SVM_STATUS_LOADED_FAILED;
+      return false;
+    }
+#else // OpenCV < 3.0
     // from http://bytefish.de/blog/machine_learning_opencv/
     // cf also http://docs.opencv.org/modules/ml/doc/support_vector_machines.html#cvsvmparams
     CvSVMParams param;
@@ -666,6 +688,7 @@ protected:
       *status = SVM_STATUS_LOADED_FAILED;
       return false;
     }
+#endif
     printf("train(method:%i): training SVM done\n", method);
     *status = SVM_STATUS_TRAINED_SUCCESFULLY;
     return true;
@@ -677,12 +700,17 @@ protected:
                 const cv::Mat1f & training_mat,
                 const cv::Mat1f & labels_mat) {
     // save to file - the SVM was trained succesfully
-    cv::SVM* SVM_ptr;
+    MySVMPtr SVM_ptr;
     SvmStatus* status;
     if (!svm_ptr(method, SVM_ptr, status))
       return false;
+#if CV_MAJOR_VERSION > 2
+    if (*status == SVM_STATUS_TRAINED_SUCCESFULLY)
+      SVM_ptr->save(SVM_FILE(method));
+#else // OpenCV < 3.0
     if (*status == SVM_STATUS_TRAINED_SUCCESFULLY)
       SVM_ptr->save(SVM_FILE(method), "svm");
+#endif
     cv::FileStorage fs(SVM_FILE(method), cv::FileStorage::APPEND);
     if (!fs.isOpened()) {
       printf("Could not open SVM file '%s'!\n", SVM_FILE(method));
@@ -700,7 +728,7 @@ protected:
     HeightBreast herror;
     herror.gender_confidence = herror.gender = ERROR;
 
-    cv::SVM* SVM_ptr;
+    MySVMPtr SVM_ptr;
     SvmStatus* status;
     if (!svm_ptr(method, SVM_ptr, status))
       return herror;
@@ -1412,7 +1440,7 @@ protected:
   cv::Mat1b _breast_projected_img;
   ImageComparer _breast_comparer;
 
-  cv::SVM _svm_walk_3d;
+  MySVMPtr _svm_walk_3d;
   SvmStatus _svm_walk_3d_status;
 
   // viz
@@ -1427,7 +1455,7 @@ protected:
   cv::Mat1b _proj_rot2img_thres;
   std::vector<Pt2i> _proj_edge;
 
-  cv::SVM _svm_reproject;
+  MySVMPtr _svm_reproject;
   SvmStatus _svm_reproject_status;
 
   // viz
@@ -1446,7 +1474,7 @@ protected:
   std::vector<Template> _precomputed_templates;
   Template* _best_template;
 
-  cv::SVM _svm_template_matching;
+  MySVMPtr _svm_template_matching;
   SvmStatus _svm_template_matching_status;
 }; // end class BreastDetector
 

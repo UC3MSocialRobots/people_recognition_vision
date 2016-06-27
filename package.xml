@@ -9,28 +9,15 @@
   <license>LGPLv3</license>
   <url type="website">http://ros.org/wiki/people_recognition_vision</url>
   <buildtool_depend>catkin</buildtool_depend>
-  <!-- dependencies -->
-  <depend>roscpp</depend>
-  <depend>openni_camera</depend>
-  <depend>openni_tracker</depend>
-  <depend>openni_launch</depend>
-
-  <!-- AD -->
-  <depend>people_msgs</depend>
+  <!-- Ubuntu packages dependencies:
+       get the keys using "rosdep db"  -->
+  <depend>libgsl</depend>
+  <!-- AD:
+      these should be in the dependencies.rosinstall of the package -->
   <depend>vision_utils</depend>
   <depend>kinect</depend>
 
   <export>
-    <!-- nodelet plugin="${prefix}/nodelets.xml" /-->
-    <cpp cflags="-I${prefix} -I${prefix}/build"
-         lflags="-L${prefix}/lib -Wl,-rpath,${prefix}/lib"/>
     <rosdoc config="rosdoc.yaml" />
   </export>
 </package>
-
-
-
-
-
-
-
