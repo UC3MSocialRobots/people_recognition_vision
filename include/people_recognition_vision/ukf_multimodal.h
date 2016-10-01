@@ -37,7 +37,7 @@ This gives some more robust position detections.
   - \b "~ppl_input_topics"
         [string] (default: "ppl")
         The list of topics where to get the detections of the users
-        ( of types people_msgs/PeoplePoseList ).
+        ( of types people_msgs_rl/PeoplePoseList ).
         Topics must be separated by ";",
         for example "/foo;/bar".
 
@@ -63,12 +63,12 @@ This gives some more robust position detections.
 
 \section Subscriptions
   - \b {ppl_input_topics}
-        [people_msgs/PeoplePoseList]
+        [people_msgs_rl/PeoplePoseList]
         The different input methods for people pose lists
 
 \section Publications
   - \b "~ppl"
-        [people_msgs::PeoplePoseList]
+        [people_msgs_rl::PeoplePoseList]
         Results of the person tracking after applying UKF.
  */
 #ifndef UKF_MULTIMODAL_H
@@ -77,8 +77,8 @@ This gives some more robust position detections.
 #include "vision_utils/utils/pt_utils.h"
 #include "vision_utils/utils/multi_subscriber.h"
 #include "vision_utils/utils/timer.h"
-// people_msgs
-#include <people_msgs/MatchPPL.h>
+// people_msgs_rl
+#include <people_msgs_rl/MatchPPL.h>
 #include "vision_utils/people_pose_list_utils.h"
 #include "vision_utils/ppl_tf_utils.h"
 #include "vision_utils/ppl_attributes.h"
@@ -90,8 +90,8 @@ This gives some more robust position detections.
 
 class UkfMultiModal : public PPLPublisherTemplate {
 public:
-  typedef people_msgs::PeoplePose PP;
-  typedef people_msgs::PeoplePoseList PPL;
+  typedef people_msgs_rl::PeoplePose PP;
+  typedef people_msgs_rl::PeoplePoseList PPL;
   static const unsigned int QUEUE_SIZE = 1;
 
   UkfMultiModal() : PPLPublisherTemplate("UKF_MULTIMODAL_START", "UKF_MULTIMODAL_STOP") {
@@ -149,7 +149,7 @@ public:
     _blobs_pub = _nh_public.advertise<PPL>("ukf_blobs", 1);
     // subscribe to PPLM services
     for (unsigned int topic_idx = 0; topic_idx < nmatchers; ++topic_idx)
-      _matchers.push_back(_nh_public.serviceClient<people_msgs::MatchPPL>
+      _matchers.push_back(_nh_public.serviceClient<people_msgs_rl::MatchPPL>
                           (_matcher_services[topic_idx]));
     // strip services that do not exist
     sleep(2); // publishers and subscribers can need 1 sec to be ready
@@ -266,7 +266,7 @@ public:
     Timer timer;
 
     // convert to wanted frame
-    people_msgs::PeoplePoseList new_ppl = new_ppl_bad_tf;
+    people_msgs_rl::PeoplePoseList new_ppl = new_ppl_bad_tf;
     if (!ppl_utils::convert_ppl_tf
         (new_ppl, _static_frame_id, *_tf_listener)) {
       ROS_WARN("UkfMultiModal:Could not convert new_ppl to tf '%s'\n",
@@ -275,7 +275,7 @@ public:
     }
 
     // gate if needed
-    std::vector<people_msgs::PeoplePose> unassociated_poses_from_new_ppl;
+    std::vector<people_msgs_rl::PeoplePose> unassociated_poses_from_new_ppl;
     if (_use_gating)
       ppl_gating::gate_ppl(new_ppl, _tracks, unassociated_poses_from_new_ppl,
                            _human_walking_speed);
@@ -290,8 +290,8 @@ public:
     _avg_costs.set_to_zero();
     unsigned int costs_size = npps * ntracks;
     unsigned int nmatchers = _matchers.size(), nmatches = 0;
-    people_msgs::MatchPPLRequest req;
-    people_msgs::MatchPPLResponse res;
+    people_msgs_rl::MatchPPLRequest req;
+    people_msgs_rl::MatchPPLResponse res;
     req.tracks = _tracks;
     req.new_ppl = new_ppl;
     // call matching services
@@ -389,8 +389,8 @@ public:
       ppl_utils::set_attribute(*track, "ukf_orien", track_orien);
       ppl_utils::set_attribute(*track, "ukf_speed", track_speed);
       if (!detec->person_name.empty()
-          && detec->person_name != people_msgs::PeoplePose::NO_RECOGNITION_MADE
-          && detec->person_name != people_msgs::PeoplePose::RECOGNITION_FAILED)
+          && detec->person_name != people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE
+          && detec->person_name != people_msgs_rl::PeoplePose::RECOGNITION_FAILED)
         track->person_name = detec->person_name;
       track->std_dev = ukf_pp.get_std_dev();
       track->confidence = detec->confidence; // TODO improve that

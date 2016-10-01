@@ -27,7 +27,7 @@ ________________________________________________________________________________
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs::PeoplePoseList]
+        [people_msgs_rl::PeoplePoseList]
         The found faces ROIs and the name of the persons recognized
 
  */
@@ -41,8 +41,8 @@ ________________________________________________________________________________
 #include <gnuplot-cpp/gnuplot_i.hpp>
 #include "vision_utils/utils/system_utils.h"
 using namespace ukf::state;
-// people_msgs
-#include "people_msgs/PeoplePoseList.h"
+// people_msgs_rl
+#include "people_msgs_rl/PeoplePoseList.h"
 
 
 class UkfGenders {
@@ -142,7 +142,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_reco_result_cb
-  (const people_msgs::PeoplePoseListConstPtr & msg) {
+  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
     // count nb of men and women
     int nb_men = 0, nb_women = 0;
     std::ostringstream all_names;

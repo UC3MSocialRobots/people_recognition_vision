@@ -31,7 +31,7 @@ displays them overlaid on the camera frame.
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs::PeoplePoseList]
+        [people_msgs_rl::PeoplePoseList]
         The found faces ROIs and the name of the persons recognized
 
 \section Publications
@@ -47,8 +47,8 @@ displays them overlaid on the camera frame.
 #include "vision_utils/rgb_skill.h"
 #include "vision_utils/color_utils.h"
 #include "vision_utils/drawing_utils.h"
-// people_msgs
-#include "people_msgs/PeoplePoseList.h"
+// people_msgs_rl
+#include "people_msgs_rl/PeoplePoseList.h"
 
 class FaceRecognizerViewer : public RgbSkill {
 public:
@@ -73,7 +73,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_reco_result_cb
-  (const people_msgs::PeoplePoseListConstPtr & msg) {
+  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
     // do nothing if frame not ready
     if (!is_running()) {
       ROS_WARN_THROTTLE(1, "Received face recognition but not running!");
@@ -101,10 +101,10 @@ public:
     _received_rec_mutex.lock();
     // ROS_WARN("_received_rec.size():%i", _received_rec.size());
     for (unsigned int rec_idx = 0; rec_idx < _received_rec.size(); ++rec_idx) {
-      people_msgs::PeoplePoseList* curr_rec = &(_received_rec[rec_idx]);
+      people_msgs_rl::PeoplePoseList* curr_rec = &(_received_rec[rec_idx]);
       // draw rectangles
       for (unsigned int face_idx = 0; face_idx < curr_rec->poses.size(); ++face_idx) {
-        const people_msgs::PeoplePose* curr_pose = &(curr_rec->poses[face_idx]);
+        const people_msgs_rl::PeoplePose* curr_pose = &(curr_rec->poses[face_idx]);
         std::string person_name = curr_pose->person_name;
         maggieDebug2("rec #%i: person #%i:'%s'",
                      rec_idx, face_idx, person_name.c_str());
@@ -148,7 +148,7 @@ public:
 private:
   //! face reco sub
   ros::MultiSubscriber _face_recognition_results_subs;
-  std::vector<people_msgs::PeoplePoseList> _received_rec;
+  std::vector<people_msgs_rl::PeoplePoseList> _received_rec;
   //! the frame where the stuff is drawn
   cv::Mat3b _frame_out;
   boost::mutex _received_rec_mutex;

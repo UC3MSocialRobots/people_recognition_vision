@@ -28,8 +28,8 @@ ________________________________________________________________________________
 #include "vision_utils/utils/map_utils.h"
 #include "vision_utils/utils/string_casts_stl.h"
 #include "vision_utils/utils/timer.h"
-// people_msgs
-#include <people_msgs/MatchPPL.h>
+// people_msgs_rl
+#include <people_msgs_rl/MatchPPL.h>
 #include <ros/ros.h>
 
 int main(int argc, char** argv) {
@@ -69,14 +69,14 @@ int main(int argc, char** argv) {
     name2idx.insert(std::pair<std::string, unsigned int>(names[i], name2idx.size()));
 
   // service
-  ros::ServiceClient matcher = nh_public.serviceClient<people_msgs::MatchPPL>("match_ppl");
+  ros::ServiceClient matcher = nh_public.serviceClient<people_msgs_rl::MatchPPL>("match_ppl");
 
   // start the loop
   cv::Mat1d confusion_matrix(nnames, nnames);
   confusion_matrix.setTo(0);
   ppl_utils::Images2PPL gt_img2ppl, nite_img2ppl;
-  people_msgs::MatchPPLRequest req;
-  people_msgs::MatchPPLResponse res;
+  people_msgs_rl::MatchPPLRequest req;
+  people_msgs_rl::MatchPPLResponse res;
   std_msgs::Header curr_header;
   ROS_INFO("pplm_benchmarker: service '%s', names: '%s', eval_nite:%i",
            matcher.getService().c_str(), string_utils::map_to_string(name2idx).c_str(),
@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
       ROS_WARN("gt_img2ppl.convert() failed!");
       continue;
     }
-    people_msgs::PeoplePoseList *gtppl = &(gt_img2ppl.get_ppl()), *niteppl = NULL;
+    people_msgs_rl::PeoplePoseList *gtppl = &(gt_img2ppl.get_ppl()), *niteppl = NULL;
     if (eval_nite) {
       if (!nite_img2ppl.convert(reader.get_bgr(),
                                 reader.get_depth(),

@@ -32,8 +32,8 @@ using EuclideanPPLM as a PeoplePoseListMatcher.
 
 #define ASSERT_TRUE_TIMEOUT(cond, timeout) { Timer timer; while (timer.getTimeSeconds() < timeout && !(cond)) usleep(50 * 1000); } ASSERT_TRUE(cond)
 
-typedef people_msgs::PeoplePose PP;
-typedef people_msgs::PeoplePoseList PPL;
+typedef people_msgs_rl::PeoplePose PP;
+typedef people_msgs_rl::PeoplePoseList PPL;
 typedef geometry_utils::FooPoint3f Pt3f;
 
 inline void assert_ntracks_eq(const UkfMultiModal & ukf, unsigned int nusers) {

@@ -33,7 +33,7 @@
 #ifndef CONDITIONALPARTICLEFILTER_H
 #define CONDITIONALPARTICLEFILTER_H
 
-// people_msgs
+// people_msgs_rl
 #include "vision_utils/utils/select_index_wth_probas.h"
 #include "vision_utils/utils/odom_utils.h"
 #include "vision_utils/utils/timer.h"

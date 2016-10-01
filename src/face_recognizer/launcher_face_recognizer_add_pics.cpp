@@ -42,7 +42,7 @@ ________________________________________________________________________________
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs::PeoplePoseList]
+        [people_msgs_rl::PeoplePoseList]
         The images of the found faces, and their ROIs
 
 \section Publications
@@ -59,9 +59,9 @@ ________________________________________________________________________________
 // vision
 #include "vision_utils/make_opencv_interface.h"
 #include "vision_utils/drawing_utils.h"
-// people_msgs
+// people_msgs_rl
 #include "people_recognition_vision/face_recognizer.h"
-#include "people_msgs/PeoplePoseList.h"
+#include "people_msgs_rl/PeoplePoseList.h"
 
 class FaceRecognizerAddPics : public NanoSkill {
 public:
@@ -155,7 +155,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_detec_result_cb
-  (const people_msgs::PeoplePoseListConstPtr & msg) {
+  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
     // do nothing if waiting for user
     if (!_can_receive_new_face)
       return;
@@ -170,7 +170,7 @@ public:
     boost::shared_ptr<void const> tracked_object;
 
     for (unsigned int face_idx = 0; face_idx < nfaces; ++face_idx) {
-      const people_msgs::PeoplePose* curr_pose = &(msg->poses[face_idx]);
+      const people_msgs_rl::PeoplePose* curr_pose = &(msg->poses[face_idx]);
       if (curr_pose->rgb.width == 0 || curr_pose->rgb.height == 0)
         continue;
 

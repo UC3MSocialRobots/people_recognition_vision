@@ -27,7 +27,7 @@ A PPLMatcherTemplate using the height of the users as a metric.
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs/MatchPPL]
+        [people_msgs_rl/MatchPPL]
         Match a detected PPL against a reference one.
  */
 #ifndef HEIGHT_PPLM_H
@@ -77,8 +77,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int ntracks = tracks.poses.size(),
         ncurr_users = new_ppl.poses.size();
     DEBUG_PRINT("HeightPPLM::match(%i new PP, %i tracks)\n",

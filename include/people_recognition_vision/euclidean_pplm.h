@@ -31,7 +31,7 @@ the tracks and the PPL detections.
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs/MatchPPL]
+        [people_msgs_rl/MatchPPL]
         Match a detected PPL against a reference one.
  */
 
@@ -51,8 +51,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int ntracks = tracks.poses.size(), npps = new_ppl.poses.size();
     DEBUG_PRINT("EuclideanPPLM::match(%i new PP, %i tracks)\n",
                 npps, ntracks);

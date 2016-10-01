@@ -50,7 +50,7 @@ A bunch of functions doing that with different kind of inputs are available,
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "vision_utils/content_processing.h"
 #include "vision_utils/user_image_to_rgb.h"
-// people_msgs
+// people_msgs_rl
 #include "people_recognition_vision/person_histogram_set.h"
 
 class HistTrackingSkill {

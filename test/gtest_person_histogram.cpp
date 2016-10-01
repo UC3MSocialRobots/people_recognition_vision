@@ -23,7 +23,7 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-// people_msgs
+// people_msgs_rl
 #include "people_recognition_vision/person_histogram.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "vision_utils/utils/timer.h"

@@ -26,8 +26,8 @@ Some tests for ppl_gating namespace
 #include "vision_utils/ppl_testing.h"
 #include "people_recognition_vision/ppl_gating.h"
 
-typedef people_msgs::PeoplePose PP;
-typedef people_msgs::PeoplePoseList PPL;
+typedef people_msgs_rl::PeoplePose PP;
+typedef people_msgs_rl::PeoplePoseList PPL;
 typedef geometry_utils::FooPoint3f Pt3f;
 
 ////////////////////////////////////////////////////////////////////////////////

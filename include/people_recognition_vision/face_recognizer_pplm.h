@@ -27,7 +27,7 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs/MatchPPL]
+        [people_msgs_rl/MatchPPL]
         Match a detected PPL against a reference one.
  */
 #ifndef FACE_RECOGNIZER_PPLM_H
@@ -69,8 +69,8 @@ public:
   /*! \arg pp not const because we store the result of the face reco when succesful
     */
   bool pp2reco(const PP & pp, face_recognition::PersonName & ans,
-               people_msgs::PeoplePoseAttributes & added_attributes) {
-    ans = people_msgs::PeoplePose::RECOGNITION_FAILED;
+               people_msgs_rl::PeoplePoseAttributes & added_attributes) {
+    ans = people_msgs_rl::PeoplePose::RECOGNITION_FAILED;
     if (pp.rgb.width == 0 || pp.rgb.height == 0) {
       printf("FaceRecognizerPPLM: PP has no rgb image\n");
       return false;
@@ -97,9 +97,9 @@ public:
     cv::Mat3b face_color = _rgb_bridge->image(faces_roi.front());
     //cv::imshow("face_color", face_color); cv::waitKey(0);
     ans = _face_reco.predict_non_preprocessed_face(face_color);
-    if (ans == face_recognition::NOBODY || ans == people_msgs::PeoplePose::RECOGNITION_FAILED) {
+    if (ans == face_recognition::NOBODY || ans == people_msgs_rl::PeoplePose::RECOGNITION_FAILED) {
       printf("FaceRecognizerPPLM::pp2reco(): predict_non_preprocessed_face() failed\n");
-      ans = people_msgs::PeoplePose::RECOGNITION_FAILED;
+      ans = people_msgs_rl::PeoplePose::RECOGNITION_FAILED;
       return false;
     }
     // save result of face reco - only if success
@@ -112,8 +112,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int npps = new_ppl.poses.size(),
         ntracks = tracks.poses.size();
     DEBUG_PRINT("FaceRecognizerPPLM::match(%i new PP, %i tracks)\n",
@@ -136,7 +136,7 @@ public:
       // otherwise try and detect them
       if (pp2reco(*track, track_recos[track_idx], tracks_added_attributes[track_idx]))
         continue;
-      track_recos[track_idx] = people_msgs::PeoplePose::RECOGNITION_FAILED;
+      track_recos[track_idx] = people_msgs_rl::PeoplePose::RECOGNITION_FAILED;
       DEBUG_PRINT("Could not recognize the face of track #%i\n", track_idx);
     } // end for (track_idx)
     // apply face reco on PP
@@ -144,7 +144,7 @@ public:
       const PP* pp = &(new_ppl.poses[pp_idx]);
       if (pp2reco(*pp, ppl_recos[pp_idx], new_ppl_added_attributes[pp_idx]))
         continue;
-      ppl_recos[pp_idx] = people_msgs::PeoplePose::RECOGNITION_FAILED;
+      ppl_recos[pp_idx] = people_msgs_rl::PeoplePose::RECOGNITION_FAILED;
       DEBUG_PRINT("Could not recognize the face of PP #%i\n", pp_idx);
     } // end for (pp_idx)
 
@@ -156,16 +156,16 @@ public:
     for (unsigned int pp_idx = 0; pp_idx < npps; ++pp_idx) {
       face_recognition::PersonName curr_name = ppl_recos[pp_idx];
       if (curr_name.empty()
-          || curr_name == people_msgs::PeoplePose::RECOGNITION_FAILED
-          || curr_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE)
+          || curr_name == people_msgs_rl::PeoplePose::RECOGNITION_FAILED
+          || curr_name == people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE)
         continue;
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
         face_recognition::PersonName track_name = track_recos[track_idx];
         DEBUG_PRINT("FaceRecognizerPPLM: curr:%i='%s', track:%i='%s'\n",
                     pp_idx, curr_name.c_str(), track_idx, track_name.c_str());
         if (track_name.empty()
-            || track_name == people_msgs::PeoplePose::RECOGNITION_FAILED
-            || track_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE)
+            || track_name == people_msgs_rl::PeoplePose::RECOGNITION_FAILED
+            || track_name == people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE)
           continue;
         int cost_idx = pp_idx * ntracks + track_idx;
         

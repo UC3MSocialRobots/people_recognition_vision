@@ -27,7 +27,7 @@ ________________________________________________________________________________
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs/MatchPPL]
+        [people_msgs_rl/MatchPPL]
         Match a detected PPL against a reference one.
  */
 
@@ -49,8 +49,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PeoplePoseAttributes> & tracks_added_attributes) {
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
     unsigned int npps = new_ppl.poses.size(),  ntracks = tracks.poses.size();
     //printf("NitePPLM:match(%i tracks, %i PPs)\n", ntracks, npps);
     costs.resize(ntracks * npps, DEFAULT_COST);
@@ -68,21 +68,21 @@ public:
     for (unsigned int curr_idx = 0; curr_idx < npps; ++curr_idx) {
       if (!ppl_utils::get_attribute_readonly
           (new_ppl.poses[curr_idx], "user_multimap_name", curr_name)) {
-        curr_name = people_msgs::PeoplePose::NO_RECOGNITION_MADE;
+        curr_name = people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE;
       }
       if (curr_name.empty()
-          || curr_name == people_msgs::PeoplePose::RECOGNITION_FAILED
-          || curr_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE)
+          || curr_name == people_msgs_rl::PeoplePose::RECOGNITION_FAILED
+          || curr_name == people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE)
         continue;
       // check matches
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
         if (!ppl_utils::get_attribute_readonly
             (tracks.poses[track_idx], "user_multimap_name", track_name))
-          track_name = people_msgs::PeoplePose::NO_RECOGNITION_MADE;
+          track_name = people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE;
         //printf("curr:%i='%s', track:%i='%s'\n", curr_idx, curr_name.c_str(), track_idx, track_name.c_str());
         if (track_name.empty()
-            || track_name == people_msgs::PeoplePose::RECOGNITION_FAILED
-            || track_name == people_msgs::PeoplePose::NO_RECOGNITION_MADE)
+            || track_name == people_msgs_rl::PeoplePose::RECOGNITION_FAILED
+            || track_name == people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE)
           continue;
         int cost_idx = curr_idx * ntracks + track_idx;
         

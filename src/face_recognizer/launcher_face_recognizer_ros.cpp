@@ -40,12 +40,12 @@ it will recognizes (put a name on) the faces that the latter finds.
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs::PeoplePoseList]
+        [people_msgs_rl::PeoplePoseList]
         The images of the found faces, and their ROIs
 
 \section Publications
   - \b ${ppl_output_topic}
-        [people_msgs::PeoplePoseList]
+        [people_msgs_rl::PeoplePoseList]
         The found faces ROIs and the name of the persons recognized
 
  */
@@ -57,9 +57,9 @@ it will recognizes (put a name on) the faces that the latter finds.
 // ad_core
 #include "vision_utils/nano_skill.h"
 // vision
-// people_msgs
+// people_msgs_rl
 #include "people_recognition_vision/face_recognizer.h"
-#include <people_msgs/PeoplePoseList.h>
+#include <people_msgs_rl/PeoplePoseList.h>
 
 class FaceRecognizerRos : public NanoSkill {
 public:
@@ -74,7 +74,7 @@ public:
 
     // advertize for the updated PPL
     _face_recognition_results_pub = _nh_private.advertise
-        <people_msgs::PeoplePoseList>("ppl", 1);
+        <people_msgs_rl::PeoplePoseList>("ppl", 1);
   } // end ctor
 
   //////////////////////////////////////////////////////////////////////////////
@@ -113,16 +113,16 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_detec_result_cb
-  (const people_msgs::PeoplePoseListConstPtr & msg) {
+  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
     // prepair the msg to be published
     _face_recognition_results_msg = *msg;
 
     // try to recognize each face
     cv_bridge::CvImageConstPtr img_ptr;
     for (unsigned int face_idx = 0; face_idx < msg->poses.size(); ++face_idx) {
-      const people_msgs::PeoplePose*
+      const people_msgs_rl::PeoplePose*
           curr_pose_in = &(msg->poses[face_idx]);
-      people_msgs::PeoplePose*
+      people_msgs_rl::PeoplePose*
           curr_pose_out = &(_face_recognition_results_msg.poses[face_idx]);
       //      if (curr_pose_in->has_image == false)
       //        continue;
@@ -135,7 +135,7 @@ public:
       } catch (cv_bridge::Exception e) {
         ROS_WARN("cv_bridge exception:'%s'", e.what());
         // mark the person as not recognized
-        curr_pose_out->person_name = people_msgs::PeoplePose::RECOGNITION_FAILED;
+        curr_pose_out->person_name = people_msgs_rl::PeoplePose::RECOGNITION_FAILED;
         continue;
       }
 
@@ -166,7 +166,7 @@ private:
   ros::Subscriber _ppl_sub;
 
   //! face reco topic
-  people_msgs::PeoplePoseList _face_recognition_results_msg;
+  people_msgs_rl::PeoplePoseList _face_recognition_results_msg;
   //! face reco pub
   ros::Publisher _face_recognition_results_pub;
 
