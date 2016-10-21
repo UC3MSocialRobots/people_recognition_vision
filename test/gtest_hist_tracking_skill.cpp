@@ -25,8 +25,9 @@ ________________________________________________________________________________
 // Bring in gtest
 #include <gtest/gtest.h>
 #include "vision_utils/utils/timer.h"
-#include <test/matrix_testing.h>
-#include <ros_utils/rosmaster_alive.h>
+#include "vision_utils/utils/matrix_testing.h"
+
+#include <vision_utils/utils/rosmaster_alive.h>
 #include <vision_utils/img_path.h>
 #include "people_recognition_vision/hist_tracking_skill.h"
 

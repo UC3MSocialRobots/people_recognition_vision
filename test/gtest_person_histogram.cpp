@@ -27,7 +27,8 @@ ________________________________________________________________________________
 #include "people_recognition_vision/person_histogram.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "vision_utils/utils/timer.h"
-#include "test/matrix_testing.h"
+#include "vision_utils/utils/matrix_testing.h"
+
 
 using namespace test_person_histogram_set_variables;
 //#define DISPLAY
