@@ -39,7 +39,7 @@ typedef cv::Ptr<cv::SVM> MySVMPtr;
 #include "vision_utils/colormaps.h"
 #include "vision_utils/utils/timestamp.h"
 #include "vision_utils/array_to_color.h"
-#include "vision_utils/mini_stage.h"
+#include "cvstage/cvstage.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////

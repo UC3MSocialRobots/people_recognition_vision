@@ -29,7 +29,7 @@ thanks to the size of his/her breast.
 
 #include "people_recognition_vision/height_detector.h"
 #include "vision_utils/cloud_tilter.h"
-#include "vision_utils/mini_stage_plugins.h"
+#include "vision_utils/cvstage_plugins.h"
 #include "vision_utils/utils/Rect3.h"
 #include "vision_utils/utils/find_and_replace.h"
 #include "vision_utils/utils/string_split.h"
@@ -1258,8 +1258,8 @@ protected:
     //    ms.set_scale(1. / 150);
     //    ms.draw_grid(1.f, 150);
     //    ms.draw_axes();
-    //    mini_stage_plugins::plot_xy_pts(ms, _user_3D, CV_RGB(0, 255, 0), 1);
-    //    mini_stage_plugins::plot_xy_pts(ms, _breast3D_Z, _breast3D_Y, CV_RGB(255, 0, 0), 2, 8, -3);
+    //    cvstage_plugins::plot_xy_pts(ms, _user_3D, CV_RGB(0, 255, 0), 1);
+    //    cvstage_plugins::plot_xy_pts(ms, _breast3D_Z, _breast3D_Y, CV_RGB(255, 0, 0), 2, 8, -3);
     //    cv::imshow("viz", ms.get_viz()); cv::waitKey(5);
 
     // draw features
@@ -1299,15 +1299,15 @@ protected:
     ms.set_scale(1. / 150);
     ms.draw_grid(1.f, 150);
     ms.draw_axes();
-    mini_stage_plugins::plot_xy_pts(ms, _proj_x, _proj_y, CV_RGB(255, 100, 100), 2);
-    mini_stage_plugins::plot_xy_pts(ms, _proj_rot_x, _proj_rot_y, CV_RGB(100, 255, 100), 2);
+    cvstage_plugins::plot_xy_pts(ms, _proj_x, _proj_y, CV_RGB(255, 100, 100), 2);
+    cvstage_plugins::plot_xy_pts(ms, _proj_rot_x, _proj_rot_y, CV_RGB(100, 255, 100), 2);
     //    cv::line(ms.get_viz(), ms.world2pixel(_ellipse_center),
     //             ms.world2pixel(_ellipse_end1), CV_RGB(0, 0, 0), 2);
     //    cv::line(ms.get_viz(), ms.world2pixel(_ellipse_center),
     //             ms.world2pixel(_ellipse_end2), CV_RGB(0, 0, 0), 2);
 
     // draw _ellipse
-    mini_stage_plugins::draw_ellipse(ms, _ellipse, CV_RGB(0, 0, 0), 2);
+    cvstage_plugins::draw_ellipse(ms, _ellipse, CV_RGB(0, 0, 0), 2);
     // draw _ellipse_closest_end
     cv::line(ms.get_viz(), ms.world2pixel(_ellipse_center),
              ms.world2pixel(_ellipse_closest_end), CV_RGB(0, 0, 0), 2);
@@ -1364,9 +1364,9 @@ protected:
         ms.clear();
         ms.draw_grid(1.f, 150);
         ms.draw_axes();
-        mini_stage_plugins::plot_xy_pts(ms, _proj_x, _proj_y, CV_RGB(255, 150, 150), 2);
-        mini_stage_plugins::draw_ellipse(ms, _ellipse, CV_RGB(0, 0, 0), 2);
-        mini_stage_plugins::plot_xy_pts(ms, (*slice), CV_RGB(255, 0, 0), 2);
+        cvstage_plugins::plot_xy_pts(ms, _proj_x, _proj_y, CV_RGB(255, 150, 150), 2);
+        cvstage_plugins::draw_ellipse(ms, _ellipse, CV_RGB(0, 0, 0), 2);
+        cvstage_plugins::plot_xy_pts(ms, (*slice), CV_RGB(255, 0, 0), 2);
         cv::imshow(win_name, ms.get_viz());
       } // end while key
     } // end loop slice_idx
@@ -1389,15 +1389,15 @@ protected:
     ms.draw_axes();
     // show the initial user:ellipse and set of points
     // unsigned int user_npts = _user_3D.size();
-    mini_stage_plugins::plot_xy_pts(ms, _proj_x, _proj_y, CV_RGB(255, 150, 150), 2);
-    mini_stage_plugins::draw_ellipse(ms, _ellipse, CV_RGB(0, 0, 0), 2);
+    cvstage_plugins::plot_xy_pts(ms, _proj_x, _proj_y, CV_RGB(255, 150, 150), 2);
+    cvstage_plugins::draw_ellipse(ms, _ellipse, CV_RGB(0, 0, 0), 2);
     //    for (unsigned int pt_idx = 0; pt_idx < user_npts; ++pt_idx)
     //      cv::circle(ms.get_viz(), ms.world2pixel(_proj_x[pt_idx], _proj_y[pt_idx]),
     //                 2, CV_RGB(255, 150, 150), -1);
 
     // plot the best slice and its template vec
-    mini_stage_plugins::plot_xy_pts(ms, (*slice), CV_RGB(255, 0, 0), 2);
-    mini_stage_plugins::plot_xy_pts(ms, _best_template->pts, CV_RGB(0,0,0), 2);
+    cvstage_plugins::plot_xy_pts(ms, (*slice), CV_RGB(255, 0, 0), 2);
+    cvstage_plugins::plot_xy_pts(ms, _best_template->pts, CV_RGB(0,0,0), 2);
     // cv::imshow(win_name, ms.get_viz());
     //} // end while key
 
