@@ -1,4 +1,7 @@
 - git:
+    local-name: cvstage
+    uri: https://github.com/arnaud-ramey/cvstage.git
+- git:
     local-name: kinect
     uri: https://github.com/UC3MSocialRobots/kinect.git
 - git:
