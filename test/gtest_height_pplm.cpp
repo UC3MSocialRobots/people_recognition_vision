@@ -22,7 +22,7 @@ ________________________________________________________________________________
 Some tests for HeightPPLM
  */
 #include "vision_utils/pplm_testing.h"
-#include "people_recognition_vision/height_detector.h"
+#include "people_recognition_vision/height_pplm.h"
 
 TEST(TestSuite, create) {
   if (!rosmaster_alive()) return;

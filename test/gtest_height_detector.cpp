@@ -336,7 +336,8 @@ TEST(TestSuite, ref_skel) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#include <databases_io/g3d2imgs.h>
+#if 0
+#include <vision_utils/databases_io/g3d2imgs.h>
 #define G3D_DIR "/home/user/Downloads/0datasets/g3d_kingston/"
 TEST(TestSuite, g3d2imgs) {
   G3D2Imgs db;
@@ -361,6 +362,7 @@ TEST(TestSuite, g3d2imgs) {
   cv::imshow("illus", illus); cv::waitKey(0);
 #endif
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

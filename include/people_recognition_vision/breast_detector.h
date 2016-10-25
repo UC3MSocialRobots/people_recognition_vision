@@ -28,8 +28,10 @@ thanks to the size of his/her breast.
 #define BREAST_DETECTOR_H
 
 #include "people_recognition_vision/height_detector.h"
+#include "cvstage/plugins/draw_xy_lines.h"
+#include "cvstage/plugins/draw_ellipses.h"
 #include "vision_utils/cloud_tilter.h"
-#include "vision_utils/cvstage_plugins.h"
+#include "vision_utils/drawing_utils.h"
 #include "vision_utils/utils/Rect3.h"
 #include "vision_utils/utils/find_and_replace.h"
 #include "vision_utils/utils/string_split.h"
@@ -196,7 +198,7 @@ public:
     if (user_indices.size() != nsamples || depth_cam_models.size() != nsamples
         || labels.size() != nsamples) {
       printf("train(): non consistent size in the training data! "
-             "%i filenames, %i user indces, %i cam models, %i labels\n",
+             "%i filenames, %li user indces, %li cam models, %li labels\n",
              nsamples, user_indices.size(), depth_cam_models.size(), labels.size());
       return false;
     }
@@ -236,7 +238,7 @@ public:
       if (feature_size == -1) // store the feature size
         feature_size= _feature.size();
       if ((int) _feature.size() != feature_size) {
-        printf("train(): '%s': Feature size %i != the correct size %i\n",
+        printf("train(): '%s': Feature size %li != the correct size %i\n",
                filename.c_str(), _feature.size(), feature_size);
         // cv::waitKey(0);
         continue;
@@ -435,11 +437,11 @@ protected:
       printf("fit_ellipse_and_rotate(): gaussian_pdf_ellipse() failed!\n");
       return false;
     }
-    _ellipse = ellipse_utils::three_pts2ellipse(_ellipse_center, _ellipse_end1, _ellipse_end2);
+    _ellipse = cvstage_plugins::three_pts2ellipse(_ellipse_center, _ellipse_end1, _ellipse_end2);
 
     // find the end of the short axis of the ellipse closest to origin
     Pt2f long1, long2, short1, short2;
-    ellipse_utils::ellipse_axes(_ellipse, long1, long2, short1, short2);
+    cvstage_plugins::ellipse_axes(_ellipse, long1, long2, short1, short2);
     _ellipse_closest_end = short1;
     if (geometry_utils::distance_points_squared(short1, Pt2f(0, 0))
         > geometry_utils::distance_points_squared(short2, Pt2f(0, 0)))
@@ -515,7 +517,7 @@ protected:
     if (head_height < .1 || head_height > .45) {
       printf("convert_head2feet_path_to_feature(): "
              "head_height %g m out of bounds! "
-             "(_head2feet_path3D has %i pts, _user_height:%g m)\n",
+             "(_head2feet_path3D has %li pts, _user_height:%g m)\n",
              head_height, _head2feet_path3D.size(), _user_height);
       return herror;
     }
@@ -1417,7 +1419,7 @@ protected:
   std::vector<double> _proj_x, _proj_y;
   Pt2f _ellipse_center, _ellipse_end1, _ellipse_end2;
   Pt2f _ellipse_closest_end;
-  ellipse_utils::Ellipse _ellipse;
+  cvstage_plugins::Ellipse _ellipse;
   double _user_ymin, _user_ymax, _user_height;
 
   std::vector<double> _breast3D_Y, _breast3D_Z;

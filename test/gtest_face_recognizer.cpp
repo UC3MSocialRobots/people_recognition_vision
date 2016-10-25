@@ -27,6 +27,7 @@ ________________________________________________________________________________
 #include "vision_utils/utils/timer.h"
 #include <vision_utils/img_path.h>
 #include "people_recognition_vision/face_recognizer.h"
+#include <people_msgs_rl/PeoplePoseList.h>
 
 #define FACES_DIR   IMG_DIR "faces/"
 
