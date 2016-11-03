@@ -87,7 +87,7 @@ void train_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
   // load data
   unsigned int nfiles = DGaitDBFilename::ONI_FILES * DGaitDBFilename::NFILES_TRAIN;
   image_geometry::PinholeCameraModel depth_camera_model, rgb_camera_model;
-  kinect_openni_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
+  vision_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
   // now train
   BreastDetector detector;
   
@@ -112,7 +112,7 @@ bool test_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
   // load data
   unsigned int nfiles = DGaitDBFilename::ONI_FILES * DGaitDBFilename::NFILES_TEST;
   image_geometry::PinholeCameraModel depth_camera_model, rgb_camera_model;
-  kinect_openni_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
+  vision_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
   std::vector<std::string> files = f.all_filenames_test();
   std::vector<BreastDetector::Gender> exp_genders =
       f.all_genders_test<BreastDetector::Gender>(BreastDetector::MALE, BreastDetector::FEMALE);
@@ -126,14 +126,14 @@ bool test_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
     cv::Mat1b user_mask;
     cv::Mat3b rgb;
     cv::Mat1f depth;
-    if (!image_utils::read_rgb_depth_user_image_from_image_file
+    if (!vision_utils::read_rgb_depth_user_image_from_image_file
         (files[file_idx], &rgb, &depth, &user_mask))
       continue;
       
     const uchar USER_IDX_auxConst = DGaitDBFilename::USER_IDX;  
       
     user_mask = (user_mask == USER_IDX_auxConst);
-    Timer timer;
+    vision_utils::Timer timer;
     BreastDetector::HeightBreast h = detector.detect_breast(depth, user_mask, depth_camera_model, method);
     if (h.gender == BreastDetector::ERROR) {
       printf("BreastDetector failed to test with img '%s'.\n", files[file_idx].c_str());
@@ -143,8 +143,8 @@ bool test_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
     cv::Mat3b breast_illus;
     detector.breast2img(user_mask, breast_illus, BreastDetector::HeightBreast(), method);
     cv::imshow("rgb", rgb);
-    cv::imshow("depth", image_utils::depth2viz(depth));
-    //cv::imshow("depth", image_utils::in(depth));
+    cv::imshow("depth", vision_utils::depth2viz(depth));
+    //cv::imshow("depth", vision_utils::in(depth));
     cv::imshow("breast_illus", breast_illus); cv::waitKey(5);
 
     BreastDetector::Gender exp_gender = exp_genders[file_idx];

@@ -26,19 +26,19 @@
 #define CONDITIONNAL_PARTICLE_FILTER_LASER_H
 
 #include "people_recognition_vision/conditional_particle_filter.h"
-#include "vision_utils/utils/geometry_utils.h"
-#include "vision_utils/utils/combinatorics_utils.h"
+
+
 
 namespace conditional_particle_filter_laser {
 
 //! a 2D point
-typedef geometry_utils::FooPoint2f Pt2;
+typedef vision_utils::FooPoint2f Pt2;
 
 //! the sensor data "y" : the laser range.
 typedef std::vector<Pt2> SensorMeasurement;
 
 //! the pose of the human "y" : x, y, yaw
-struct PeoplePose {
+struct Person {
   float x, y, yaw;
   static const float PEOPLE_RADIUS_SQUARED = .25; // meters * meters
 };
@@ -46,7 +46,7 @@ struct PeoplePose {
 ////////////////////////////////////////////////////////////////////////////////
 
 class ConditionalParticleFilterLaser :
-    public ConditionalParticleFilter<SensorMeasurement, PeoplePose> {
+    public ConditionalParticleFilter<SensorMeasurement, Person> {
 public:
   //////////////////////////////////////////////////////////////////////////////
 
@@ -67,9 +67,9 @@ public:
     for (unsigned int t_idx = 0; t_idx < z_t.size(); ++t_idx) {
       for (unsigned int people_idx = 0; people_idx < x_t.people_poses->size();
            ++people_idx) {
-        if (geometry_utils::distance_points_squared
+        if (vision_utils::distance_points_squared
             ((*x_t.people_poses)[people_idx], z_t[t_idx])
-            < PeoplePose::PEOPLE_RADIUS_SQUARED)
+            < Person::PEOPLE_RADIUS_SQUARED)
           ++ans;
       } // end loop people_idx
     } // end loop idx
@@ -90,7 +90,7 @@ public:
     //             u_t.linear.y, u_t.angular.z, r_t_minus1.x, r_t_minus1.y, dt_sec);
     // odometry update
     RobotPose r_t = r_t_minus1;
-    odom_utils::update_pos_rot(r_t.x, r_t.y, r_t.yaw, u_t, dt_sec);
+    vision_utils::update_pos_rot(r_t.x, r_t.y, r_t.yaw, u_t, dt_sec);
     return r_t;
   }
 
@@ -99,19 +99,19 @@ public:
   /*! for instance brownian motion
       \warning the poses are given in static frame
       to implement */
-  virtual PeoplePose sample_people_motion_model_law(const RobotCommandOrder & u_t,
-                                                    const PeoplePose & y_t_minus1,
+  virtual Person sample_people_motion_model_law(const RobotCommandOrder & u_t,
+                                                    const Person & y_t_minus1,
                                                     const Timer::Time & dt_sec)
   {
     // odometry update - nothing to: in the static frame, no move!
-    PeoplePose y_t = y_t_minus1;
+    Person y_t = y_t_minus1;
 
     // brownian move
     const double max_speed = .5;
     // gaussian speed
-    y_t.x   += combinatorics_utils::rand_gaussian() * dt_sec * max_speed;
-    y_t.y   += combinatorics_utils::rand_gaussian() * dt_sec * max_speed;
-    y_t.yaw += combinatorics_utils::rand_gaussian() * dt_sec * max_speed;
+    y_t.x   += vision_utils::rand_gaussian() * dt_sec * max_speed;
+    y_t.y   += vision_utils::rand_gaussian() * dt_sec * max_speed;
+    y_t.yaw += vision_utils::rand_gaussian() * dt_sec * max_speed;
 
     // max of .5 m/s
     //  y_t.x   += (-1 + 2 * drand48()) * dt_sec * max_speed;
@@ -133,8 +133,8 @@ public:
     // state of the particle filter just after initialization:
     // particles scattered all over the map
     // [robot_pose_part_idx][people_pose_part_idx][people_idx]
-    std::vector<PeoplePose> v3(_M, PeoplePose());
-    std::vector<std::vector<PeoplePose> > v2(_N_y, v3);
+    std::vector<Person> v3(_M, Person());
+    std::vector<std::vector<Person> > v2(_N_y, v3);
     _Y_t_minus1 = ParticleVector3(_N_r, v2);
     // init with a scattering on the  map
     float map_w = 4, map_h = 4;

@@ -27,7 +27,7 @@ ________________________________________________________________________________
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs_rl/MatchPPL]
+        [people_recognition_vision/MatchPPL]
         Match a detected PPL against a reference one.
  */
 
@@ -49,9 +49,9 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
-    unsigned int npps = new_ppl.poses.size(),  ntracks = tracks.poses.size();
+             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
+    unsigned int npps = new_ppl.people.size(),  ntracks = tracks.poses.size();
     //printf("NitePPLM:match(%i tracks, %i PPs)\n", ntracks, npps);
     costs.resize(ntracks * npps, DEFAULT_COST);
     for (unsigned int i = 0; i < std::min(npps, ntracks); ++i) // set diagonal costs
@@ -66,23 +66,23 @@ public:
     }
     std::string curr_name,track_name;
     for (unsigned int curr_idx = 0; curr_idx < npps; ++curr_idx) {
-      if (!ppl_utils::get_attribute_readonly
-          (new_ppl.poses[curr_idx], "user_multimap_name", curr_name)) {
-        curr_name = people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE;
+      if (!vision_utils::get_tag
+          (new_ppl.people[curr_idx], "user_multimap_name", curr_name)) {
+        curr_name = "NOREC";
       }
       if (curr_name.empty()
-          || curr_name == people_msgs_rl::PeoplePose::RECOGNITION_FAILED
-          || curr_name == people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE)
+          || curr_name == "RECFAIL"
+          || curr_name == "NOREC")
         continue;
       // check matches
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-        if (!ppl_utils::get_attribute_readonly
+        if (!vision_utils::get_tag
             (tracks.poses[track_idx], "user_multimap_name", track_name))
-          track_name = people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE;
+          track_name = "NOREC";
         //printf("curr:%i='%s', track:%i='%s'\n", curr_idx, curr_name.c_str(), track_idx, track_name.c_str());
         if (track_name.empty()
-            || track_name == people_msgs_rl::PeoplePose::RECOGNITION_FAILED
-            || track_name == people_msgs_rl::PeoplePose::NO_RECOGNITION_MADE)
+            || track_name == "RECFAIL"
+            || track_name == "NOREC")
           continue;
         int cost_idx = curr_idx * ntracks + track_idx;
         

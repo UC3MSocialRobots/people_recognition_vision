@@ -32,7 +32,7 @@ the tracks and the PPL detections.
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs_rl/MatchPPL]
+        [people_recognition_vision/MatchPPL]
         Match a detected PPL against a reference one.
  */
 
@@ -40,7 +40,7 @@ the tracks and the PPL detections.
 #define ARTOOLKIT_PPLM_H
 
 #include "vision_utils/pplm_template.h"
-#include "vision_utils/utils/distances.h"
+#include "vision_utils/distances.h"
 
 class ARToolkitPPLM : public PPLMatcherTemplate {
 public:
@@ -52,13 +52,14 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
+             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
     unsigned int ntracks = tracks.poses.size(),
-        ncurr_users = new_ppl.poses.size();
-    if (new_ppl.method != "artoolkit") {
+        ncurr_users = new_ppl.people.size();
+    std::string method  = vision_utils::get_method(new_ppl);
+    if (method != "artoolkit") {
       DEBUG_PRINT("ARToolkitPPLM::match() with method '%s'!='artoolkit'",
-                  new_ppl.method.c_str());
+                  method.c_str());
       return false;
     }
     DEBUG_PRINT("ARToolkitPPLM::match(%i new PP, %i tracks)\n",
@@ -71,9 +72,9 @@ public:
     }
     costs.resize(ncurr_users * ntracks, HIGH_COST);
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
-      std::string curr_name = new_ppl.poses[curr_idx].person_name;
+      std::string curr_name = new_ppl.people[curr_idx].name;
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-        std::string track_name = tracks.poses[curr_idx].person_name;
+        std::string track_name = tracks.poses[curr_idx].name;
         if (curr_name != track_name)
           continue;
         // set a low cost

@@ -82,7 +82,7 @@ inline std::vector<std::string> create_google_genders_images_filenames() {
 
 inline std::vector<std::string> create_yale_images_filenames() {
   std::vector<std::string> images_filenames;
-  string_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/index.txt",
+  vision_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/index.txt",
                                    images_filenames);
   //printf("n_pics:%i", images_filenames.size());
   return images_filenames;
@@ -111,7 +111,7 @@ inline std::vector<face_recognition::PersonName> image_filenames_to_names
     bool is_woman = is_woman_ptr(images_filenames[file_idx]);
     names.push_back(is_woman ? "woman" : "man");
   } // end loop filename
-  maggiePrint("image_filenames_to_names(): %i pics, %i%% men",
+  ROS_WARN("image_filenames_to_names(): %i pics, %i%% men",
               names.size(), n_men(names) * 100 / names.size());
   return names;
 }
@@ -136,7 +136,7 @@ inline bool yale_is_woman(const std::string & filename) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_google_genders_face_recognizer() {
-  maggieDebug2("train_google_genders_face_recognizer()");
+  ROS_INFO("train_google_genders_face_recognizer()");
   face_recognition::FaceRecognizer reco;
   reco.from_color_images_filenames
       (create_google_genders_images_filenames(),
@@ -148,7 +148,7 @@ void train_google_genders_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_yale_face_recognizer() {
-  maggieDebug2("train_yale_face_recognizer()");
+  ROS_INFO("train_yale_face_recognizer()");
   std::vector<std::string> filenames_big = create_yale_images_filenames();
   std::vector<std::string> filenames_small;
   decimate_vector(filenames_big, filenames_small, 1.f / 20);
@@ -161,7 +161,7 @@ void train_yale_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_yale_small_face_recognizer() {
-  maggieDebug2("train_yale_small_face_recognizer()");
+  ROS_INFO("train_yale_small_face_recognizer()");
 #if 0 // create training and test subsets
   std::vector<std::string> filenames_big = create_yale_images_filenames(),
       filenames_small, training_set_filenames, test_set_filenames;
@@ -172,13 +172,13 @@ void train_yale_small_face_recognizer() {
   split_vector_in_two(filenames_small, training_set_filenames, test_set_filenames, 1 / 2.f);
   printf("training_set size:%i, test_set size:%i",
            training_set_filenames.size(), test_set_filenames.size());
-  string_utils::save_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
+  vision_utils::save_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
                                training_set_filenames);
-  string_utils::save_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
+  vision_utils::save_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
                                test_set_filenames);
 #else
   std::vector<std::string> training_set_filenames;
-  string_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
+  vision_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/training.txt",
                                    training_set_filenames);
 #endif
 
@@ -194,7 +194,7 @@ void train_yale_small_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_people_lab_face_recognizer() {
-  maggieDebug2("test_people_lab_face_recognizer()");
+  ROS_INFO("test_people_lab_face_recognizer()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "people_lab/index.xml");
 
@@ -218,7 +218,7 @@ void test_people_lab_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_google_genders_face_recognizer() {
-  maggieDebug2("test_google_genders_face_recognizer()");
+  ROS_INFO("test_google_genders_face_recognizer()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "google_genders/index.xml");
 
@@ -232,7 +232,7 @@ void test_google_genders_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_google_genders_face_recognizer_varying_size() {
-  maggieDebug2("test_google_genders_face_recognizer_varying_size()");
+  ROS_INFO("test_google_genders_face_recognizer_varying_size()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "google_genders/index.xml");
 
@@ -253,7 +253,7 @@ void test_google_genders_face_recognizer_varying_size() {
 
 //! benchmark: train on google images, test on yale
 void benchmark_google_with_yale() {
-  maggieDebug2("benchmark_google_with_yale()");
+  ROS_INFO("benchmark_google_with_yale()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "google_genders/index.xml");
   reco.benchmark_color_images_filenames
@@ -265,7 +265,7 @@ void benchmark_google_with_yale() {
 
 //! benchmark: train on people from the lab, test on yale
 void benchmark_yale_with_google() {
-  maggieDebug2("benchmark_yale_with_google()");
+  ROS_INFO("benchmark_yale_with_google()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "YaleB/index.xml");
   reco.benchmark_color_images_filenames
@@ -278,12 +278,12 @@ void benchmark_yale_with_google() {
 
 //! benchmark: train on people from the lab, test on yale
 void benchmark_yale_small_with_yale_small2() {
-  maggieDebug2("benchmark_yale_small_with_yale_small2()");
+  ROS_INFO("benchmark_yale_small_with_yale_small2()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "Yale_B_small/index.xml");
 
   std::vector<std::string> test_filenames;
-  string_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
+  vision_utils::retrieve_file_split("/home/user/Downloads/ExtendedYaleB/test.txt",
                                    test_filenames);
   reco.benchmark_color_images_filenames
       (test_filenames, image_filenames_to_names(test_filenames, &yale_is_woman));
@@ -292,7 +292,7 @@ void benchmark_yale_small_with_yale_small2() {
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(/*int argc, char** argv*/) {
-  maggieDebug2("test_face_recognizer()");
+  ROS_INFO("test_face_recognizer()");
   int idx = 1;
   printf("%i: train_google_genders_face_recognizer();\n", idx++);
   printf("%i: train_yale_face_recognizer();\n", idx++);

@@ -31,12 +31,11 @@ thanks to the size of his/her breast.
 #include "cvstage/plugins/draw_xy_lines.h"
 #include "cvstage/plugins/draw_ellipses.h"
 #include "vision_utils/cloud_tilter.h"
-#include "vision_utils/drawing_utils.h"
-#include "vision_utils/utils/Rect3.h"
-#include "vision_utils/utils/find_and_replace.h"
-#include "vision_utils/utils/string_split.h"
+
+#include "vision_utils/Rect3.h"
+#include "vision_utils/find_and_replace.h"
+#include "vision_utils/string_split.h"
 //#define DEBUG
-#include "vision_utils/utils/debug2.h"
 // opencv
 #include <opencv2/ml/ml.hpp>
 #if CV_MAJOR_VERSION > 2
@@ -216,7 +215,7 @@ public:
       cv::Mat1b user_mask;
       cv::Mat3b rgb;
       cv::Mat1f depth;
-      if (!image_utils::read_rgb_depth_user_image_from_image_file
+      if (!vision_utils::read_rgb_depth_user_image_from_image_file
           (filename, &rgb, &depth, &user_mask))
         return false;
       user_mask = (user_mask == user_indices[sample_idx]);
@@ -275,12 +274,12 @@ public:
            << training_mat.at<float>(sample_idx, 1) << ' '
            << training_mat.at<float>(sample_idx, 2) << ' '
            << labels_mat.at<float>(sample_idx) << std::endl;
-    string_utils::save_file("/tmp/BreastDetector.data", data.str());
+    vision_utils::save_file("/tmp/BreastDetector.data", data.str());
     instr << "gnuplot -e \""
           << "set palette rgb 33,13,10; "
           << "splot '/tmp/BreastDetector.data' using 1:2:3:4 with points palette title 'Gender'; "
           << "pause -1 \"";
-    system_utils::exec_system(instr.str());
+    vision_utils::exec_system(instr.str());
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -305,7 +304,7 @@ public:
     }
     // find all users
     std::vector<uchar> user_indices;
-    image_utils::get_all_different_values(user_mask, user_indices, true);
+    vision_utils::get_all_different_values(user_mask, user_indices, true);
     unsigned int nusers = user_indices.size();
 
     // iterate on all user values
@@ -347,7 +346,7 @@ public:
                  Method method) {
 #ifdef USE_PCL_VIEWER
     // reproject user
-    cloud_viewer::Viewer viewer("SimpleCloudViewer");
+    vision_utils::Viewer viewer("SimpleCloudViewer");
     viewer.setBackgroundColor (0, 0, 0);
     viewer.addCoordinateSystem (1.0);
     viewer.initCameraParameters ();
@@ -362,23 +361,23 @@ public:
       // reprojected user_3D
       if (!reproject_user_to_3D(depth, user_mask, depth_cam_model, false))
         return;
-      // viewer.addPointCloud(cloud_viewer::cloud2pcl(_path3D), "path3D");
+      // viewer.addPointCloud(vision_utils::cloud2pcl(_path3D), "path3D");
       _head2feet_path_colors.resize(_head2feet_path3D.size(), cv::Vec3b(0, 255, 0));
 
-      viewer.addPointCloud(cloud_viewer::rgb_cloud2pcl(_head2feet_path3D, _head2feet_path_colors),
+      viewer.addPointCloud(vision_utils::rgb_cloud2pcl(_head2feet_path3D, _head2feet_path_colors),
                            "path3D");
       centroid = _breast_bbox3D.centroid<Pt3f>();
     } // end if (method == WALK3D)
     else { // REPROJECT
-      geometry_utils::Rect3_<float> _user_bbox3D =
-          geometry_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_user_3D);
+      vision_utils::Rect3_<float> _user_bbox3D =
+          vision_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_user_3D);
       centroid = _user_bbox3D.centroid<Pt3f>();
     }
     // all methods have reprojected _user_3D
-    viewer.addPointCloud(cloud_viewer::cloud2pcl(_user_3D), "user3D");
+    viewer.addPointCloud(vision_utils::cloud2pcl(_user_3D), "user3D");
 
-    printf("centroid:'%s'\n", geometry_utils::printP(centroid).c_str());
-    cloud_viewer::look_at(viewer, -0.1, 0, 0.1,
+    printf("centroid:'%s'\n", vision_utils::printP(centroid).c_str());
+    vision_utils::look_at(viewer, -0.1, 0, 0.1,
                           centroid.x, centroid.y, centroid.z,    0, -1, 0);
     viewer.spin();
 
@@ -386,7 +385,7 @@ public:
     if (method == WALK3D) {
       _breast_path_colors.resize(_breast_path3D.size(), cv::Vec3b(0, 0, 255));
       viewer.removeAllPointClouds();
-      viewer.addPointCloud(cloud_viewer::rgb_cloud2pcl(_breast_path3D, _breast_path_colors),
+      viewer.addPointCloud(vision_utils::rgb_cloud2pcl(_breast_path3D, _breast_path_colors),
                            "breast_path3D");
       viewer.addCube(_breast_bbox3D.x, _breast_bbox3D.x + _breast_bbox3D.width,
                      _breast_bbox3D.y, _breast_bbox3D.y + _breast_bbox3D.height,
@@ -443,8 +442,8 @@ protected:
     Pt2f long1, long2, short1, short2;
     cvstage_plugins::ellipse_axes(_ellipse, long1, long2, short1, short2);
     _ellipse_closest_end = short1;
-    if (geometry_utils::distance_points_squared(short1, Pt2f(0, 0))
-        > geometry_utils::distance_points_squared(short2, Pt2f(0, 0)))
+    if (vision_utils::distance_points_squared(short1, Pt2f(0, 0))
+        > vision_utils::distance_points_squared(short2, Pt2f(0, 0)))
       _ellipse_closest_end = short2;
 
     // center the point cloud in 0, looking towards x
@@ -464,10 +463,10 @@ protected:
    bool straighten = true)
   {
     if (erode) {
-      cv::Rect bbox = image_utils::boundingBox(user_mask);
+      cv::Rect bbox = vision_utils::boundingBox(user_mask);
       if (bbox.x < 0) {
         printf("HeightBreast: input user_mask '%s 'empty!\n",
-               image_utils::infosImage(user_mask).c_str());
+               vision_utils::infosImage(user_mask).c_str());
         return false;
       }
       int erode_kernel_size = clamp(bbox.width / 8, 10, 30);
@@ -477,7 +476,7 @@ protected:
     }
 
     // reproject user in 3D
-    if (!kinect_openni_utils::pixel2world_depth
+    if (!vision_utils::pixel2world_depth
         (depth, depth_cam_model, _user_3D, 1,
          (erode ? user_mask_eroded : user_mask), true))
       return false;
@@ -501,8 +500,8 @@ protected:
     }
 
     // first find the bbox of _head2feet_path3D and deduce the head height
-    geometry_utils::Rect3_<float> _head2feet_bbox3D =
-        geometry_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_head2feet_path3D);
+    vision_utils::Rect3_<float> _head2feet_bbox3D =
+        vision_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_head2feet_path3D);
     _user_height = _head2feet_bbox3D.height;
     _user_ymin = _head2feet_bbox3D.y;
     double head_height = _user_height / 8.,
@@ -555,7 +554,7 @@ protected:
     } // end loop pt_idx
     // display bins
     for (unsigned int bin_idx = 0; bin_idx < NBINS; ++bin_idx) {
-      debugPrintf("bin %i:'%s'\n", bin_idx, string_utils::iterable_to_string(binsZ[bin_idx]).c_str());
+      debugPrintf("bin %i:'%s'\n", bin_idx, vision_utils::iterable_to_string(binsZ[bin_idx]).c_str());
     }
 
     // find the median point along the Z axis
@@ -571,9 +570,9 @@ protected:
         _feature[bin_idx] = -avgZ + median(bin_values->begin(), bin_values->end());
       //_feature[bin_idx] = -avgZ + *std::max_element(bin_values->begin(), bin_values->end());
     } // end loop bin_idx
-    debugPrintf("feature:'%s'\n", string_utils::iterable_to_string(_feature).c_str());
+    debugPrintf("feature:'%s'\n", vision_utils::iterable_to_string(_feature).c_str());
     normalize(_feature);
-    debugPrintf("feature:'%s'\n", string_utils::iterable_to_string(_feature).c_str());
+    debugPrintf("feature:'%s'\n", vision_utils::iterable_to_string(_feature).c_str());
 
     return predict_svm(method);
   } // end convert_head2feet_path_to_feature()
@@ -790,7 +789,7 @@ protected:
     // reproject points
     _head2feet_path3D.clear();
     for (unsigned int pt_idx = 0; pt_idx < head2feet_pathsize; ++pt_idx) {
-      Pt3f pt3D = kinect_openni_utils::pixel2world_depth<Pt3f>
+      Pt3f pt3D = vision_utils::pixel2world_depth<Pt3f>
                   (_head2feet_path[pt_idx], depth_cam_model, depth);
       if (isnan(pt3D.x) || isnan(pt3D.y) || isnan(pt3D.z))
         continue;
@@ -833,7 +832,7 @@ protected:
       _breast_path3D.push_back(_head2feet_path3D[i]);
 
     _breast_bbox3D =
-        geometry_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_breast_path3D);
+        vision_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_breast_path3D);
 
     // project to an image on the (YZ) plan (remove X)
     int cols = 32;
@@ -856,7 +855,7 @@ protected:
     } // end loop pt_idx
     _breast_projected_img.create(cols, cols);
     _breast_projected_img.setTo(0);
-    image_utils::drawPolygon(_breast_projected_img, _breast_projected_2D, false,
+    vision_utils::drawPolygon(_breast_projected_img, _breast_projected_2D, false,
                              cv::Scalar::all(255), 1);
     //  if (!_breast_projected_2D.empty())
     //    cv::imwrite("breast_projected_img.png", _breast_projected_img);
@@ -902,7 +901,7 @@ protected:
     if (!fit_ellipse_and_rotate(translation, rotation))
       return hans;
 
-    //geometry_utils::rotate_translate_polygon();
+    //vision_utils::rotate_translate_polygon();
     double cos_angle = cos(rotation), sin_angle = sin(rotation);
 #if 0
     _proj_rot_xmin = _proj_rot_xmax = _proj_rot_ymin = _proj_rot_ymax = 0;
@@ -1145,8 +1144,8 @@ protected:
           _best_template = t;
           // printf("New best! best_dist:%g, a:%g, b:%g, s:%g\n", best_dist, a, b, s);
           //      printf("tvec:'%s', _slices[slice_idx]:'%s'\n",
-          //             string_utils::iterable_to_string(tvec).c_str(),
-          //             string_utils::iterable_to_string(_slices[slice_idx]).c_str());
+          //             vision_utils::iterable_to_string(tvec).c_str(),
+          //             vision_utils::iterable_to_string(_slices[slice_idx]).c_str());
         }
       } // end loop slice_idx
     } // end loop template_idx
@@ -1180,10 +1179,10 @@ protected:
 
     // call octave (system call)
     //printf("instr:'%s'\n", instr.str().c_str());
-    std::string octave_output = system_utils::exec_system_get_output(instr.str().c_str());
-    while (string_utils::find_and_replace(octave_output, " =", "=")) {}
-    while (string_utils::find_and_replace(octave_output, "\n", " ")) {}
-    while (string_utils::find_and_replace(octave_output, "  ", " ")) {}
+    std::string octave_output = vision_utils::exec_system_get_output(instr.str().c_str());
+    while (vision_utils::find_and_replace(octave_output, " =", "=")) {}
+    while (vision_utils::find_and_replace(octave_output, "\n", " ")) {}
+    while (vision_utils::find_and_replace(octave_output, "  ", " ")) {}
     //printf("octave_output:'%s'\n", octave_output.c_str());
 
     // default values
@@ -1192,22 +1191,22 @@ protected:
     _best_template = &(_precomputed_templates.front());
     // parse results
     std::vector<std::string> words;
-    string_utils::StringSplit(octave_output, " ", &words);
+    vision_utils::StringSplit(octave_output, " ", &words);
     int nwords = words.size(), success_idx = nwords-1;
     while (success_idx >= 0 && words[success_idx] != "success=")
       --success_idx;
     if (success_idx < 0
         || success_idx + 13 > nwords-1 // we read 13 values
-        || string_utils::cast_from_string<int>(words[success_idx+1]) <= 0) {
+        || vision_utils::cast_from_string<int>(words[success_idx+1]) <= 0) {
       printf("Octave failed in optimizing!\n");
       return false;
     }
-    _best_template->a = string_utils::cast_from_string<double>(words[success_idx+3]);
-    _best_template->b = string_utils::cast_from_string<double>(words[success_idx+4]);
-    _best_template->s = string_utils::cast_from_string<double>(words[success_idx+5]);
-    _best_slice_idx = string_utils::cast_from_string<int>(words[success_idx+7]);
-    double best_error = string_utils::cast_from_string<double>(words[success_idx+9]);
-    double time = 1000 * string_utils::cast_from_string<double>(words[success_idx+13]);
+    _best_template->a = vision_utils::cast_from_string<double>(words[success_idx+3]);
+    _best_template->b = vision_utils::cast_from_string<double>(words[success_idx+4]);
+    _best_template->s = vision_utils::cast_from_string<double>(words[success_idx+5]);
+    _best_slice_idx = vision_utils::cast_from_string<int>(words[success_idx+7]);
+    double best_error = vision_utils::cast_from_string<double>(words[success_idx+9]);
+    double time = 1000 * vision_utils::cast_from_string<double>(words[success_idx+13]);
     BreastDetector::template_matching_fn(*_best_template, false);
     printf("after octave: time:%g s, a:%g, b:%g, c:%g, best_error:%g\n",
            time, _best_template->a, _best_template->b, _best_template->s, best_error);
@@ -1223,10 +1222,10 @@ protected:
     // draw skeleton
     _height_detector.height2img(user_mask, breast_illus, true, h);
     // draw _head2feet_path
-    image_utils::drawListOfPoints(breast_illus, _head2feet_path, cv::Vec3b(255, 255, 255));
+    vision_utils::drawListOfPoints(breast_illus, _head2feet_path, cv::Vec3b(255, 255, 255));
     // draw _breast_path
     cv::Rect breast_path_bbox =
-        geometry_utils::boundingBox_vec<std::vector<Pt2i>, cv::Rect>(_breast_path);
+        vision_utils::boundingBox_vec<std::vector<Pt2i>, cv::Rect>(_breast_path);
     cv::rectangle(breast_illus, breast_path_bbox, CV_RGB(0, 0, 255), 2);
 
     // print estimated gender and dist
@@ -1330,7 +1329,7 @@ protected:
     std::vector<Pt2i> _proj_edge_big;
     for (unsigned int pt_idx = 0; pt_idx < _proj_edge.size(); ++pt_idx)
       _proj_edge_big.push_back(scale_factor * _proj_edge[pt_idx]);
-    image_utils::drawPolygon(_proj_rot2img_big, _proj_edge_big, false,
+    vision_utils::drawPolygon(_proj_rot2img_big, _proj_edge_big, false,
                              CV_RGB(255, 0, 0), 1);
 
     if (!_proj_rot2img_big.empty())
@@ -1430,8 +1429,8 @@ protected:
 
   // WALK3D ////////////////////////
   HeightDetector _height_detector;
-  geometry_utils::Rect3_<float> _breast_bbox3D;
-  image_utils::ShortestPathFinder<short> _path_finder;
+  vision_utils::Rect3_<float> _breast_bbox3D;
+  vision_utils::ShortestPathFinder<short> _path_finder;
   std::vector<Pt2i> _head2feet_path;
   std::vector<Pt3f> _head2feet_path3D;
 

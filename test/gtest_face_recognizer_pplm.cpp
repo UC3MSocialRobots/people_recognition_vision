@@ -27,48 +27,48 @@ Some tests for FaceRecognizerPPLM
 TEST(TestSuite, create) {
   ros::NodeHandle nh_private("~");
   nh_private.setParam("face_reco_xml_file", IMG_DIR "faces/people_lab/index.xml");
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   FaceRecognizerPPLM matcher;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, test_sizes) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   FaceRecognizerPPLM matcher;
-  pplm_testing::test_sizes(matcher);
+  vision_utils::test_sizes(matcher);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, test_same_msg) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   FaceRecognizerPPLM matcher;
   for (unsigned int nusers = 0; nusers < 10; ++nusers)
-    pplm_testing::test_same_msg(matcher, nusers, 1E-1);
+    vision_utils::test_same_msg(matcher, nusers, 1E-1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 //TEST(TestSuite, test_same_msg_david_arnaud) {
-//  if (!rosmaster_alive()) return;
+//  if (!vision_utils::rosmaster_alive()) return;
 //  FaceRecognizerPPLM matcher;
 //  for (unsigned int nusers = 0; nusers < 10; ++nusers)
-//    pplm_testing::test_same_msg(matcher, nusers, 1E-1, IMG_DIR "depth/david_arnaud1");
+//    vision_utils::test_same_msg(matcher, nusers, 1E-1, IMG_DIR "depth/david_arnaud1");
 //  for (unsigned int nusers = 0; nusers < 10; ++nusers)
-//    pplm_testing::test_same_msg(matcher, nusers, 1E-1, IMG_DIR "depth/david_arnaud2");
+//    vision_utils::test_same_msg(matcher, nusers, 1E-1, IMG_DIR "depth/david_arnaud2");
 //}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 //TEST(TestSuite, test_two_frames_matching) {
-//  if (!rosmaster_alive()) return;
+//  if (!vision_utils::rosmaster_alive()) return;
 //  FaceRecognizerPPLM matcher;
-//  pplm_testing::test_two_frames_matching
+//  vision_utils::test_two_frames_matching
 //      (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud2");
-//  pplm_testing::test_two_frames_matching
+//  vision_utils::test_two_frames_matching
 //      (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud3");
-//  pplm_testing::test_two_frames_matching
+//  vision_utils::test_two_frames_matching
 //      (matcher, IMG_DIR "depth/david_arnaud2", IMG_DIR "depth/david_arnaud3");
 //}
 

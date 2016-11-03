@@ -13,10 +13,12 @@
        get the keys using "rosdep db"  -->
   <depend>libgsl</depend>
   <depend>libblas-dev</depend>
+  <!-- ROS -->
+  <depend>dynamic_reconfigure</depend>
+  <depend>message_generation</depend>
+  <depend>people_msgs</depend>
   <!-- AD:
       these should be in the dependencies.rosinstall of the package -->
-  <depend>vision_utils</depend>
-  <depend>kinect</depend>
 
   <export>
     <rosdoc config="rosdoc.yaml" />

@@ -27,7 +27,7 @@ A PPLMatcherTemplate using the height of the users as a metric.
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs_rl/MatchPPL]
+        [people_recognition_vision/MatchPPL]
         Match a detected PPL against a reference one.
  */
 #ifndef HEIGHT_PPLM_H
@@ -43,7 +43,7 @@ public:
   HeightPPLM() : PPLMatcherTemplate("HEIGHT_PPLM_START", "HEIGHT_PPLM_STOP") {
     // get camera model
     image_geometry::PinholeCameraModel rgb_camera_model;
-    kinect_openni_utils::read_camera_model_files
+    vision_utils::read_camera_model_files
         (DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
   }
 
@@ -77,10 +77,10 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
+             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
     unsigned int ntracks = tracks.poses.size(),
-        ncurr_users = new_ppl.poses.size();
+        ncurr_users = new_ppl.people.size();
     DEBUG_PRINT("HeightPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
     // if there is only one track and one user, skip computation
@@ -94,7 +94,7 @@ public:
     // compute heights
     std::vector<double> new_ppl_heights(ncurr_users), track_heights(ntracks);
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
-      if (!pp2height_meter(new_ppl.poses[curr_idx], new_ppl_heights[curr_idx]))
+      if (!pp2height_meter(new_ppl.people[curr_idx], new_ppl_heights[curr_idx]))
         return false;
     } // end for (curr_idx)
     for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
@@ -102,8 +102,8 @@ public:
         return false;
     } // end for (track_idx)
     DEBUG_PRINT("HeightPPLM:new_ppl_heights:%s, track_heights:%s",
-                string_utils::iterable_to_string(new_ppl_heights).c_str(),
-                string_utils::iterable_to_string(track_heights).c_str());
+                vision_utils::iterable_to_string(new_ppl_heights).c_str(),
+                vision_utils::iterable_to_string(track_heights).c_str());
 
     // compute height differences
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {

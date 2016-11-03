@@ -33,10 +33,10 @@
 #ifndef CONDITIONALPARTICLEFILTER_H
 #define CONDITIONALPARTICLEFILTER_H
 
-// people_msgs_rl
-#include "vision_utils/utils/select_index_wth_probas.h"
-#include "vision_utils/utils/odom_utils.h"
-#include "vision_utils/utils/timer.h"
+// people_msgs
+#include "vision_utils/select_index_wth_probas.h"
+
+#include "vision_utils/timer.h"
 
 namespace conditional_particle_filter_laser {
 
@@ -48,30 +48,30 @@ struct RobotPose {
   float x, y, yaw;
 };
 
-typedef odom_utils::FooRobotCommandOrder RobotCommandOrder;
+typedef vision_utils::FooRobotCommandOrder RobotCommandOrder;
 
 //////////////////////////////////////////////////////////////////////////////
 
-template<class SensorMeasurement, class PeoplePose>
+template<class SensorMeasurement, class Person>
 class ConditionalParticleFilter {
 public:
-  /*! the world state "x" : contains the PeoplePose "y1..M",
+  /*! the world state "x" : contains the Person "y1..M",
     and also the RobotPose "r" */
   struct WorldState {
     RobotPose* robot_pose;
-    std::vector<PeoplePose>* people_poses;
+    std::vector<Person>* people_poses;
     //! ctor
-    WorldState(RobotPose* _robot_pose, std::vector<PeoplePose>* _people_poses) :
+    WorldState(RobotPose* _robot_pose, std::vector<Person>* _people_poses) :
       robot_pose(_robot_pose), people_poses(_people_poses) {}
   };
 
   //! all the particles [robot_pose_part_idx][people_pose_part_idx][people_idx]
-  typedef std::vector< std::vector< std::vector<PeoplePose > > > ParticleVector3;
+  typedef std::vector< std::vector< std::vector<Person > > > ParticleVector3;
 
 
   //! number of particles for RobotPose estimation
   static const int _N_r = 1;
-  //! number of particles for PeoplePose estimation
+  //! number of particles for Person estimation
   static const int _N_y = 10;
   //! number of tracked persons
   static const int _M = 2;
@@ -112,8 +112,8 @@ public:
       To be implemented by sons
       \warning the poses are given in static frame
   */
-  virtual PeoplePose sample_people_motion_model_law(const RobotCommandOrder & u_t,
-                                                    const PeoplePose & y_t_minus1,
+  virtual Person sample_people_motion_model_law(const RobotCommandOrder & u_t,
+                                                    const Person & y_t_minus1,
                                                     const Timer::Time & dt_sec)
   = 0;
 
@@ -122,7 +122,7 @@ public:
 
   /*!
     \arg R_t : set of estimated RobotPose
-    \arg Y_t : for each estimated RobotPose, set of estimated PeoplePose
+    \arg Y_t : for each estimated RobotPose, set of estimated Person
                   for each person
     */
   inline void algo(const RobotCommandOrder & u_t,
@@ -155,7 +155,7 @@ public:
         for (int m = 0; m < _M; ++m) {
           // sample the new position of the person "y_m_t_ij"
           // [robot_pose_part_idx][people_pose_part_idx][people_idx]
-          const PeoplePose & y_m_t_minus1_ij = _Y_t_minus1[i][j][m];
+          const Person & y_m_t_minus1_ij = _Y_t_minus1[i][j][m];
           _Y_t[i][j][m]= sample_people_motion_model_law
               (u_t, y_m_t_minus1_ij, time_elapsed);
         } // end loop m

@@ -31,7 +31,7 @@ displays them overlaid on the camera frame.
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs_rl::PeoplePoseList]
+        [people_msgs::People]
         The found faces ROIs and the name of the persons recognized
 
 \section Publications
@@ -41,14 +41,14 @@ displays them overlaid on the camera frame.
 #include <ros/ros.h>
 #include <boost/thread/mutex.hpp>
 // utils
-#include "vision_utils/utils/rect_utils.h"
-#include "vision_utils/utils/multi_subscriber.h"
+
+#include "vision_utils/multi_subscriber.h"
 // vision
 #include "vision_utils/rgb_skill.h"
-#include "vision_utils/color_utils.h"
-#include "vision_utils/drawing_utils.h"
-// people_msgs_rl
-#include "people_msgs_rl/PeoplePoseList.h"
+
+
+// people_msgs
+#include "people_msgs/People.h"
 
 class FaceRecognizerViewer : public RgbSkill {
 public:
@@ -59,7 +59,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void create_subscribers_and_publishers() {
-    maggieDebug2("create_subscribers_and_publishers()");
+    ROS_INFO("create_subscribers_and_publishers()");
     // get the topic names
     std::string ppl_input_topics = "ppl";
     _nh_private.param("ppl_input_topics", ppl_input_topics, ppl_input_topics);
@@ -73,7 +73,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_reco_result_cb
-  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
+  (const people_msgs::PeopleConstPtr & msg) {
     // do nothing if frame not ready
     if (!is_running()) {
       ROS_WARN_THROTTLE(1, "Received face recognition but not running!");
@@ -95,37 +95,37 @@ public:
   }
 
   void process_rgb(const cv::Mat3b & rgb) {
-    // maggieDebug3("process_rgb()");
+    // ROS_DEBUG("process_rgb()");
     rgb.copyTo(_frame_out);
 
     _received_rec_mutex.lock();
     // ROS_WARN("_received_rec.size():%i", _received_rec.size());
     for (unsigned int rec_idx = 0; rec_idx < _received_rec.size(); ++rec_idx) {
-      people_msgs_rl::PeoplePoseList* curr_rec = &(_received_rec[rec_idx]);
+      people_msgs::People* curr_rec = &(_received_rec[rec_idx]);
       // draw rectangles
       for (unsigned int face_idx = 0; face_idx < curr_rec->poses.size(); ++face_idx) {
-        const people_msgs_rl::PeoplePose* curr_pose = &(curr_rec->poses[face_idx]);
-        std::string person_name = curr_pose->person_name;
-        maggieDebug2("rec #%i: person #%i:'%s'",
-                     rec_idx, face_idx, person_name.c_str());
+        const people_msgs::Person* curr_pose = &(curr_rec->poses[face_idx]);
+        std::string name = curr_pose->name;
+        ROS_INFO("rec #%i: person #%i:'%s'",
+                     rec_idx, face_idx, name.c_str());
         cv::Rect face_ROI;
         face_ROI.x = curr_pose->images_offsetx;
         face_ROI.y = curr_pose->images_offsety;
         face_ROI.width = curr_pose->rgb.width;
         face_ROI.height = curr_pose->rgb.height;
-        // geometry_utils::copy_rectangles(curr_pose->image_roi, face_ROI);
-        // cv::Scalar txt_color = color_utils::color<cv::Scalar>(face_idx);
-        cv::Scalar txt_color = color_utils::color<cv::Scalar>
-            (string_to_some_int(person_name));
+        // vision_utils::copy_rectangles(curr_pose->image_roi, face_ROI);
+        // cv::Scalar txt_color = vision_utils::color<cv::Scalar>(face_idx);
+        cv::Scalar txt_color = vision_utils::color<cv::Scalar>
+            (string_to_some_int(name));
         cv::rectangle(_frame_out, face_ROI, txt_color, 2);
         cv::Point text_pt(face_ROI.x + face_ROI.width / 2,
                           face_ROI.y + face_ROI.height + 10 + 25 * rec_idx);
-        //ROS_WARN("Writing '%s' in (%i, %i)", person_name.c_str(), text_pt.x, text_pt.y);
-        image_utils::draw_text_centered // white background
-            (_frame_out, person_name, text_pt,
+        //ROS_WARN("Writing '%s' in (%i, %i)", name.c_str(), text_pt.x, text_pt.y);
+        vision_utils::draw_text_centered // white background
+            (_frame_out, name, text_pt,
              cv::FONT_HERSHEY_DUPLEX, 1, CV_RGB(255, 255, 255), 3);
-        image_utils::draw_text_centered
-            (_frame_out, person_name, text_pt,
+        vision_utils::draw_text_centered
+            (_frame_out, name, text_pt,
              cv::FONT_HERSHEY_DUPLEX, 1, txt_color, 2);
       } // end loop face_idx
     } // end loop rec
@@ -139,7 +139,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void shutdown_subscribers_and_publishers()  {
-    maggieDebug2("shutdown_subscribers_and_publishers()");
+    ROS_INFO("shutdown_subscribers_and_publishers()");
     _face_recognition_results_subs.shutdown();
   } // end shutdown_subscribers_and_publishers()
 
@@ -148,7 +148,7 @@ public:
 private:
   //! face reco sub
   ros::MultiSubscriber _face_recognition_results_subs;
-  std::vector<people_msgs_rl::PeoplePoseList> _received_rec;
+  std::vector<people_msgs::People> _received_rec;
   //! the frame where the stuff is drawn
   cv::Mat3b _frame_out;
   boost::mutex _received_rec_mutex;

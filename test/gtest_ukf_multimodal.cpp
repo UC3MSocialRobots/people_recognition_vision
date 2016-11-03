@@ -21,20 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 
 Some tests for UkfMultiModal,
-using EuclideanPPLM as a PeoplePoseListMatcher.
+using EuclideanPPLM as a PeopleMatcher.
  */
 #include <gtest/gtest.h>
 #include "vision_utils/ppl_testing.h"
 #include "people_recognition_vision/ukf_multimodal.h"
 #include "people_recognition_vision/euclidean_pplm.h"
-#include <vision_utils/utils/rosmaster_alive.h>
-#include "vision_utils/utils/string_casts_stl.h"
+#include <vision_utils/rosmaster_alive.h>
 
-#define ASSERT_TRUE_TIMEOUT(cond, timeout) { Timer timer; while (timer.getTimeSeconds() < timeout && !(cond)) usleep(50 * 1000); } ASSERT_TRUE(cond)
+#define ASSERT_TRUE_TIMEOUT(cond, timeout) { vision_utils::Timer timer; while (timer.getTimeSeconds() < timeout && !(cond)) usleep(50 * 1000); } ASSERT_TRUE(cond)
 
-typedef people_msgs_rl::PeoplePose PP;
-typedef people_msgs_rl::PeoplePoseList PPL;
-typedef geometry_utils::FooPoint3f Pt3f;
+typedef people_msgs::Person PP;
+typedef people_msgs::People PPL;
+typedef vision_utils::FooPoint3f Pt3f;
 
 inline void assert_ntracks_eq(const UkfMultiModal & ukf, unsigned int nusers) {
   ASSERT_TRUE(ukf.nblobs() == 0 && ukf.nusers() == nusers)
@@ -48,7 +47,7 @@ inline void assert_ntracks_sumgt(const UkfMultiModal & ukf, unsigned int nusers)
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, ctor) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   UkfMultiModal ukf;
   ASSERT_TRUE(ukf.nusers() == 0);
   ASSERT_TRUE(ukf.nb_total_matchers() == 0);
@@ -57,7 +56,7 @@ TEST(TestSuite, ctor) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, connectivity_check) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   ros::NodeHandle nh_public, nh_private("~");
   ros::Publisher ppl_pub = nh_public.advertise<PPL>("ppl", 1);
   EuclideanPPLM pplm;
@@ -76,7 +75,7 @@ typedef void (*UKFTestCb)(UkfMultiModal& ukf, PPL& ppl, void* c);
 static const double TRACK_TIMEOUT = 1;
 
 void test_environment_wrapper(UKFTestCb cb, void* c) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   ros::AsyncSpinner spinner(0);
   EuclideanPPLM pplm;
   UkfMultiModal ukf;
@@ -88,7 +87,7 @@ void test_environment_wrapper(UKFTestCb cb, void* c) {
   nh_private.setParam("human_walking_speed", 5.);
   ukf.start();
   pplm.start();
-  truth_ppl.method = "gtest_ukf_multimodal";
+  vision_utils::set_method(truth_ppl, "gtest_ukf_multimodal");
   truth_ppl.header.frame_id = ukf.get_static_frame_id();
   ASSERT_TRUE_TIMEOUT(ukf.nb_available_matchers() == 1, 1);
   cb(ukf, truth_ppl, c);
@@ -125,7 +124,7 @@ void test_simple_track_creation(UkfMultiModal& ukf, PPL& truth_ppl, void* cookie
 
   unsigned int niters = 10, iter = 0;
   while (iter++ < niters && ukf.nusers() != c->nusers) {
-    ppl_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
+    vision_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
     ukf.ppl_cb(truth_ppl);
     usleep(100 * 1000);
     assert_ntracks_sumgt(ukf, c->nusers);
@@ -133,7 +132,7 @@ void test_simple_track_creation(UkfMultiModal& ukf, PPL& truth_ppl, void* cookie
 
   // check the created tracks
   assert_ntracks_eq(ukf, c->nusers);
-  ppl_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
+  vision_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
 } // end run()
 
 TEST(TestSuite, tracks_creation_no_error) {
@@ -169,7 +168,7 @@ void test_tracks_sudden_creation_destruction(UkfMultiModal& ukf, PPL& truth_ppl,
     // blobs creation, wait for tracks
     unsigned int niters = 10, iter = 0;
     while (iter++ < niters && ukf.nusers() != c->nusers) {
-      ppl_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
+      vision_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
       ukf.ppl_cb(truth_ppl);
       usleep(100 * 1000);
       assert_ntracks_sumgt(ukf, c->nusers);
@@ -177,13 +176,13 @@ void test_tracks_sudden_creation_destruction(UkfMultiModal& ukf, PPL& truth_ppl,
 
     // check the created tracks
     assert_ntracks_eq(ukf, c->nusers);
-    ppl_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
+    vision_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
 
     // now remove the tracks
-    Timer timer;
+    vision_utils::Timer timer;
     while (timer.getTimeSeconds() < TRACK_TIMEOUT + 1 && ukf.nusers() > 0) {
-      ppl_utils::set_ppl_header(truth_ppl, ukf.get_static_frame_id(), ros::Time::now());
-      truth_ppl.poses.clear();
+      vision_utils::set_ppl_header(truth_ppl, ukf.get_static_frame_id(), ros::Time::now());
+      truth_ppl.people.clear();
       ukf.ppl_cb(truth_ppl);
       usleep(100 * 1000);
     } // end loop iter
@@ -225,15 +224,15 @@ void test_tracks_progresive_creation_destruction(UkfMultiModal& ukf, PPL& truth_
     if (are_users_appearing)  { // let time for the blobs to disappear
       unsigned int niters = 10, iter = 0;
       while (iter++ < niters && ukf.nusers() != nusers) {
-        ppl_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
+        vision_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
         ukf.ppl_cb(truth_ppl);
         usleep(100 * 1000);
         assert_ntracks_sumgt(ukf, nusers);
       } // end for (iter)
     } else { // users disappearing
-      Timer timer;
+      vision_utils::Timer timer;
       while (timer.getTimeSeconds() < TRACK_TIMEOUT + 1 && ukf.nusers() != nusers) {
-        ppl_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
+        vision_utils::ppl_factory(truth_ppl, exp_users_pos, c->pos_error_std_dev);
         ukf.ppl_cb(truth_ppl);
         usleep(100 * 1000);
       } // end loop iter
@@ -241,7 +240,7 @@ void test_tracks_progresive_creation_destruction(UkfMultiModal& ukf, PPL& truth_
 
     // check the created tracks
     assert_ntracks_eq(ukf, nusers);
-    ppl_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
+    vision_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
   } // end for nusers
 } // end test_tracks_progresive_creation_destruction();
 
@@ -271,7 +270,7 @@ typedef bool (*UKFFactory)(const double time_sec,
                            double & pos_error_std_dev);
 
 void test_approx_following(UKFFactory factory) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   ros::AsyncSpinner spinner(0);
   EuclideanPPLM pplm;
   UkfMultiModal ukf;
@@ -283,22 +282,22 @@ void test_approx_following(UKFFactory factory) {
   pplm.start();
   ASSERT_TRUE_TIMEOUT(ukf.nb_available_matchers() == 1, 1);
 
-  Timer timer;
+  vision_utils::Timer timer;
   double pos_error_std_dev;
   // blobs creation, wait for tracks
   PPL truth_ppl, detection_ppl;
-  truth_ppl.method = "gtest_ukf_multimodal";
+  vision_utils::set_method(truth_ppl, "gtest_ukf_multimodal");
   truth_ppl.header.frame_id = ukf.get_static_frame_id();
   while (factory(timer.getTimeSeconds(), truth_ppl, detection_ppl, pos_error_std_dev)) {
-    ppl_utils::set_ppl_header(truth_ppl, ukf.get_static_frame_id(), ros::Time::now());
-    ppl_utils::set_ppl_header(detection_ppl, ukf.get_static_frame_id(), ros::Time::now());
-    unsigned int nusers = truth_ppl.poses.size();
+    vision_utils::set_ppl_header(truth_ppl, ukf.get_static_frame_id(), ros::Time::now());
+    vision_utils::set_ppl_header(detection_ppl, ukf.get_static_frame_id(), ros::Time::now());
+    unsigned int nusers = truth_ppl.people.size();
     ukf.ppl_cb(detection_ppl);
     usleep(100 * 1000);
-    assert_ntracks_sumgt(ukf, detection_ppl.poses.size());
+    assert_ntracks_sumgt(ukf, detection_ppl.people.size());
     // check the created tracks
     if (ukf.nusers() == nusers)
-      ppl_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), pos_error_std_dev);
+      vision_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), pos_error_std_dev);
   } // end for (iter)
   spinner.stop();
   ukf.stop();
@@ -314,29 +313,29 @@ void test_random_detections_miss(UkfMultiModal& ukf, PPL& truth_ppl, void* cooki
   std::vector<Pt3f> exp_users_pos;
   for (unsigned int user_idx = 0; user_idx < c->nusers; ++user_idx)
     exp_users_pos.push_back(Pt3f (2*user_idx, 0, 1));
-  ppl_utils::ppl_factory(truth_ppl, exp_users_pos, 0);
+  vision_utils::ppl_factory(truth_ppl, exp_users_pos, 0);
 
   // blobs creation, wait for tracks
   unsigned int niters = 50, iter = 0;
   PPL detection_ppl;
   while (iter++ < niters && ukf.nusers() < c->nusers) {
-    ppl_utils::set_ppl_header(truth_ppl, ukf.get_static_frame_id(), ros::Time::now());
+    vision_utils::set_ppl_header(truth_ppl, ukf.get_static_frame_id(), ros::Time::now());
     detection_ppl.header = truth_ppl.header;
-    detection_ppl.poses.clear();
+    detection_ppl.people.clear();
     for (unsigned int user_idx = 0; user_idx < c->nusers; ++user_idx) {
       if (rand() % 4 == 0) // randomly miss detection
         continue;
-      detection_ppl.poses.push_back(truth_ppl.poses[user_idx]);
-      combinatorics_utils::add_gaussian_noise
-          (detection_ppl.poses.back().head_pose.position, c->pos_error_std_dev);
+      detection_ppl.people.push_back(truth_ppl.people[user_idx]);
+      vision_utils::add_gaussian_noise
+          (detection_ppl.people.back().position.position, c->pos_error_std_dev);
     } // end for user_idx
     ukf.ppl_cb(detection_ppl);
     usleep(100 * 1000);
-    assert_ntracks_sumgt(ukf, detection_ppl.poses.size());
+    assert_ntracks_sumgt(ukf, detection_ppl.people.size());
   } // end for (iter)
   // check the created tracks
   assert_ntracks_eq(ukf, c->nusers);
-  ppl_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
+  vision_utils::check_ppl_equals(truth_ppl, ukf.get_last_PPL(), c->pos_error_std_dev);
 } // end test_random_detections_miss();
 
 TEST(TestSuite, random_detections_miss_no_error) {

@@ -3,14 +3,18 @@ cmake_minimum_required(VERSION 2.8.3)
 ### 2- Package Name
 project(people_recognition_vision)
 ### 3 - Find other CMake/Catkin packages needed for build
-SET(ROSDEPS
-  # AD
-  vision_utils kinect)
+SET(ROSDEPS message_generation  people_msgs)
 find_package(catkin REQUIRED COMPONENTS ${ROSDEPS})
 ### 4 - Message/Service/Action Generators (add_message_files(), add_service_files(), add_action_files())
-# Nothing in this package
+add_service_files(
+  FILES
+  MatchPPL.srv
+)
 ### 5 - Invoke message/service/action generation (generate_messages())
-# Nothing in this package
+generate_messages(
+  DEPENDENCIES
+  people_msgs # Or other packages containing msgs
+)
 ### 6 - Specify package build info export (catkin_package())
 catkin_package(
   INCLUDE_DIRS include
@@ -21,7 +25,6 @@ catkin_package(
 include_directories(
   include ${catkin_INCLUDE_DIRS}
   ${people_msgs_INCLUDE_DIRS}
-  ${vision_utils_INCLUDE_DIRS}
   /usr/include/ni/
   ${PCL_INCLUDE_DIRS}
 )

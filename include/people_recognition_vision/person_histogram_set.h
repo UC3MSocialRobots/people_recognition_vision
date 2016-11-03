@@ -35,9 +35,9 @@ typedef cv::Ptr<cv::SVM> MySVMPtr;
 #endif
 
 #include "people_recognition_vision/person_histogram.h"
-#include "vision_utils/utils/assignment_utils.h"
+
 #include "vision_utils/colormaps.h"
-#include "vision_utils/utils/timestamp.h"
+#include "vision_utils/timestamp.h"
 #include "vision_utils/array_to_color.h"
 #include "cvstage/cvstage.h"
 
@@ -48,7 +48,7 @@ class PersonHistogramSet {
 public:
   typedef int PersonLabel;
   typedef CMatrix<double> CostMatrix;
-  typedef assignment_utils::MatchList PHMatch;
+  typedef vision_utils::MatchList PHMatch;
   typedef std::map<PersonLabel, PersonLabel> LabelMatch;
 
   static const int MAT_COLS = PersonHistogram::MAT_COLS;
@@ -59,10 +59,10 @@ public:
   PersonHistogramSet() {
     dist_matrix_illus.create(1, 1);
     // draw caption
-    col_titlemap = &titlemaps::int_to_uppercase_letter; // used for this PHS
-    row_titlemap = &titlemaps::int_to_lowercase_letter; // used for other PHS
+    col_titlemap = &vision_utils::int_to_uppercase_letter; // used for this PHS
+    row_titlemap = &vision_utils::int_to_lowercase_letter; // used for other PHS
     colormap_to_caption_image(dist_matrix_colormap_caption, 100, 300,
-                              colormaps::ratio2red_green_half,
+                              vision_utils::ratio2red_green_half,
                               0., .6, .05, .1);
     refresh_unique_labels();
   } // end ctor
@@ -261,7 +261,7 @@ public:
     // rows, cols, data
     if (labels_mat.rows != (int) nhists() ||labels_mat.cols != 1) {
       printf("train_svm(): _labels_mat:'%s' != (1xnhists()=%i)\n",
-             image_utils::infosImage(labels_mat).c_str(), nhists());
+             vision_utils::infosImage(labels_mat).c_str(), nhists());
       return false;
     }
 
@@ -328,7 +328,7 @@ public:
           //      printf("mean:%g, std_dev:%g, label:%i\n",
           //             meand_stddev.x, meand_stddev.y, label);
           // paint it
-          out_ptr[col] = color_utils::color<cv::Vec3b>(label);
+          out_ptr[col] = vision_utils::color<cv::Vec3b>(label);
         } // end loop col
       } // end loop row
 #else
@@ -337,7 +337,7 @@ public:
       for (int training_idx = 0; training_idx < _training_mat.rows; ++training_idx) {
         cv::Point sample = _ms.world2pixel(_training_mat.at<float>(training_idx, 0),
                                            _training_mat.at<float>(training_idx, 1));
-        image_utils::drawCross(_ms.get_viz(), sample, 3, CV_RGB(0, 0, 0), 2);
+        vision_utils::drawCross(_ms.get_viz(), sample, 3, CV_RGB(0, 0, 0), 2);
       } // end loop training_idx
 
       _ms.draw_grid(5, 150);
@@ -368,7 +368,7 @@ public:
 
   void generate_caption_image
   (cv::Mat3b & caption_illus,
-   titlemaps::Map row_titlemap = &titlemaps::int_to_lowercase_letter)
+   vision_utils::Map row_titlemap = &vision_utils::int_to_lowercase_letter)
   const {
     uint nimgs = nlabels();
     if (nimgs == 0) { // check if histogram empty
@@ -387,11 +387,11 @@ public:
       if (!last_at(curr_label, ph))
         continue;
       illus_color_imgs.push_back(ph->get_illus_color_img());
-      // printf("color:'%s'\n", image_utils::infosImage(illus_color_imgs.back()).c_str());
+      // printf("color:'%s'\n", vision_utils::infosImage(illus_color_imgs.back()).c_str());
       illus_mask_imgs.push_back(ph->get_illus_color_mask());
-      // printf("mask:'%s'\n", image_utils::infosImage(illus_mask_imgs.back()).c_str());
+      // printf("mask:'%s'\n", vision_utils::infosImage(illus_mask_imgs.back()).c_str());
     } // end loop label_idx
-    image_utils::paste_images(illus_color_imgs, caption_illus,
+    vision_utils::paste_images(illus_color_imgs, caption_illus,
                               true, CAPTION_WIDTH1, CAPTION_HEIGHT1, CAPTION_ITEMPADDING,
                               true, row_titlemap, illus_mask_imgs, true);
 
@@ -436,22 +436,22 @@ public:
         }
       } // end loop row
     } // end not are_vector_equals
-    // maggiePrint("dist_matrix:'%s'", dist_matrix.to_string(15).c_str());
+    // ROS_WARN("dist_matrix:'%s'", dist_matrix.to_string(15).c_str());
 
     // make linear assignment
     best_assign.clear();
-    assignment_utils::Cost best_cost;
-    bool assign_success = assignment_utils::linear_assign
+    vision_utils::Cost best_cost;
+    bool assign_success = vision_utils::linear_assign
         (dist_matrix, best_assign, best_cost);
     if (!assign_success)
       return false;
     // reverse it, as rows correspond to hists2
-    assignment_utils::reverse_assignment_list(best_assign);
+    vision_utils::reverse_assignment_list(best_assign);
 
     if (generate_dist_matrix_illus) {
       DEBUG_PRINT("compare_person_histograms_generate_images()");
       // build custom headers: rows = hists1, cols = hists2
-      row_titlemap = (are_vector_equals ? &titlemaps::int_to_uppercase_letter : &titlemaps::int_to_lowercase_letter);
+      row_titlemap = (are_vector_equals ? &vision_utils::int_to_uppercase_letter : &vision_utils::int_to_lowercase_letter);
       std::vector<std::string> col_headers, row_headers;
       generate_headers(col_titlemap, col_headers);
       if (are_vector_equals)
@@ -462,7 +462,7 @@ public:
       // draw distance array with no edges and red_green mmap
       array_to_color(dist_matrix, nhists2, nhists1,
                      dist_matrix_illus, 60, 40, false, true,
-                     colormaps::ratio2red_green_half,
+                     vision_utils::ratio2red_green_half,
                      col_titlemap, row_titlemap, &row_headers, &col_headers);
     }
 
@@ -503,14 +503,14 @@ public:
         out_label = label(ph_idx);
         if (out_label == -1) {
           printf("compare_to(): the new person histogram was not assigned:'%s'\n",
-                 assignment_utils::assignment_list_to_string(assign).c_str());
+                 vision_utils::assignment_list_to_string(assign).c_str());
           return false;
         }
         return true;
       }
     } // end for assign_idx
     printf("compare_to(): could not find index 0 in assign:'%s'\n",
-           assignment_utils::assignment_list_to_string(assign).c_str());
+           vision_utils::assignment_list_to_string(assign).c_str());
     return false;
   } // end compare_to()
 
@@ -519,9 +519,9 @@ public:
   bool assign2labels(const PHMatch & best_assign, LabelMatch & out) const {
     out.clear();
     for (unsigned int assign_idx = 0; assign_idx < best_assign.size(); ++assign_idx) {
-      const assignment_utils::Match* asg = &best_assign[assign_idx];
-      if (asg->first == assignment_utils::UNASSIGNED
-          || asg->second == assignment_utils::UNASSIGNED)
+      const vision_utils::Match* asg = &best_assign[assign_idx];
+      if (asg->first == vision_utils::UNASSIGNED
+          || asg->second == vision_utils::UNASSIGNED)
         continue;
       PersonLabel l1 = label(asg->first), l2 = label(asg->second);
       if (l1 == -1 || l2 == -1)
@@ -548,12 +548,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline bool to_yaml(const std::string & full_filename) const {
-    maggieDebug2("to_yaml('%s')", full_filename.c_str());
-    //image_utils::to_yaml_vector(_phs, yaml_filename_prefix, "PersonHistogramSet");
+    ROS_INFO("to_yaml('%s')", full_filename.c_str());
+    //vision_utils::to_yaml_vector(_phs, yaml_filename_prefix, "PersonHistogramSet");
     cv::FileStorage fs(full_filename, cv::FileStorage::WRITE);
     if (!fs.isOpened())
       return false;
-    image_utils::write(_phs, fs, "phs");
+    vision_utils::write(_phs, fs, "phs");
     //fs << "SVM" << _SVM;
     //_SVM->write(&fs, "SVM");
     fs << "labels" << _labels;
@@ -565,8 +565,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline bool from_yaml(const std::string & full_filename) {
-    maggieDebug2("from_yaml('%s')", full_filename.c_str());
-    //image_utils::from_yaml_vector(_phs, yaml_filename_prefix, "PersonHistogramSet");
+    ROS_INFO("from_yaml('%s')", full_filename.c_str());
+    //vision_utils::from_yaml_vector(_phs, yaml_filename_prefix, "PersonHistogramSet");
     cv::FileStorage fs(full_filename, cv::FileStorage::READ);
     if (!fs.isOpened())
       return false;
@@ -583,7 +583,7 @@ public:
 
   inline void save_back_up_file() const {
     std::ostringstream xml_filename_stream;
-    xml_filename_stream << "/tmp/PersonHistogramSet_backup_" << string_utils::timestamp();
+    xml_filename_stream << "/tmp/PersonHistogramSet_backup_" << vision_utils::timestamp();
     to_yaml(xml_filename_stream.str());
   }
 
@@ -594,7 +594,7 @@ public:
    *  the letter identifies the label
    *  and the number the index of the Ph with this label
    */
-  inline bool generate_headers(titlemaps::Map titlemap,
+  inline bool generate_headers(vision_utils::Map titlemap,
                                std::vector<std::string> & ans) const {
     ans.clear();
     ans.reserve(nhists());
@@ -607,7 +607,7 @@ public:
     for (unsigned int hist_idx = 0; hist_idx < nhists(); ++hist_idx) {
       PersonLabel curr_label = label(hist_idx);
       counts[curr_label] = counts[curr_label]+1;
-      std::string header = labels2letter[curr_label] + string_utils::cast_to_string(counts[curr_label]);
+      std::string header = labels2letter[curr_label] + vision_utils::cast_to_string(counts[curr_label]);
       ans.push_back(header);
     } // end loop hist_idx
     return true;
@@ -648,7 +648,7 @@ private:
   CostMatrix dist_matrix;
 
   // viz
-  titlemaps::Map col_titlemap, row_titlemap; // col: this, row: other
+  vision_utils::Map col_titlemap, row_titlemap; // col: this, row: other
   cv::Mat3b dist_matrix_illus_caption1, dist_matrix_illus_caption2;
   cv::Mat3b dist_matrix_colormap_caption;
   cv::Mat3b dist_matrix_illus;

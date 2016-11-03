@@ -36,13 +36,13 @@ ________________________________________________________________________________
         [string] (default: "index_out.xml")
         The XML filename containing the model and the pictures pathes.
 
-  - \b "~person_name"
+  - \b "~name"
         [string] (default: "new_user_${timestamp}")
         The name of the person that will be seen.
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs_rl::PeoplePoseList]
+        [people_msgs::People]
         The images of the found faces, and their ROIs
 
 \section Publications
@@ -58,10 +58,10 @@ ________________________________________________________________________________
 #include "vision_utils/nano_skill.h"
 // vision
 #include "vision_utils/make_opencv_interface.h"
-#include "vision_utils/drawing_utils.h"
-// people_msgs_rl
+
+// people_msgs
 #include "people_recognition_vision/face_recognizer.h"
-#include "people_msgs_rl/PeoplePoseList.h"
+#include "people_msgs/People.h"
 
 class FaceRecognizerAddPics : public NanoSkill {
 public:
@@ -77,14 +77,14 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void create_subscribers_and_publishers() {
-    maggieDebug2("create_subscribers_and_publishers()");
+    ROS_INFO("create_subscribers_and_publishers()");
     // load the model
     ros::NodeHandle nh_private("~");
     std::string xml_filename;
     nh_private.param("xml_filename", xml_filename, xml_filename);
     _face_recognizer.from_xml_file(xml_filename);
     nh_private.param("xml_filename_out", _xml_filename_out, _xml_filename_out);
-    nh_private.param("person_name", _person_name, _person_name);
+    nh_private.param("name", _name, _name);
 
     // make subscriber to face detection results
     ros::NodeHandle nh_public;
@@ -108,7 +108,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void shutdown_subscribers_and_publishers()  {
-    maggieDebug2("shutdown_subscribers_and_publishers()");
+    ROS_INFO("shutdown_subscribers_and_publishers()");
     _face_detector_start_pub.shutdown();
     _ppl_sub.shutdown();
     cvDestroyWindow(_window_name.c_str());
@@ -123,7 +123,7 @@ public:
     // check if a button was clicked
     if (event != cv::EVENT_LBUTTONDOWN && event != cv::EVENT_LBUTTONDBLCLK)
       return;
-    int button_idx = image_utils::is_pixel_a_button
+    int button_idx = vision_utils::is_pixel_a_button
         (this_ptr->_interface_img, this_ptr->_interface_position, 2,
          this_ptr->_buttons_size, x, y);
     //ROS_WARN("mouse_cb(x:%i, y:%i, button_idx:%i)", x, y, button_idx);
@@ -134,14 +134,14 @@ public:
       ROS_WARN("Adding the picture");
       // add the new face
       this_ptr->_face_recognizer.add_non_preprocessed_face_to_person
-          (this_ptr->_current_face, this_ptr->_person_name);
+          (this_ptr->_current_face, this_ptr->_name);
       // save model
       this_ptr->_face_recognizer.to_xml_file(this_ptr->_xml_filename_out);
     }
     // clear window
     if (button_idx == 0 || button_idx == 1) {
       this_ptr->_interface_img.setTo(255);
-      image_utils::draw_text_centered
+      vision_utils::draw_text_centered
           (this_ptr->_interface_img, "Waiting for a face...",
            cv::Point(this_ptr->_interface_img.cols / 2,
                      this_ptr->_interface_img.rows / 2),
@@ -155,12 +155,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_detec_result_cb
-  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
+  (const people_msgs::PeopleConstPtr & msg) {
     // do nothing if waiting for user
     if (!_can_receive_new_face)
       return;
 
-    unsigned int nfaces = msg->poses.size();
+    unsigned int nfaces = msg->people.size();
     // do nothing if no face
     if (nfaces == 0)
       return;
@@ -170,7 +170,7 @@ public:
     boost::shared_ptr<void const> tracked_object;
 
     for (unsigned int face_idx = 0; face_idx < nfaces; ++face_idx) {
-      const people_msgs_rl::PeoplePose* curr_pose = &(msg->poses[face_idx]);
+      const people_msgs::Person* curr_pose = &(msg->people[face_idx]);
       if (curr_pose->rgb.width == 0 || curr_pose->rgb.height == 0)
         continue;
 
@@ -190,7 +190,7 @@ public:
       std::vector<cv::Scalar> button_colors;
       button_colors.push_back(CV_RGB(255, 100, 100));
       button_colors.push_back(CV_RGB(100, 255, 100));
-      image_utils::make_opencv_interface
+      vision_utils::make_opencv_interface
           (_current_face, _interface_img, button_names, button_colors,
            _interface_position, _buttons_size);
       while (!_can_receive_new_face && is_running())
@@ -213,7 +213,7 @@ private:
   //! where to save the file
   std::string _xml_filename_out;
   //! the name of the new person
-  std::string _person_name;
+  std::string _name;
 
   //! the model to recognize the faces
   bool _can_receive_new_face;
@@ -221,7 +221,7 @@ private:
   cv::Mat3b _current_face;
   cv::Mat3b _interface_img;
   std::string _window_name;
-  static const image_utils::InterfacePosition _interface_position = image_utils::LEFT;
+  static const vision_utils::InterfacePosition _interface_position = vision_utils::LEFT;
   static const int _buttons_size = 100; // px
 }; // end class FaceRecognizerAddPics
 

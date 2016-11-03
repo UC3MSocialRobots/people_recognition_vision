@@ -27,7 +27,7 @@ thanks to Unscented Kalman Filters.
 #define UKF_PERSON_POSE_H
 
 #include <easykf-2.03/src/ukf.h>
-#include "vision_utils/utils/combinatorics_utils.h"
+
 
 using namespace ukf::state;
 
@@ -148,9 +148,9 @@ private:
     gsl_vector_set(xk, 2, z);
     // set new brownian direction
     gsl_vector_set(xk, 3, 2 * M_PI * drand48());
-    // gsl_vector_set(xk, 3, 2 * M_PI * combinatorics_utils::rand_gaussian());
+    // gsl_vector_set(xk, 3, 2 * M_PI * vision_utils::rand_gaussian());
     // and speed in [0 .. brownian_speed_amp]
-    gsl_vector_set(xk, 4, brownian_speed_amp * combinatorics_utils::rand_gaussian());
+    gsl_vector_set(xk, 4, brownian_speed_amp * vision_utils::rand_gaussian());
   }
 
   // Observation function

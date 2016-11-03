@@ -1,0 +1,28 @@
+# match a PeoplePoseList found by some detection
+# against a set of reference (known) PeoplePoseList
+
+# the detected PeoplePoseList.
+# the method is accessible via new_ppl.method, ex: "face_recognition_eigen"
+people_msgs_rl/PeoplePoseList new_ppl
+# the reference (known) PeoplePoseList
+people_msgs_rl/PeoplePoseList tracks
+
+---
+
+# true if the matching between both PPL was a success.
+# if true, "costs" is supposed to be of good size (see below)
+# and filled with meaningful values.
+# otherwise, "costs" will be discarded (wont even be accessed).
+bool match_success
+
+# "costs" should be of size (|new_ppl| x ntracks),
+# ie new_ppl.poses.size() x tracks.poses.size(),
+# the costs are obtained by costs[detected_pp_idx][track_idx]
+float64[] costs
+
+# the attributes to add to new_ppl, that were computed by the node
+# to be valid, the vector should be of size |new_ppl.poses|
+people_msgs_rl/PeoplePoseAttributes[]  new_ppl_added_attributes
+# the attributes to add to tracks,  that were computed by the node
+# to be valid, the vector should be of size |tracks.poses|
+people_msgs_rl/PeoplePoseAttributes[]   tracks_added_attributes

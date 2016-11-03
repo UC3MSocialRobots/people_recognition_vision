@@ -24,10 +24,10 @@ A benchmark for our homebrew HeightDetector vs other
 state-of-the-art height detectors.
  */
 #include "people_recognition_vision/height_detector.h"
-#include "vision_utils/utils/Rect3.h"
+#include "vision_utils/Rect3.h"
 typedef double Height;
 typedef cv::Point3f Pt3f;
-typedef geometry_utils::Rect3f Rect3f;
+typedef vision_utils::Rect3f Rect3f;
 HeightDetector _detector;
 std::vector<Pt3f> _user3D;
 
@@ -37,11 +37,11 @@ Height naive_height_meters(const cv::Mat1f & depth,
                            const cv::Mat1b & user_mask,
                            const image_geometry::PinholeCameraModel & depth_camera_model) {
   // reproject mask
-  bool ok = kinect_openni_utils::pixel2world_depth
+  bool ok = vision_utils::pixel2world_depth
             (depth, depth_camera_model, _user3D, 1, user_mask);
   if (!ok)
     return HeightDetector::ERROR;
-  Rect3f bbox3D = geometry_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_user3D);
+  Rect3f bbox3D = vision_utils::boundingBox_vec3<float, Pt3f, std::vector<Pt3f> >(_user3D);
   // printf("bbox3D:'%s'\n", bbox3D.to_string().c_str());
   return bbox3D.height;
 }
@@ -96,9 +96,9 @@ int main(int argc, char**argv) {
   if (argc != 2)
     print_help_and_exit(argc, argv);
   std::string input_file(argv[1]),
-      folder = string_utils::extract_folder_from_full_path(input_file);
+      folder = vision_utils::extract_folder_from_full_path(input_file);
   std::vector<std::string> lines;
-  string_utils::retrieve_file_split(input_file, lines, true);
+  vision_utils::retrieve_file_split(input_file, lines, true);
   unsigned int nlines = lines.size();
   if (nlines == (unsigned int) 0)
     print_help_and_exit(argc, argv);
@@ -111,7 +111,7 @@ int main(int argc, char**argv) {
     if (line.size() >= 2 && line.substr(0, 2) == "//") // comment line
       continue;
     std::vector<std::string> words;
-    string_utils::StringSplit(line, " ", &words);
+    vision_utils::StringSplit(line, " ", &words);
     if (words.size() < 2 || words.size() > 4) {
       printf("Line #%i '%s' does not respect the syntax! Skipping.\n",
              i, line.c_str());
@@ -127,20 +127,20 @@ int main(int argc, char**argv) {
         kinect_serial_number = KINECT_SERIAL_ARNAUD();
     }
     image_geometry::PinholeCameraModel rgb_camera_model, depth_camera_model;
-    assert(kinect_openni_utils::read_camera_model_files
+    assert(vision_utils::read_camera_model_files
            (kinect_serial_number, depth_camera_model, rgb_camera_model));
 
     // read input depth and user images
     std::string filename_prefix = folder + std::string(words[0]);
     printf("Reading file '%s'\n", filename_prefix.c_str());
-    if (!image_utils::read_rgb_depth_user_image_from_image_file
+    if (!vision_utils::read_rgb_depth_user_image_from_image_file
         (filename_prefix, NULL, &depth, &user_mask)) {
       printf("Could not read file '%s'\n", filename_prefix.c_str());
       continue;
     }
-    Height ground_truth_height_m = string_utils::cast_from_string<Height>(words[1]);
+    Height ground_truth_height_m = vision_utils::cast_from_string<Height>(words[1]);
     if (words.size() == 3) {
-      unsigned char user_value = string_utils::cast_from_string<int>(words[2]);
+      unsigned char user_value = vision_utils::cast_from_string<int>(words[2]);
       // printf("Applying user value %i\n", (int) user_value);
       user_mask = (user_mask == user_value);
       //cv::imshow("user_mask", user_mask); cv::waitKey(0);

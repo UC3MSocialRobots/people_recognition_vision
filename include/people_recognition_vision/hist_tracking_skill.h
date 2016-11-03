@@ -43,14 +43,14 @@ A bunch of functions doing that with different kind of inputs are available,
 #define HIST_TRACKING_SKILL_H
 
 // AD
-#include "vision_utils/color_utils.h"
-#include "vision_utils/utils/timer.h"
+
+#include "vision_utils/timer.h"
 #include "std_msgs/String.h"
 #include "vision_utils/nano_etts_api.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
-#include "vision_utils/content_processing.h"
+
 #include "vision_utils/user_image_to_rgb.h"
-// people_msgs_rl
+// people_msgs
 #include "people_recognition_vision/person_histogram_set.h"
 
 class HistTrackingSkill {
@@ -64,7 +64,7 @@ public:
     _etts_api.advertise();
     DEBUG_PRINT("ctor HistTrackingSkill()");
     // init etts_api
-    //_etts_api.setLanguage(Translator::LANGUAGE_ENGLISH);
+    //_etts_api.setLanguage(LANGUAGE_ENGLISH);
     _etts_api.say_text("|en:Show me what clothes you wear!");
 
     // create reference PersonHistogramSet
@@ -82,7 +82,7 @@ public:
     // draw caption
     colormap_to_caption_image(_colormap_caption,
                               150, 300,
-                              colormaps::ratio2red_green_half,
+                              vision_utils::ratio2red_green_half,
                               0., .6, .05, .1);
 
     // GUI
@@ -94,14 +94,14 @@ public:
     new_ph_button.get_illus_color_img().setTo(200);
     new_ph_button.get_illus_color_mask().create(rows, cols); // rows, cols
     new_ph_button.get_illus_color_mask().setTo(255);
-    image_utils::draw_text_centered
+    vision_utils::draw_text_centered
         (new_ph_button.get_illus_color_img(), "[NEW]",
          center, CV_FONT_HERSHEY_PLAIN, 1, CV_RGB(255, 0, 0));
     erase_ph_button.get_illus_color_img().create(rows, cols);
     erase_ph_button.get_illus_color_img().setTo(200);
     erase_ph_button.get_illus_color_mask().create(rows, cols); // rows, cols
     erase_ph_button.get_illus_color_mask().setTo(255);
-    image_utils::draw_text_centered
+    vision_utils::draw_text_centered
         (erase_ph_button.get_illus_color_img(), "[erase]",
          center, CV_FONT_HERSHEY_PLAIN, 1, CV_RGB(255, 0, 0));
     repaint_ref_phset_illus();
@@ -184,7 +184,7 @@ public:
     repaint_curr_phset_illus();
 
     ROS_WARN_THROTTLE(1, "assign:%s, dist_matrix:'%s'",
-                      assignment_utils::assignment_list_to_string(_best_assign).c_str(),
+                      vision_utils::assignment_list_to_string(_best_assign).c_str(),
                       ref_phset.get_dist_matrix().to_string(15).c_str());
     return true;
   } // end compare()
@@ -242,7 +242,7 @@ public:
       } // end if (illus_hist_per_user)
 
       if (illus_seen_buffer_per_user) {
-        image_utils::propagative_floodfill_seen_buffer_to_viz_image
+        vision_utils::propagative_floodfill_seen_buffer_to_viz_image
             (ph->get_seen_buffer(), seen_buffer_float_buffer, seen_buffer_illus);
         if (!seen_buffer_illus.empty()) {
           window_title.str("");  window_title << "seen_buffer #" << (int) curr_label;
@@ -300,7 +300,7 @@ public:
       std::string sentence = sentences_to_say[sentence_idx];
       if (std::find(last_sentences_said.begin(), last_sentences_said.end(),
                     sentence) != last_sentences_said.end()) {
-        maggieDebug2("Sentence '%s' was already said, skipping it.",
+        ROS_INFO("Sentence '%s' was already said, skipping it.",
                      sentence.c_str());
         continue;
       }
@@ -391,7 +391,7 @@ protected:
     HistTrackingSkill* this_ptr = (HistTrackingSkill*) userdata;
     bool clicked_on_ref = (y < this_ptr->_interface.cols / 2);
     if (clicked_on_ref) { // first half -> ref phset
-      ButtonIdx ref_button_idx = image_utils::paste_images_pixel_belong_to_image
+      ButtonIdx ref_button_idx = vision_utils::paste_images_pixel_belong_to_image
           (x, y, true,
            PersonHistogramSet::CAPTION_WIDTH1,
            PersonHistogramSet::CAPTION_HEIGHT1, true);
@@ -453,7 +453,7 @@ protected:
     else { // 2nd half -> curr phset
       y = y - this_ptr->_ref_phset_illus.rows; // offset due to ref phset being above
       ButtonIdx ref_button_idx = this_ptr->ref_phs_prev_button;
-      ButtonIdx curr_button_idx = image_utils::paste_images_pixel_belong_to_image
+      ButtonIdx curr_button_idx = vision_utils::paste_images_pixel_belong_to_image
           (x, y, true,
            PersonHistogramSet::CAPTION_WIDTH1,
            PersonHistogramSet::CAPTION_HEIGHT1,
@@ -494,17 +494,17 @@ protected:
 
   inline void repaint_interface() {
     DEBUG_PRINT("repaint_interface(): ref:'%s', curr:'%s'",
-                image_utils::infosImage(_ref_phset_illus).c_str(),
-                image_utils::infosImage(_curr_phset_illus).c_str());
-    int expected_img_rows = PersonHistogramSet::CAPTION_HEIGHT1 + image_utils::HEADER_SIZE;
+                vision_utils::infosImage(_ref_phset_illus).c_str(),
+                vision_utils::infosImage(_curr_phset_illus).c_str());
+    int expected_img_rows = PersonHistogramSet::CAPTION_HEIGHT1 + vision_utils::HEADER_SIZE;
     // copy paste _ref_phset_illus and _curr_phset_illus
     bool ref_img_good = _ref_phset_illus.rows == expected_img_rows && _ref_phset_illus.cols > 0;
     bool curr_img_good = _curr_phset_illus.rows == expected_img_rows && _curr_phset_illus.cols > 0;
     if (!ref_img_good && !curr_img_good) {
       printf("repaint_interface(): both curr and ref phset illus non valid! "
              "(ref:'%s', curr:'%s')\n",
-             image_utils::infosImage(_ref_phset_illus).c_str(),
-             image_utils::infosImage(_curr_phset_illus).c_str());
+             vision_utils::infosImage(_ref_phset_illus).c_str(),
+             vision_utils::infosImage(_curr_phset_illus).c_str());
       _interface.create(expected_img_rows, 100);
       _interface.setTo(0);
       return;
@@ -512,16 +512,16 @@ protected:
     if (!curr_img_good) {
       printf("repaint_interface(): only ref phset illus valid! "
              "(ref:'%s', curr:'%s')\n",
-             image_utils::infosImage(_ref_phset_illus).c_str(),
-             image_utils::infosImage(_curr_phset_illus).c_str());
+             vision_utils::infosImage(_ref_phset_illus).c_str(),
+             vision_utils::infosImage(_curr_phset_illus).c_str());
       _ref_phset_illus.copyTo(_interface);
       return;
     }
     if (!ref_img_good) {
       printf("repaint_interface(): only curr phset illus valid!"
              "(ref:'%s', curr:'%s')\n",
-             image_utils::infosImage(_ref_phset_illus).c_str(),
-             image_utils::infosImage(_curr_phset_illus).c_str());
+             vision_utils::infosImage(_ref_phset_illus).c_str(),
+             vision_utils::infosImage(_curr_phset_illus).c_str());
       _curr_phset_illus.copyTo(_interface);
       return;
     }
@@ -530,8 +530,8 @@ protected:
                       std::max(_ref_phset_illus.cols, _curr_phset_illus.cols)); // rows, cols
     _interface.setTo(255);
     // define the ROIs
-    cv::Mat3b inter_ref_roi = _interface(image_utils::bbox_full(_ref_phset_illus));
-    cv::Mat3b inter_curr_roi = _interface(image_utils::bbox_full(_curr_phset_illus)
+    cv::Mat3b inter_ref_roi = _interface(vision_utils::bbox_full(_ref_phset_illus));
+    cv::Mat3b inter_curr_roi = _interface(vision_utils::bbox_full(_curr_phset_illus)
                                           + cv::Point(0, _ref_phset_illus.rows));
     // copy the interfaces
     _ref_phset_illus.copyTo(inter_ref_roi);
@@ -539,7 +539,7 @@ protected:
 
     // paint the selections
     if (ref_phs_prev_button != NO_USER_SELECTED) {
-      cv::Rect ROI = image_utils::paste_images_image_roi
+      cv::Rect ROI = vision_utils::paste_images_image_roi
           (ref_phs_prev_button, true,
            PersonHistogramSet::CAPTION_WIDTH1,
            PersonHistogramSet::CAPTION_HEIGHT1,
@@ -547,7 +547,7 @@ protected:
       cv::rectangle(inter_ref_roi, ROI, CV_RGB(255, 0, 0), 3);
     }
     if (curr_phs_prev_button != NO_USER_SELECTED) {
-      cv::Rect ROI = image_utils::paste_images_image_roi
+      cv::Rect ROI = vision_utils::paste_images_image_roi
           (curr_phs_prev_button, true,
            PersonHistogramSet::CAPTION_WIDTH1,
            PersonHistogramSet::CAPTION_HEIGHT1,
@@ -581,7 +581,7 @@ protected:
     ref_phset.push_back(erase_ph_button, 100001, false); // no retraining
     ref_phset.push_back(new_ph_button, 100002, false);
     ref_phset.generate_caption_image
-        (_ref_phset_illus, &titlemaps::int_to_uppercase_letter);
+        (_ref_phset_illus, &vision_utils::int_to_uppercase_letter);
     ref_phset.pop_back(false);
     ref_phset.pop_back(false);
     repaint_interface();
@@ -592,7 +592,7 @@ protected:
   inline void repaint_curr_phset_illus() {
     DEBUG_PRINT("repaint_curr_phset_illus()");
     _curr_phset_illus.release();
-    curr_phset.generate_caption_image(_curr_phset_illus, &titlemaps::int_to_lowercase_letter);
+    curr_phset.generate_caption_image(_curr_phset_illus, &vision_utils::int_to_lowercase_letter);
     repaint_interface();
   } // end repaint_curr_phset_illus
 

@@ -26,48 +26,48 @@ Some tests for EuclideanPPLM
 #include "vision_utils/filename_prefix2imgs.h"
 
 TEST(TestSuite, create) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, test_sizes) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
-  pplm_testing::test_sizes(matcher);
+  vision_utils::test_sizes(matcher);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, test_same_msg) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
   for (unsigned int nusers = 0; nusers < 10; ++nusers)
-    pplm_testing::test_same_msg(matcher, nusers);
+    vision_utils::test_same_msg(matcher, nusers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, test_two_frames_matching) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
-  pplm_testing::test_two_frames_matching
+  vision_utils::test_two_frames_matching
       (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud2");
-  pplm_testing::test_two_frames_matching
+  vision_utils::test_two_frames_matching
       (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud3");
-  pplm_testing::test_two_frames_matching
+  vision_utils::test_two_frames_matching
       (matcher, IMG_DIR "depth/david_arnaud2", IMG_DIR "depth/david_arnaud3");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_pplm_benchmark(const std::string & filename_regex) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
   FilenamePrefix2Imgs db_player;
   ASSERT_TRUE(db_player.from_file(filename_regex));
-  pplm_testing::pplm_benchmark(matcher, db_player, 1);
+  vision_utils::pplm_benchmark(matcher, db_player, 1);
 }
 
 TEST(TestSuite, pplm_benchmark) {

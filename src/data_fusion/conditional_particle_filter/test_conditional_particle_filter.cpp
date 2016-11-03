@@ -22,7 +22,6 @@
 
   */
 
-#include "vision_utils/utils/error.h"
 #include "people_recognition_vision/conditional_particle_filter_laser_ros.h"
 
 void test_select_index_with_probas() {
@@ -33,10 +32,10 @@ void test_select_index_with_probas() {
   for (unsigned int var = 0; var < 1000; ++var) {
     unsigned int index = select_index_with_probas::select(probas, probas + 4);
     ++ occurences[index];
-    //maggiePrint("index:%i", index);
+    //ROS_WARN("index:%i", index);
   } // end loop var
 
-  maggiePrint("occurences:%i, %i, %i, %i",
+  ROS_WARN("occurences:%i, %i, %i, %i",
               occurences[0], occurences[1], occurences[2], occurences[3]);
 } // end test_select_index_with_probas();
 

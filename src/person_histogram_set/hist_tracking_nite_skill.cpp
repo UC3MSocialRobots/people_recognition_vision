@@ -48,11 +48,11 @@ public:
     ROS_INFO_THROTTLE(1, "HistTrackingNiteSkill:fn()");
     DEBUG_PRINT("HistTrackingNiteSkill:fn()");
     // ROS_INFO("fn()");
-    Timer timer_callback;
+    vision_utils::Timer timer_callback;
 
     // get the list of all labels in user
     std::vector<uchar> user_labels;
-    image_utils::get_all_different_values(user, user_labels, true);
+    vision_utils::get_all_different_values(user, user_labels, true);
     unsigned int nusers = user_labels.size();
 
     // for each label, compute its histogram
@@ -76,14 +76,14 @@ public:
 #if 0
     // user_skeleton_illus
     user_image_to_rgb(user, user_skeleton_illus, 8);
-    skeleton_utils::draw_skeleton_list(user_skeleton_illus, skeleton_list);
+    vision_utils::draw_skeleton_list(user_skeleton_illus, skeleton_list);
     cv::imshow("user_skeleton_illus", user_skeleton_illus);
 #endif
     illus();
     wait_key();
     ROS_WARN_THROTTLE(1, "user_labels:'%s' (size:%i), time for "
                       "compute_vector_of_histograms(): %g ms, total callback:%g ms",
-                      string_utils::accessible_to_string(user_labels).c_str(),
+                      vision_utils::accessible_to_string(user_labels).c_str(),
                       nusers,
                       time_compute_vector_of_histograms, timer_callback.getTimeMilliseconds());
 

@@ -23,11 +23,11 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-// people_msgs_rl
+// people_msgs
 #include "people_recognition_vision/person_histogram.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
-#include "vision_utils/utils/timer.h"
-#include "vision_utils/utils/matrix_testing.h"
+#include "vision_utils/timer.h"
+#include "vision_utils/matrix_testing.h"
 
 
 using namespace test_person_histogram_set_variables;
@@ -46,18 +46,18 @@ void ASSERT_SOUND_PH(const PersonHistogram & ph,
 
   // check multimask values = 1, 2, 3
   std::vector<uchar> values;
-  image_utils::get_all_different_values(ph.get_multimask(), values, true);
+  vision_utils::get_all_different_values(ph.get_multimask(), values, true);
   ASSERT_TRUE(values.size() == PersonHistogram::BODY_PARTS);
   for (unsigned int i = 1; i <= PersonHistogram::BODY_PARTS; ++i)
     ASSERT_TRUE(std::find(values.begin(), values.end(), (uchar) i)
-                != values.end()) << "values:" << string_utils::iterable_to_int_string(values);
+                != values.end()) << "values:" << vision_utils::iterable_to_int_string(values);
 
   // check illus images
   int cols = ph.get_illus_color_img().cols, rows = ph.get_illus_color_img().rows;
   ASSERT_TRUE(cols > 0 && rows > 0) << "cols:" << cols << ", rows:" << rows;
-  ASSERT_TRUE(matrix_testing::matrice_size_equal
+  ASSERT_TRUE(vision_utils::matrice_size_equal
               (ph.get_illus_color_img(), cols, rows, 3, CV_8UC3));
-  ASSERT_TRUE(matrix_testing::matrice_size_equal
+  ASSERT_TRUE(vision_utils::matrice_size_equal
               (ph.get_illus_color_mask(), cols, rows, 1, CV_8U));
 }
 
@@ -78,14 +78,14 @@ void test_io_PersonHistogram(const std::string & filename_prefix,
                              const T2 & arg2,
                              const T3 & arg3) {
   // compute all histogams
-  Timer timer;
+  vision_utils::Timer timer;
   PersonHistogram ph(filename_prefix, arg2, arg3), ph2;
   timer.printTime("loading data and computing histograms");
 
   timer.reset();
-  image_utils::to_yaml(ph, "/tmp/foo", "PersonHistogram");
+  vision_utils::to_yaml(ph, "/tmp/foo", "PersonHistogram");
   timer.printTime("to yaml");
-  image_utils::from_yaml(ph2, "/tmp/foo", "PersonHistogram");
+  vision_utils::from_yaml(ph2, "/tmp/foo", "PersonHistogram");
   timer.printTime("to yaml -> from yaml");
 
   // evaluate dist between hists
@@ -102,7 +102,7 @@ void test_io_PersonHistogram(const std::string & filename_prefix,
 
   // assert masks are equal
   cv::Mat1b frame_diff;
-  ASSERT_NEAR(matrix_testing::rate_of_changes_between_two_images
+  ASSERT_NEAR(vision_utils::rate_of_changes_between_two_images
               (ph.get_illus_color_mask(), ph2.get_illus_color_mask(),
                frame_diff, 1), 0, 1E-2);
 }
@@ -152,7 +152,7 @@ void test_rgb_fill(const cv::Mat3b & new_rgb, std::string exp_color) {
   cv::Mat1b user_mask;
   cv::Mat rgb, depth;
   int image_idx = rand() % ainara_hists_nb;
-  ASSERT_TRUE(image_utils::read_rgb_depth_user_image_from_image_file
+  ASSERT_TRUE(vision_utils::read_rgb_depth_user_image_from_image_file
               (ainara_filename_prefixes[image_idx], &rgb, &depth, &user_mask));
   user_mask = (user_mask == ainara_user_idx[image_idx]);
   PersonHistogram ph;
@@ -161,7 +161,7 @@ void test_rgb_fill(const cv::Mat3b & new_rgb, std::string exp_color) {
 #ifdef DISPLAY
   ph.show_illus_image(0);
   cv::imshow("rgb", rgb);
-  cv::imshow("depth", image_utils::depth2viz(depth));
+  cv::imshow("depth", vision_utils::depth2viz(depth));
   cv::imshow("multimask", user_image_to_rgb(ph.get_multimask()));
   cv::imshow("user_mask", user_mask);
   ph.show_illus_image(0);
@@ -169,7 +169,7 @@ void test_rgb_fill(const cv::Mat3b & new_rgb, std::string exp_color) {
 
   ASSERT_SOUND_PH(ph, 1);
   for (unsigned int hidx = 0; hidx < PersonHistogram::BODY_PARTS; ++hidx) {
-    std::string hist_dominant_color = histogram_utils::hue_hist_dominant_color_to_string
+    std::string hist_dominant_color = vision_utils::hue_hist_dominant_color_to_string
                                       (ph.get_hist_vector()[hidx]);
     ASSERT_TRUE(hist_dominant_color == exp_color)
         << "hist_dominant_color:" << hist_dominant_color << ", exp_color:" << exp_color;
@@ -201,7 +201,7 @@ TEST(TestSuite, test_rgb_multi) {
   for (int row = 0; row < rows; ++row) {
     cv::Vec3b* data = rgb.ptr<cv::Vec3b>(row);
     for (int col = 0; col < cols; ++col)
-      data[col] = color_utils::hue2rgb<cv::Vec3b>(rand() % 180);
+      data[col] = vision_utils::hue2rgb<cv::Vec3b>(rand() % 180);
   } // end loop row
   test_rgb_fill(rgb, "multicolor");
 }
@@ -232,7 +232,7 @@ TEST(TestSuite, to_mat) {
   ASSERT_TRUE(ph2mat.cols == (int) PersonHistogram::MAT_COLS);
 #ifndef SVM_USE_STD_DEV_HIST
   ASSERT_TRUE(ph2mat.cols == PersonHistogram::HIST_NBINS);
-  ASSERT_TRUE(matrix_testing::matrices_equal(ph.get_hist_vector().at(1).t(), ph2mat));
+  ASSERT_TRUE(vision_utils::matrices_equal(ph.get_hist_vector().at(1).t(), ph2mat));
 #endif
 }
 
@@ -256,7 +256,7 @@ TEST(TestSuite, merge_one_image) {
   // check merging: now ph=ph2
   ASSERT_SOUND_PH(ph_out, 1);
   for (unsigned int hidx = 0; hidx < PersonHistogram::BODY_PARTS; ++hidx)
-    ASSERT_TRUE(matrix_testing::matrices_near(ph_out.get_hist_vector()[hidx],
+    ASSERT_TRUE(vision_utils::matrices_near(ph_out.get_hist_vector()[hidx],
                                               ph_in.get_hist_vector()[hidx], 1E-2));
 }
 
@@ -276,7 +276,7 @@ TEST(TestSuite, merge_two_images) {
   // check merging: now ph=ph1+ph2/2
   ASSERT_SOUND_PH(ph_out, 2);
   for (unsigned int hidx = 0; hidx < PersonHistogram::BODY_PARTS; ++hidx)
-    ASSERT_TRUE(matrix_testing::matrices_near
+    ASSERT_TRUE(vision_utils::matrices_near
                 (ph_out.get_hist_vector()[hidx],
                  .5*(ph_in1.get_hist_vector()[hidx] + ph_in2.get_hist_vector()[hidx]),
                  1E-2));
@@ -297,7 +297,7 @@ TEST(TestSuite, merge_four_images) {
   // check merging: now ph=.25*ph1+.75*ph2
   ASSERT_SOUND_PH(ph_out, 4);
   for (unsigned int hidx = 0; hidx < PersonHistogram::BODY_PARTS; ++hidx)
-    ASSERT_TRUE(matrix_testing::matrices_near
+    ASSERT_TRUE(vision_utils::matrices_near
                 (ph_out.get_hist_vector()[hidx],
                  .25*ph_in1.get_hist_vector()[hidx] + .75*ph_in2.get_hist_vector()[hidx],
                  1E-2));

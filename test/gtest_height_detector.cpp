@@ -26,8 +26,8 @@ Some tests for HeightDetector
 
 // Bring in gtest
 #include <gtest/gtest.h>
-#include "vision_utils/utils/map_utils.h"
-#include "vision_utils/utils/timer.h"
+
+#include "vision_utils/timer.h"
 #include "people_recognition_vision/height_detector.h"
 
 //#define DISPLAY
@@ -37,10 +37,10 @@ void load_depth_mask_cammodel(cv::Mat1f & depth,
                               image_geometry::PinholeCameraModel & depth_camera_model,
                               const std::string filename_prefix,
                               const std::string kinect_serial_number = DEFAULT_KINECT_SERIAL()) {
-  image_utils::read_rgb_depth_user_image_from_image_file
+  vision_utils::read_rgb_depth_user_image_from_image_file
       (filename_prefix, NULL, &depth, &user_mask);
   image_geometry::PinholeCameraModel rgb_camera_model;
-  ASSERT_TRUE(kinect_openni_utils::read_camera_model_files
+  ASSERT_TRUE(vision_utils::read_camera_model_files
               (kinect_serial_number, depth_camera_model, rgb_camera_model));
 }
 
@@ -117,7 +117,7 @@ void test_height_pixels(const std::string user_mask_name,
   HeightDetector detector;
   HeightDetector::Height h;
   unsigned int ntimes = 10;
-  Timer timer;
+  vision_utils::Timer timer;
   for (unsigned int time = 0; time < ntimes; ++time)
     h = detector.height_pixels(user_mask);
   timer.printTime_factor("height_pixels()", ntimes);
@@ -214,7 +214,7 @@ void test_height_meters(std::string prefix,
   load_depth_mask_cammodel(depth, user_mask, depth_camera_model, prefix);
   HeightDetector detec;
 
-  Timer timer;
+  vision_utils::Timer timer;
   HeightDetector::Height h = detec.height_meters
                              (depth, user_mask, depth_camera_model, compute_confidence);
   timer.printTime("height_meters()");
@@ -271,7 +271,7 @@ void test_height_all_values(const std::string filename_prefix,
   HeightDetector detec;
   std::map<int, HeightDetector::Height> heights;
   cv::Mat3b illus;
-  Timer timer;
+  vision_utils::Timer timer;
   bool ok = detec.height_meters_all_values
             (depth, user_mask, depth_camera_model, heights, true, true, &illus);
   timer.printTime("height_meters_all_values()");
@@ -284,13 +284,13 @@ void test_height_all_values(const std::string filename_prefix,
   std::vector<int> out_keys, correct_keys;
   for (unsigned int i = 0; i < exp_nusers; ++i)
     correct_keys.push_back(i+1);
-  map_utils::map_keys_to_container(heights, out_keys);
+  vision_utils::map_keys_to_container(heights, out_keys);
   ASSERT_TRUE(out_keys == correct_keys)
-      << "heights:" << string_utils::map_to_string(heights);
+      << "heights:" << vision_utils::map_to_string(heights);
 #else
   ASSERT_TRUE(heights.size() == exp_nusers)
       << "exp_nusers:" << exp_nusers
-      << ", heights:" << string_utils::map_to_string(heights);
+      << ", heights:" << vision_utils::map_to_string(heights);
 #endif
   std::map<int, HeightDetector::Height>::const_iterator h_it = heights.begin();
   while(h_it != heights.end()) {
@@ -345,17 +345,17 @@ TEST(TestSuite, g3d2imgs) {
     return;
   ASSERT_TRUE(db.go_to_next_frame());
   image_geometry::PinholeCameraModel depth_camera_model, rgb_camera_model;
-  ASSERT_TRUE(kinect_openni_utils::read_camera_model_files
+  ASSERT_TRUE(vision_utils::read_camera_model_files
               (DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model));
 
   std::map<int, HeightDetector::Height> heights;
   cv::Mat3b illus;
-  Timer timer;
+  vision_utils::Timer timer;
   HeightDetector detec;
   bool ok = detec.height_meters_all_values
             (db.get_depth(), db.get_user(), depth_camera_model, heights, true, true, &illus);
   timer.printTime("height_meters_all_values()");
-  printf("heights:'%s'\n", string_utils::map_to_string(heights).c_str());
+  printf("heights:'%s'\n", vision_utils::map_to_string(heights).c_str());
   ASSERT_TRUE(ok);
 #ifdef DISPLAY
   db.display();

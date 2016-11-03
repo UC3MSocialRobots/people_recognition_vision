@@ -24,10 +24,10 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include "vision_utils/utils/timer.h"
+#include "vision_utils/timer.h"
 #include <vision_utils/img_path.h>
 #include "people_recognition_vision/face_recognizer.h"
-#include <people_msgs_rl/PeoplePoseList.h>
+#include <people_msgs/People.h>
 
 #define FACES_DIR   IMG_DIR "faces/"
 
@@ -81,7 +81,7 @@ TEST(TestSuite, people_lab_predict_known_faces) {
   face_recognition::FaceRecognizer rec;
   EXPECT_TRUE(rec.from_xml_file(FACES_DIR "people_lab/index.xml"));
   // empty image
-  test_recognizer(rec, "/foo.png", people_msgs_rl::PeoplePose::RECOGNITION_FAILED);
+  test_recognizer(rec, "/foo.png", "RECFAIL");
   test_recognizer(rec, FACES_DIR "people_lab/alberto_0.png", "alberto");
   test_recognizer(rec, FACES_DIR "people_lab/arnaud_20.png", "arnaud");
   test_recognizer(rec, FACES_DIR "people_lab/avi_35.png", "avi");

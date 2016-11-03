@@ -25,7 +25,7 @@ The implementation of \a HistTrackingSkill
 thanks to a \a RgbDepthSkill.
 
 The estimated positions of the users are obtained
-by subscribing to a topic supplying some \a PeoplePoseList .
+by subscribing to a topic supplying some \a People .
 
 \section Parameters
   - \b "~ppl_input_topic"
@@ -34,16 +34,16 @@ by subscribing to a topic supplying some \a PeoplePoseList .
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs_rl::PeoplePoseList]
+        [people_msgs::People]
         The found faces ROIs and the name of the persons recognized
 
  */
 // vision
 #include "vision_utils/rgb_depth_skill.h"
-#include <people_msgs_rl/PeoplePoseList.h>
-#include "vision_utils/cv_conversion_float_uchar.h"
+#include <people_msgs/People.h>
 
-// people_msgs_rl
+
+// people_msgs
 #include "people_recognition_vision/hist_tracking_skill.h"
 
 class HistTrackingRgbDepthSkill : public RgbDepthSkill, public HistTrackingSkill {
@@ -53,7 +53,7 @@ public:
   {
     // get camera model
     image_geometry::PinholeCameraModel rgb_camera_model;
-    kinect_openni_utils::read_camera_model_files
+    vision_utils::read_camera_model_files
         (DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
   }
 
@@ -91,7 +91,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_reco_result_cb
-  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
+  (const people_msgs::PeopleConstPtr & msg) {
     face_recs_mutex.lock();
     face_recs.clear();
     //face_recs.push_back(msg->results.rois.size());
@@ -112,7 +112,7 @@ public:
     }
 
     face_recs_mutex.lock();
-    people_msgs_rl::PeoplePoseList* curr_list = &face_recs.front();
+    people_msgs::People* curr_list = &face_recs.front();
     unsigned int nusers = curr_list->poses.size();
 
     // find histogram for each face
@@ -143,10 +143,10 @@ public:
 private:
   image_geometry::PinholeCameraModel _default_depth_camera_model;
   ros::Publisher _face_detector_start_pub, _etts_face_counter_start_pub;
-  std::vector<people_msgs_rl::PeoplePoseList> face_recs;
+  std::vector<people_msgs::People> face_recs;
   ros::Subscriber _ppl_sub;
   boost::mutex face_recs_mutex;
-  Timer timer;
+  vision_utils::Timer timer;
 }; // end class HistTrackingRgbDepthSkill
 
 //////////////////////////////////////////////////////////////////////////////

@@ -24,12 +24,11 @@ ________________________________________________________________________________
  */
 #include "vision_utils/images2ppl.h"
 #include "vision_utils/rlpd2imgs.h"
-#include "vision_utils/utils/assignment_utils.h"
-#include "vision_utils/utils/map_utils.h"
-#include "vision_utils/utils/string_casts_stl.h"
-#include "vision_utils/utils/timer.h"
-// people_msgs_rl
-#include <people_msgs_rl/MatchPPL.h>
+
+
+#include "vision_utils/timer.h"
+// people_msgs
+#include <people_recognition_vision/MatchPPL.h>
 #include <ros/ros.h>
 
 int main(int argc, char** argv) {
@@ -63,29 +62,29 @@ int main(int argc, char** argv) {
   }
   std::map<std::string, int> name2idx;
   std::vector<std::string> names;
-  string_utils::StringSplit(names_str, ";", &names);
+  vision_utils::StringSplit(names_str, ";", &names);
   unsigned int nnames = names.size();
   for (int i = 0; i < nnames; ++i)
     name2idx.insert(std::pair<std::string, unsigned int>(names[i], name2idx.size()));
 
   // service
-  ros::ServiceClient matcher = nh_public.serviceClient<people_msgs_rl::MatchPPL>("match_ppl");
+  ros::ServiceClient matcher = nh_public.serviceClient<people_recognition_vision::MatchPPL>("match_ppl");
 
   // start the loop
   cv::Mat1d confusion_matrix(nnames, nnames);
   confusion_matrix.setTo(0);
-  ppl_utils::Images2PPL gt_img2ppl, nite_img2ppl;
-  people_msgs_rl::MatchPPLRequest req;
-  people_msgs_rl::MatchPPLResponse res;
+  vision_utils::Images2PPL gt_img2ppl, nite_img2ppl;
+  people_recognition_vision::MatchPPLRequest req;
+  people_recognition_vision::MatchPPLResponse res;
   std_msgs::Header curr_header;
   ROS_INFO("pplm_benchmarker: service '%s', names: '%s', eval_nite:%i",
-           matcher.getService().c_str(), string_utils::map_to_string(name2idx).c_str(),
+           matcher.getService().c_str(), vision_utils::map_to_string(name2idx).c_str(),
            eval_nite);
 
   curr_header.frame_id = "openni_rgb_optical_frame";
   curr_header.stamp = ros::Time::now();
   while (ros::ok()) {
-    Timer timer;
+    vision_utils::Timer timer;
     if (!reader.go_to_next_frame()) {
       ROS_WARN("pplm_benchmarker: couldn't go_to_next_frame()!");
       break;
@@ -102,7 +101,7 @@ int main(int argc, char** argv) {
       ROS_WARN("gt_img2ppl.convert() failed!");
       continue;
     }
-    people_msgs_rl::PeoplePoseList *gtppl = &(gt_img2ppl.get_ppl()), *niteppl = NULL;
+    people_msgs::People *gtppl = &(gt_img2ppl.get_ppl()), *niteppl = NULL;
     if (eval_nite) {
       if (!nite_img2ppl.convert(reader.get_bgr(),
                                 reader.get_depth(),
@@ -114,22 +113,22 @@ int main(int argc, char** argv) {
       }
       niteppl = &(nite_img2ppl.get_ppl());
       // copy "user_multimap_name" --> "gt_user_multimap_name"
-      unsigned int gtsize = gtppl->poses.size(), nite_size = niteppl->poses.size();
+      unsigned int gtsize = gtppl->people.size(), nite_size = niteppl->people.size();
       if (gtsize != nite_size) {
         ROS_WARN("gtsize=%i != nite_size=%i", gtsize, nite_size);
         continue;
       }
       for (int i = 0; i < nite_size; ++i) {
         std::string gtname = "";
-        ppl_utils::get_attribute_readonly(gtppl->poses[i], "user_multimap_name", gtname);
-        ppl_utils::set_attribute(niteppl->poses[i], "gt_user_multimap_name", gtname);
+        vision_utils::get_tag(gtppl->people[i], "user_multimap_name", gtname);
+        vision_utils::set_tag(niteppl->people[i], "gt_user_multimap_name", gtname);
       }
     } // end if (eval_nite)
 
     // call "MatchPPL" service
     req.tracks = req.new_ppl;
     req.new_ppl = (eval_nite ? *niteppl: *gtppl);
-    unsigned int ntracks = req.tracks.poses.size(), nppl = req.new_ppl.poses.size();
+    unsigned int ntracks = req.tracks.poses.size(), nppl = req.new_ppl.people.size();
     if (nppl < 2 && ntracks < 2) {
       ROS_WARN_THROTTLE(5, "Only %i users and %i tracks, no recognition to be made!",
                         nppl, ntracks);
@@ -150,28 +149,28 @@ int main(int argc, char** argv) {
     }
 
     // compute assignment
-    assignment_utils::Cost best_cost;
-    assignment_utils::MatchList ppl2track_affectations;
-    if (!assignment_utils::linear_assign_from_cost_vec
+    vision_utils::Cost best_cost;
+    vision_utils::MatchList ppl2track_affectations;
+    if (!vision_utils::linear_assign_from_cost_vec
         (res.costs, nppl, ntracks, ppl2track_affectations, best_cost)) {
       ROS_WARN("linear_assign_from_cost_vec() failed!");
       continue;
     }
-    std::cout << assignment_utils::assignment_list_to_string(ppl2track_affectations) << std::endl;
+    std::cout << vision_utils::assignment_list_to_string(ppl2track_affectations) << std::endl;
 
     // check if the recognition is correct
     unsigned int nassigns = ppl2track_affectations.size();
     for (int i = 0; i < nassigns; ++i) {
       int ppli = ppl2track_affectations[i].first, tracki  = ppl2track_affectations[i].second;
-      if (ppli == assignment_utils::UNASSIGNED || tracki == assignment_utils::UNASSIGNED) {
+      if (ppli == vision_utils::UNASSIGNED || tracki == vision_utils::UNASSIGNED) {
         ROS_WARN_THROTTLE(5, "Uncomplete assignment! '%s'",
-                          assignment_utils::assignment_list_to_string(ppl2track_affectations).c_str());
+                          vision_utils::assignment_list_to_string(ppl2track_affectations).c_str());
         continue;
       }
       std::string ppl_name,track_name;
       std::string attr = (eval_nite ? "gt_user_multimap_name" : "user_multimap_name");
-      if (!ppl_utils::get_attribute_readonly(req.new_ppl.poses[ppli], attr, ppl_name)
-          || !ppl_utils::get_attribute_readonly(req.tracks.poses[tracki], attr, track_name)) {
+      if (!vision_utils::get_tag(req.new_ppl.people[ppli], attr, ppl_name)
+          || !vision_utils::get_tag(req.tracks.poses[tracki], attr, track_name)) {
         ROS_WARN("Couldn't get names!");
         continue;
       }

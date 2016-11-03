@@ -24,10 +24,10 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include "vision_utils/utils/timer.h"
-#include "vision_utils/utils/matrix_testing.h"
+#include "vision_utils/timer.h"
+#include "vision_utils/matrix_testing.h"
 
-#include <vision_utils/utils/rosmaster_alive.h>
+#include <vision_utils/rosmaster_alive.h>
 #include <vision_utils/img_path.h>
 #include "people_recognition_vision/hist_tracking_skill.h"
 
@@ -39,7 +39,7 @@ using namespace test_person_histogram_set_variables;
 static const int NO_USER = HistTrackingSkill::NO_USER_SELECTED;
 
 inline int illus_cols(float nusers) { return nusers * PersonHistogramSet::CAPTION_WIDTH1; }
-inline int illus_rows()             { return PersonHistogramSet::CAPTION_HEIGHT1 + image_utils::HEADER_SIZE; }
+inline int illus_rows()             { return PersonHistogramSet::CAPTION_HEIGHT1 + vision_utils::HEADER_SIZE; }
 inline int illus_usercenter_x(int nuser) { return illus_cols(nuser+.5); }
 inline int illus_usercenter_y()          { return illus_rows()/2; }
 
@@ -61,20 +61,20 @@ public:
         << "get_curr_phs_prev_button():" << get_curr_phs_prev_button() << ", exp_curr:" << exp_curr;
   }
   void check_images_sizes(int exp_ref, int exp_curr) {
-    ASSERT_TRUE(matrix_testing::matrice_size_equal
+    ASSERT_TRUE(vision_utils::matrice_size_equal
                 (_colormap_caption, 150, 300, 3, CV_8UC3));
     if (exp_ref> 0)
-      ASSERT_TRUE(matrix_testing::matrice_size_equal
+      ASSERT_TRUE(vision_utils::matrice_size_equal
                   (_ref_phset_illus,
                    illus_cols(exp_ref+2), // include buttons
                    illus_rows(), 3, CV_8UC3));
     if (exp_curr > 0)
-      ASSERT_TRUE(matrix_testing::matrice_size_equal
+      ASSERT_TRUE(vision_utils::matrice_size_equal
                   (_curr_phset_illus,
                    illus_cols(exp_curr),
                    illus_rows(), 3, CV_8UC3));
     if (exp_curr > 0 && exp_ref > 0)
-      ASSERT_TRUE(matrix_testing::matrice_size_equal
+      ASSERT_TRUE(vision_utils::matrice_size_equal
                   (_interface,
                    illus_cols(std::max(exp_curr, exp_ref+2)), // include buttons
                    2*illus_rows(), 3, CV_8UC3));
@@ -90,7 +90,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, empty_test) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   HistTrackingSkillExtended skill;
   ASSERT_NO_FATAL_FAILURE();
   ASSERT_TRUE(skill.nusers_ref() == 3);
@@ -102,7 +102,7 @@ TEST(TestSuite, empty_test) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, assign_empty) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   HistTrackingSkillExtended skill;
   ASSERT_TRUE(skill.compare());
   PersonHistogramSet::PHMatch assign = skill.get_best_assign();
@@ -111,13 +111,13 @@ TEST(TestSuite, assign_empty) {
   ASSERT_TRUE(assign.size() == exp_assign_size)
       << "assign:" << assign.size() << ", exp_assign_size:" << exp_assign_size;
   for (unsigned int i = 0; i < exp_assign_size; ++i)
-    ASSERT_TRUE(assign[i].second == assignment_utils::UNASSIGNED);
+    ASSERT_TRUE(assign[i].second == vision_utils::UNASSIGNED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, assign_n_users) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   // load some PersonHistogram
   HistTrackingSkillExtended skill;
   for (unsigned int nusers_curr = 0; nusers_curr < refset_hists_nb; ++nusers_curr) {
@@ -140,29 +140,29 @@ TEST(TestSuite, assign_n_users) {
       continue;
     }
     ASSERT_TRUE(assign.size() == refset_hists_nb)
-        << "assign:" << assignment_utils::assignment_list_to_string(assign);
-    assignment_utils::sort_assignment_list(assign);
+        << "assign:" << vision_utils::assignment_list_to_string(assign);
+    vision_utils::sort_assignment_list(assign);
     for (unsigned int i = 0; i < nusers_curr; ++i) {
       ASSERT_TRUE(assign[i].first == (int) i)
-          << "assign:" << assignment_utils::assignment_list_to_string(assign);
+          << "assign:" << vision_utils::assignment_list_to_string(assign);
       ASSERT_TRUE(assign[i].second == (int) i)
-          << "assign:" << assignment_utils::assignment_list_to_string(assign);
+          << "assign:" << vision_utils::assignment_list_to_string(assign);
     }
     // get label assign and check it
     PersonHistogramSet::LabelMatch label_assign = skill.get_best_label_assign();
     unsigned int exp_nlabels = skill.get_curr_phset().nlabels();
     ASSERT_TRUE(label_assign.size()  == exp_nlabels)
-        << "label_assign:" << string_utils::map_to_string(label_assign);
+        << "label_assign:" << vision_utils::map_to_string(label_assign);
     for (unsigned int label_idx = 1; label_idx <= exp_nlabels; ++label_idx)
       ASSERT_TRUE(label_assign[label_idx] == (int) label_idx)
-          << "label_assign:" << string_utils::map_to_string(label_assign);
+          << "label_assign:" << vision_utils::map_to_string(label_assign);
   } // end loop nusers_curr
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, gui_test) {
-  if (!rosmaster_alive()) return;
+  if (!vision_utils::rosmaster_alive()) return;
   //HistTrackingSkill skill;
   HistTrackingSkillExtended skill;
   skill.check_select_ref_curr(NO_USER, NO_USER);

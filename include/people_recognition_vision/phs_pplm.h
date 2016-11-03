@@ -27,7 +27,7 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 
 \section Services
   - \b "~match_ppl"
-        [people_msgs_rl/MatchPPL]
+        [people_recognition_vision/MatchPPL]
         Match a detected PPL against a reference one.
  */
 #ifndef PHS_PPLM_H
@@ -48,7 +48,7 @@ public:
   PHSPPLM() : PPLMatcherTemplate("PHS_PPLM_START", "PHS_PPLM_STOP") {
     // get camera model
     image_geometry::PinholeCameraModel rgb_camera_model;
-    kinect_openni_utils::read_camera_model_files
+    vision_utils::read_camera_model_files
         (DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
   }
 
@@ -92,9 +92,9 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs_rl::PeoplePoseAttributes> & tracks_added_attributes) {
-    unsigned int ncurr_users = new_ppl.poses.size(),
+             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
+             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
+    unsigned int ncurr_users = new_ppl.people.size(),
         ntracks = tracks.poses.size();
     DEBUG_PRINT("PHSPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
@@ -109,7 +109,7 @@ public:
     // convert PP -> person histograms
     std::vector<PH> new_ppl_heights(ncurr_users), track_heights(ntracks);
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
-      if (!pp2phs(new_ppl.poses[curr_idx], new_ppl_heights[curr_idx])) {
+      if (!pp2phs(new_ppl.people[curr_idx], new_ppl_heights[curr_idx])) {
         printf("curr_idx:%i returned an error\n", curr_idx);
         return false;
       }

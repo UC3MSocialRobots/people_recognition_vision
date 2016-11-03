@@ -23,10 +23,10 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include "vision_utils/utils/map_utils.h"
+
 #include "people_recognition_vision/breast_detector.h"
 #include <vision_utils/img_path.h>
-#include "vision_utils/io.h"
+
 #include "vision_utils/dgaitdb_filename.h"
 
 //#define DISPLAY
@@ -60,7 +60,7 @@ TEST(TestSuite, test_template_fn) {
     ms.draw_axes();
     // plot shape
     BreastDetector::template_matching_fn_x(tvec, a, b, s);
-    //      printf("tvec:'%s'\n", string_utils::iterable_to_string(tvec).c_str());
+    //      printf("tvec:'%s'\n", vision_utils::iterable_to_string(tvec).c_str());
     cvstage_plugins::plot_xy(ms, tvec, CV_RGB(0,0,0), 2);
     cv::imshow(_window_name, ms.get_viz());
     char c = cv::waitKey(50);
@@ -102,7 +102,7 @@ TEST(TestSuite, detect_breast_template_matching_compare_slices_random) {
   // add points to a BreastDetector slice
   detec.get_slices().push_back(t.pts);
   // now hope we match it again
-  Timer timer;
+  vision_utils::Timer timer;
   ASSERT_TRUE(detec.detect_breast_template_matching_compare_slices());
   timer.printTime("detect_breast_template_matching_compare_slices()");
 }
@@ -116,7 +116,7 @@ TEST(TestSuite, detect_breast_template_matching_compare_slices_perfect_match) {
   // add points to a BreastDetector slice
   detec.get_slices().push_back(t_ref.pts);
   // now hope we match it again
-  Timer timer;
+  vision_utils::Timer timer;
   ASSERT_TRUE(detec.detect_breast_template_matching_compare_slices());
   timer.printTime("detect_breast_template_matching_compare_slices()");
   t = detec.get_best_template();
@@ -133,15 +133,15 @@ void load_depth_mask_cammodel(cv::Mat1f & depth,
                               const std::string filename_prefix,
                               const std::string kinect_serial_number = DEFAULT_KINECT_SERIAL()) {
   cv::Mat3b rgb;
-  ASSERT_TRUE(image_utils::read_rgb_depth_user_image_from_image_file
+  ASSERT_TRUE(vision_utils::read_rgb_depth_user_image_from_image_file
               (filename_prefix, &rgb, &depth, &user_mask));
 #ifdef DISPLAY
   cv::imshow("rgb", rgb);
-  cv::imshow("depth", image_utils::depth2viz(depth));
+  cv::imshow("depth", vision_utils::depth2viz(depth));
   cv::waitKey(10);
 #endif
   image_geometry::PinholeCameraModel rgb_camera_model;
-  ASSERT_TRUE(kinect_openni_utils::read_camera_model_files
+  ASSERT_TRUE(vision_utils::read_camera_model_files
               (kinect_serial_number, depth_camera_model, rgb_camera_model));
 }
 
@@ -212,7 +212,7 @@ TEST(TestSuite, height_pixels_zero_mask) {
 }
 
 void test_height_pixels_full_mask(BreastDetector & detec) {
-  maggiePrint("test_height_pixels_full_mask()");
+  ROS_WARN("test_height_pixels_full_mask()");
 
   test_mask(detec, 255, BreastDetector::WALK3D);
   // test_mask(detec, 255, BreastDetector::REPROJECT);
@@ -233,7 +233,7 @@ void test_breast(BreastDetector & detec,
   load_depth_mask_cammodel(depth, user_mask, depth_camera_model,
                            filename_prefix, kinect_serial_number);
   cv::Mat1b curr_user_mask = (user_mask == user_idx);
-  Timer timer;
+  vision_utils::Timer timer;
   BreastDetector::HeightBreast h =
       detec.detect_breast(depth, curr_user_mask, depth_camera_model, method);
   printf("Time for detect_breast(method %i) : %g ms\n", method, timer.getTimeMilliseconds());
@@ -274,7 +274,7 @@ TEST(TestSuite, breast_wrong_user_idx) {
 }
 
 void test_breast_DGaitDB(BreastDetector & detec) {
-  maggiePrint("test_breast_DGaitDB()");
+  ROS_WARN("test_breast_DGaitDB()");
 
   DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
   if (!f.directory_exists())
@@ -287,7 +287,7 @@ void test_breast_DGaitDB(BreastDetector & detec) {
 }
 
 void test_breast_ainara(BreastDetector & detec) {
-  maggiePrint("test_breast_ainara()");
+  ROS_WARN("test_breast_ainara()");
 
   test_breast(detec, IMG_DIR "breast/2013-10-05_15-46-13-769", 4, KINECT_SERIAL_ARNAUD());
   test_breast(detec, IMG_DIR "breast/2013-10-05_15-46-17-635", 4, KINECT_SERIAL_ARNAUD());
@@ -315,7 +315,7 @@ void test_breast_ainara(BreastDetector & detec) {
 }
 
 void test_breast_men(BreastDetector & detec) {
-  maggiePrint("test_breast_men()");
+  ROS_WARN("test_breast_men()");
 
   test_breast(detec, IMG_DIR "depth/alberto1", 255, KINECT_SERIAL_LAB());
   test_breast(detec, IMG_DIR "depth/david_arnaud1", 1, KINECT_SERIAL_LAB());
@@ -368,7 +368,7 @@ TEST(TestSuite, breast_all_values_empty_lab) {
 }
 
 void test_breast_all_values_ainara(BreastDetector & detec) {
-  maggiePrint("test_breast_all_values_ainara()");
+  ROS_WARN("test_breast_all_values_ainara()");
 
   test_breast_all_values(detec, IMG_DIR "breast/2013-10-05_15-46-13-769", 1,
                          KINECT_SERIAL_ARNAUD(), BreastDetector::WALK3D);
@@ -379,7 +379,7 @@ void test_breast_all_values_ainara(BreastDetector & detec) {
 }
 
 void test_breast_all_values_men(BreastDetector & detec) {
-  maggiePrint("test_breast_all_values_men()");
+  ROS_WARN("test_breast_all_values_men()");
 
   test_breast_all_values(detec, IMG_DIR "depth/david_arnaud2", 2,
                          KINECT_SERIAL_LAB(), BreastDetector::WALK3D);

@@ -27,7 +27,7 @@ ________________________________________________________________________________
 
 \section Subscriptions
   - \b ${ppl_input_topic}
-        [people_msgs_rl::PeoplePoseList]
+        [people_msgs::People]
         The found faces ROIs and the name of the persons recognized
 
  */
@@ -36,13 +36,13 @@ ________________________________________________________________________________
 #include <std_msgs/Int16.h>
 #include <ros/ros.h>
 // AD
-#include "vision_utils/utils/combinatorics_utils.h"
+
 #include <easykf-2.03/src/ukf.h>
 #include <gnuplot-cpp/gnuplot_i.hpp>
-#include "vision_utils/utils/system_utils.h"
+
 using namespace ukf::state;
-// people_msgs_rl
-#include "people_msgs_rl/PeoplePoseList.h"
+// people_msgs
+#include "people_msgs/People.h"
 
 
 class UkfGenders {
@@ -142,12 +142,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   void face_reco_result_cb
-  (const people_msgs_rl::PeoplePoseListConstPtr & msg) {
+  (const people_msgs::PeopleConstPtr & msg) {
     // count nb of men and women
     int nb_men = 0, nb_women = 0;
     std::ostringstream all_names;
-    for (unsigned int reco_idx = 0; reco_idx < msg->poses.size(); ++reco_idx) {
-      std::string current_name = msg->poses[reco_idx].person_name;
+    for (unsigned int reco_idx = 0; reco_idx < msg->people.size(); ++reco_idx) {
+      std::string current_name = msg->people[reco_idx].name;
       all_names << current_name << "; ";
       if (current_name == "man" || current_name == "boy")
         ++nb_men;
@@ -193,11 +193,11 @@ void ukf_test() {
     int this_men_ground_truth = (iter < 12 ? 1 : 2);
     int this_men_noisy_measurement = std::max
         (0, this_men_ground_truth +
-         (int) combinatorics_utils::rand_gaussian());
+         (int) vision_utils::rand_gaussian());
     int this_women_ground_truth = (iter < 10 ? 2 : 1);
     int this_women_noisy_measurement = std::max
         (0, this_women_ground_truth +
-         (int) combinatorics_utils::rand_gaussian());
+         (int) vision_utils::rand_gaussian());
     ukf_genders.measurement_update(this_men_noisy_measurement, this_women_noisy_measurement);
 
     men_ground_truth.push_back(this_men_ground_truth);
@@ -217,7 +217,7 @@ void ukf_test() {
   plotter2.set_style("lines lw 2").plot_x(women_ground_truth, "women (ground truth)");
   plotter2.set_style("lines lw 1").plot_x(women_noisy_measurement, "women (noisy measurewoment)");
   plotter2.set_style("lines lw 1").plot_x(women_gnu, "women (UKF result)");
-  system_utils::wait_for_key();
+  vision_utils::wait_for_key();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

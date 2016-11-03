@@ -22,11 +22,11 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-// people_msgs_rl
+// people_msgs
 #include "people_recognition_vision/person_histogram_set.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
-#include "vision_utils/utils/timer.h"
-#include "vision_utils/utils/matrix_testing.h"
+#include "vision_utils/timer.h"
+#include "vision_utils/matrix_testing.h"
 
 
 using namespace test_person_histogram_set_variables;
@@ -44,7 +44,7 @@ TEST(TestSuite, to_mat) {
   ASSERT_TRUE(ph2mat.cols == PersonHistogramSet::MAT_COLS);
 #ifndef SVM_USE_STD_DEV_HIST
   for (unsigned int ph_idx = 0; ph_idx < nhists; ++ph_idx) {
-    ASSERT_TRUE(matrix_testing::matrices_equal
+    ASSERT_TRUE(vision_utils::matrices_equal
                 (phset.at(ph_idx).get_hist_vector().at(1).t(),
                  ph2mat.row(ph_idx)));
   } // end loop ph_idx
@@ -75,7 +75,7 @@ inline void test_io(const std::vector<T1> & arg1,
 
   // assert images not empty
   for (unsigned int i = 0; i < phset2.nhists(); ++i) {
-    ASSERT_TRUE(matrix_testing::matrices_equal(phset.at(i).get_illus_color_img(),
+    ASSERT_TRUE(vision_utils::matrices_equal(phset.at(i).get_illus_color_img(),
                                                phset2.at(i).get_illus_color_img()));
 #ifdef DISPLAY
     cv::imshow("illus1", phset.at(i).get_illus_color_mask());
@@ -83,19 +83,19 @@ inline void test_io(const std::vector<T1> & arg1,
     cv::waitKey(0);
 #endif // DISPLAY
     cv::Mat1b frame_diff;
-    ASSERT_NEAR(matrix_testing::rate_of_changes_between_two_images
+    ASSERT_NEAR(vision_utils::rate_of_changes_between_two_images
                 (phset.at(i).get_illus_color_mask(), phset2.at(i).get_illus_color_mask(),
                  frame_diff, 1), 0, 1E-2);
   }
 
   // hists
-  assignment_utils::MatchList assign;
+  vision_utils::MatchList assign;
   ASSERT_TRUE(phset.compare_to(phset2, assign, true, true, CV_COMP_BHATTACHARYYA, false));
   ASSERT_TRUE(assign.size() == phset.nhists());
   for (unsigned int i = 0; i < phset2.nhists(); ++i) {
     ASSERT_TRUE(assign[i].first == assign[i].second);
     ASSERT_NEAR(assign[i].cost, 0, 1E-2)
-        << "assign:" << assignment_utils::assignment_list_to_string(assign);
+        << "assign:" << vision_utils::assignment_list_to_string(assign);
   } // end loop i
 
   // SVM test
@@ -126,7 +126,7 @@ TEST(TestSuite, to_yaml_david)    { test_io(david_filename_prefixes, david_user_
 TEST(TestSuite, generate_headers_empty) {
   PersonHistogramSet phset;
   std::vector<std::string> labels, exp_headers;
-  phset.generate_headers(titlemaps::int_to_uppercase_letter, labels);
+  phset.generate_headers(vision_utils::int_to_uppercase_letter, labels);
   ASSERT_TRUE(labels == exp_headers);
 }
 
@@ -139,16 +139,16 @@ inline void test_generate_headers(const std::vector<T1> & arg1,
   PersonHistogramSet phset;
   ASSERT_TRUE(phset.push_back_vec(arg1, arg2, arg3, labels));
   std::vector<std::string> headers;
-  phset.generate_headers(titlemaps::int_to_uppercase_letter, headers);
+  phset.generate_headers(vision_utils::int_to_uppercase_letter, headers);
   ASSERT_TRUE(headers == exp_headers)
-      << "exp_headers:" << string_utils::iterable_to_string(exp_headers)
-      << ", labels:" << string_utils::iterable_to_string(headers);
+      << "exp_headers:" << vision_utils::iterable_to_string(exp_headers)
+      << ", labels:" << vision_utils::iterable_to_string(headers);
 }
 
 TEST(TestSuite, generate_headers_david) {
   std::vector<std::string> exp_headers;
   for (unsigned int i = 0; i < david_hists_nb; ++i)
-    exp_headers.push_back("A" + string_utils::cast_to_string(i+1));
+    exp_headers.push_back("A" + vision_utils::cast_to_string(i+1));
   test_generate_headers(david_filename_prefixes, david_user_idx,
                         david_kinect_serials, david_labels, exp_headers);
 }
@@ -158,7 +158,7 @@ TEST(TestSuite, generate_headers_david) {
 TEST(TestSuite, generate_headers_juggling) {
   std::vector<std::string> exp_headers;
   for (unsigned int i = 0; i < juggling_hists_nb; ++i)
-    exp_headers.push_back("A" + string_utils::cast_to_string(i+1));
+    exp_headers.push_back("A" + vision_utils::cast_to_string(i+1));
   test_generate_headers(juggling_filename_prefixes, juggling_seeds,
                         juggling_kinect_serials, juggling_labels, exp_headers);
 }
@@ -168,11 +168,11 @@ TEST(TestSuite, generate_headers_juggling) {
 TEST(TestSuite, generate_headers_all) {
   std::vector<std::string> exp_headers;
   for (unsigned int i = 0; i < juggling_hists_nb; ++i)
-    exp_headers.push_back("A" + string_utils::cast_to_string(i+1));
+    exp_headers.push_back("A" + vision_utils::cast_to_string(i+1));
   for (unsigned int i = 0; i < alberto_hists_nb; ++i)
-    exp_headers.push_back("B" + string_utils::cast_to_string(i+1));
+    exp_headers.push_back("B" + vision_utils::cast_to_string(i+1));
   for (unsigned int i = 0; i < alvaro_hists_nb; ++i)
-    exp_headers.push_back("C" + string_utils::cast_to_string(i+1));
+    exp_headers.push_back("C" + vision_utils::cast_to_string(i+1));
   test_generate_headers(refset_filename_prefixes, refset_seeds,
                         refset_kinect_serials, refset_labels(), exp_headers);
 }
@@ -205,7 +205,7 @@ void test_train_svm(bool add_ainara = false,
   } // end add_arnaud
 
   // train
-  Timer timer;
+  vision_utils::Timer timer;
   ASSERT_TRUE(phset.train_svm());
   timer.printTime("train_svm()");
 #ifdef DISPLAY

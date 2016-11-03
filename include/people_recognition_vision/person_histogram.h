@@ -27,11 +27,11 @@ A structured representation of the colors in a person.
 #define PERSON_HISTOGRAM_H
 
 // AD
-#include "vision_utils/utils/cmatrix.h"
-#include "vision_utils/kinect_openni_utils.h"
-#include "vision_utils/histogram_utils.h"
-#include "vision_utils/content_processing.h"
-#include "vision_utils/drawing_utils.h"
+#include "vision_utils/cmatrix.h"
+
+
+
+
 #include "vision_utils/blob_segmenter.h"
 
 #define SVM_USE_STD_DEV_HIST
@@ -53,7 +53,7 @@ A structured representation of the colors in a person.
 
 class PersonHistogram {
 public:
-  typedef std::vector<histogram_utils::Histogram> HistVec;
+  typedef std::vector<vision_utils::Histogram> HistVec;
   //! the number of bins for histograms
   static const int HIST_NBINS = 15;
   /*! the number of parts in the body: head, torso, legs.
@@ -170,23 +170,23 @@ public:
     clear();
     TIMER_RESET(_depth_canny.timer);
     // get Hue channel
-    _user_mask_bbox_rect = image_utils::boundingBox(user_mask);
+    _user_mask_bbox_rect = vision_utils::boundingBox(user_mask);
     if (_user_mask_bbox_rect.x < 0)
       return false;
     // we need a clone as propagative_floodfill() needs a continuous image
     _user_mask_bbox = user_mask(_user_mask_bbox_rect).clone();
-    color_utils::rgb2hue(rgb(_user_mask_bbox_rect), _rgb_hsv, _hue);
+    vision_utils::rgb2hue(rgb(_user_mask_bbox_rect), _rgb_hsv, _hue);
     TIMER_PRINT_RESET(_depth_canny.timer, "vec_of_hists(): rgb2hue()");
 
     // find top point
-    _top_centered_seed = image_utils::find_top_point_centered(_user_mask_bbox, .4);
+    _top_centered_seed = vision_utils::find_top_point_centered(_user_mask_bbox, .4);
     if (_top_centered_seed.x < 0)
       return false;
     TIMER_PRINT_RESET(_depth_canny.timer, "vec_of_hists(): find_top_point_centered()");
 
     // propagation
     double pixel2meters_factor_clone = pixel2meters_factor;
-    image_utils::propagative_floodfill
+    vision_utils::propagative_floodfill
         (_user_mask_bbox, _top_centered_seed, _seen_buffer_short,
          false, // no need to search top point as it is already the one we have
          &PersonHistogram::body_areas_lookup_function,
@@ -198,7 +198,7 @@ public:
 
     // compute histogram - just keep a ROI
     int max_value = 180; // hue till 180
-    histogram_utils::get_vector_of_histograms
+    vision_utils::get_vector_of_histograms
         (_hue, _hist_vector, HIST_NBINS, max_value, _multimask, BODY_PARTS);
     TIMER_PRINT_RESET(_depth_canny.timer, "vec_of_hists(): get_vector_of_histograms()");
     _input_images_nb = 1;
@@ -212,11 +212,11 @@ public:
       cv::Vec3b bg_color(PH_ILLUS_BG_COLOR_B, PH_ILLUS_BG_COLOR_G, PH_ILLUS_BG_COLOR_R);
       _illus_color_img.setTo(bg_color);
       // real copy
-      if (!geometry_utils::bboxes_included(image_utils::bbox_full(rgb), _user_mask_bbox_rect)) {
+      if (!vision_utils::bboxes_included(vision_utils::bbox_full(rgb), _user_mask_bbox_rect)) {
         printf("create(): Weird bug: _user_mask_bbox_rect (%s) "
                "not included in rgb (%s)...\n",
-               geometry_utils::print_rect(_user_mask_bbox_rect).c_str(),
-               image_utils::infosImage(rgb).c_str());
+               vision_utils::print_rect(_user_mask_bbox_rect).c_str(),
+               vision_utils::infosImage(rgb).c_str());
       }
       else
         rgb(_user_mask_bbox_rect).copyTo(_illus_color_img, _user_mask_bbox);
@@ -259,12 +259,12 @@ public:
     TIMER_RESET(_depth_canny.timer);
     // find a random seed in user_mask
 #if 1
-    _user_mask_bbox_rect = image_utils::boundingBox(user_mask);
+    _user_mask_bbox_rect = vision_utils::boundingBox(user_mask);
     if (_user_mask_bbox_rect.x < 0) {
       printf("PersonHistogram::create(): error in boundingBox()!\n");
       return false;
     }
-    _seed = geometry_utils::rect_center<cv::Rect, cv::Point>(_user_mask_bbox_rect);
+    _seed = vision_utils::rect_center<cv::Rect, cv::Point>(_user_mask_bbox_rect);
     unsigned int ntries = 0, MAX_TRIES = user_mask.cols * user_mask.rows;
     while(user_mask.at<uchar>(_seed) == 0 && ntries++ < MAX_TRIES) {
       _seed.x = _user_mask_bbox_rect.x + rand() % _user_mask_bbox_rect.width;
@@ -277,7 +277,7 @@ public:
     TIMER_PRINT_RESET(_depth_canny.timer, "finding a seed in user_mask");
 
     // get pixel2meters_factor from depth_camera_model
-    double pixel2meters_factor = kinect_openni_utils::compute_pixel2meters_factor
+    double pixel2meters_factor = vision_utils::compute_pixel2meters_factor
                                  (depth, pixel2meters_arg, _seed);
     if (isnan(pixel2meters_factor)) {
       printf("PersonHistogram::create(): pixel2meters_factor at seed (%i, %i) "
@@ -285,7 +285,7 @@ public:
       return false;
     }
 #else
-    double pixel2meters_factor = kinect_openni_utils::compute_average_pixel2meters_factor
+    double pixel2meters_factor = vision_utils::compute_average_pixel2meters_factor
                                  (depth, pixel2meters_arg, user_mask);
 #endif
     TIMER_PRINT_RESET(_depth_canny.timer, "pixel2meters_factor()");
@@ -318,7 +318,7 @@ public:
     DEBUG_PRINT("PersonHistogram::create(line %i)\n", __LINE__);
     cv::Mat1b user_mask;
     cv::Mat rgb, depth;
-    bool ok = image_utils::read_rgb_depth_user_image_from_image_file
+    bool ok = vision_utils::read_rgb_depth_user_image_from_image_file
               (rgb_depth_user_filename_prefix, &rgb, &depth, &user_mask);
     if (!ok)
       return false;
@@ -357,7 +357,7 @@ public:
    * factory from a pair of images (rgb, depth) and a seed.
    * The user mask is computed thanks to compute_user_mask().
    * The pixel2meters_factor is computed thanks to
-   *  kinect_openni_utils::compute_pixel2meters_factor().
+   *  vision_utils::compute_pixel2meters_factor().
    * \param rgb, depth
    *    images coming from the kinect
    * \param seed
@@ -383,7 +383,7 @@ public:
     clear();
     TIMER_RESET(_depth_canny.timer);
     double pixel2meters_factor =
-        kinect_openni_utils::compute_pixel2meters_factor(depth, pixel2meters_arg, seed);
+        vision_utils::compute_pixel2meters_factor(depth, pixel2meters_arg, seed);
     if (isnan(pixel2meters_factor)) {
       printf("PersonHistogram::create(): pixel2meters_factor at seed (%i, %i) "
              "is NaN!\n", seed.x, seed.y);
@@ -420,7 +420,7 @@ public:
     DEBUG_PRINT("PersonHistogram::create(line %i)\n", __LINE__);
     clear();
     cv::Mat rgb, depth;
-    if (!image_utils::read_rgb_and_depth_image_from_image_file(rgb_depth_filename_prefix, &rgb, &depth))
+    if (!vision_utils::read_rgb_and_depth_image_from_image_file(rgb_depth_filename_prefix, &rgb, &depth))
       return false;
     return create<T>(rgb, depth, seed, pixel2meters_arg, want_refresh_illus_images);
   }
@@ -489,7 +489,7 @@ public:
  */
   inline double compare_to(const PersonHistogram & ph2,
                            const int method = CV_COMP_BHATTACHARYYA) const {
-    return histogram_utils::distance_hist_vectors(_hist_vector, ph2._hist_vector, method);
+    return vision_utils::distance_hist_vectors(_hist_vector, ph2._hist_vector, method);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -521,8 +521,8 @@ public:
     fn["illus_color_img"] >> _illus_color_img;
     // regenerate mask
     if (!_illus_color_img.empty())
-      // image_utils::mask(_illus_color_img, _user_mask_bbox, image_utils::is_zero_vec3b);
-      image_utils::mask(_illus_color_img, _user_mask_bbox, PersonHistogram::is_bg);
+      // vision_utils::mask(_illus_color_img, _user_mask_bbox, vision_utils::is_zero_vec3b);
+      vision_utils::mask(_illus_color_img, _user_mask_bbox, PersonHistogram::is_bg);
     fn["hist_input_images_nb"] >> _input_images_nb;
     cv::FileNode hist_nodes = fn["hists"];
     _hist_vector.resize(hist_nodes.size());
@@ -555,7 +555,7 @@ public:
         //  printf("person_idx:%i, hist_idx:%i, nbins:%i\n",
         //         person_idx, hist_idx, hists[person_idx].rows);
       } // end loop person_idx
-      bool ok = histogram_utils::merge_histograms(hists, weights, out._hist_vector[hist_idx],
+      bool ok = vision_utils::merge_histograms(hists, weights, out._hist_vector[hist_idx],
                                                   want_normalize_hist);
       if (!ok)
         return false;
@@ -573,7 +573,7 @@ public:
       out.create(nrows, ncols, CV_32FC1);
     if (out.cols != ncols || out.rows != nrows || out.type() != CV_32FC1) {
       printf("to_mat(): out has not the correct size:'%s' != (%ix%i, type:CV_32FC1)\n",
-             image_utils::infosImage(out).c_str(), ncols, nrows);
+             vision_utils::infosImage(out).c_str(), ncols, nrows);
       return false;
     }
 
@@ -585,20 +585,20 @@ public:
     }
 
     for (unsigned int hist_idx = 0; hist_idx < BODY_PARTS; ++hist_idx) {
-      const histogram_utils::Histogram* hist = &(_hist_vector.at(hist_idx));
+      const vision_utils::Histogram* hist = &(_hist_vector.at(hist_idx));
       int nbins = hist->rows;
-      if (histogram_utils::is_histogram_empty(*hist) || nbins != HIST_NBINS) {
+      if (vision_utils::is_histogram_empty(*hist) || nbins != HIST_NBINS) {
         printf("to_mat(): hist '%s', nbins()=%i != ncols=%i\n",
-               histogram_utils::hist_to_string(*hist).c_str(), nbins, ncols);
+               vision_utils::hist_to_string(*hist).c_str(), nbins, ncols);
         return false;
       }
       double mean, std_dev;
-      histogram_utils::mean_std_dev_modulo(*hist, 180, mean, std_dev);
+      vision_utils::mean_std_dev_modulo(*hist, 180, mean, std_dev);
       out.at<float>(0, 2*hist_idx)   = mean;
       out.at<float>(0, 2*hist_idx+1) = std_dev;
     } // end loop hist_idx
 #else // not SVM_USE_STD_DEV_HIST
-    const histogram_utils::Histogram* hist = &(_hist_vector.at(1));
+    const vision_utils::Histogram* hist = &(_hist_vector.at(1));
     int nbins = hist->rows;
     if (nbins != ncols) {
       printf("to_mat(): nbins()=%i != ncols=%i\n", nbins, ncols);
@@ -614,8 +614,8 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline void to_illus_image(cv::Mat3b & out) const {
-    histogram_utils::vector_of_histograms_to_image
-        (get_hist_vector(), out, 300, 200, colormaps::ratio2hue);
+    vision_utils::vector_of_histograms_to_image
+        (get_hist_vector(), out, 300, 200, vision_utils::ratio2hue);
   }
 
   inline void show_illus_image(int delay = -1) const {
@@ -637,10 +637,10 @@ public:
       return out.str();
     }
     // add dominant color for the torso, skip first bin (red of the skin)
-    std::string top_color = histogram_utils::hue_hist_dominant_color_to_string(_hist_vector[1], true);
+    std::string top_color = vision_utils::hue_hist_dominant_color_to_string(_hist_vector[1], true);
     bool top_color_found = (top_color.find("empty") == std::string::npos);
     // add dominant color for the legs, skip first bin (red of the skin)
-    std::string trousers_color = histogram_utils::hue_hist_dominant_color_to_string(_hist_vector[2], true);
+    std::string trousers_color = vision_utils::hue_hist_dominant_color_to_string(_hist_vector[2], true);
     bool trousers_color_found = (trousers_color.find("empty") == std::string::npos);
 
     if (!top_color_found && !trousers_color_found) {
@@ -673,7 +673,7 @@ public:
   inline cv::Mat3b seen_buffer2img() const {
     cv::Mat1f seen_buffer_float_buffer;
     cv::Mat3b seen_buffer_illus;
-    image_utils::propagative_floodfill_seen_buffer_to_viz_image
+    vision_utils::propagative_floodfill_seen_buffer_to_viz_image
         (_seen_buffer_short, seen_buffer_float_buffer, seen_buffer_illus);
     cv::circle(seen_buffer_illus, _seed - _user_mask_bbox_rect.tl(), 4, CV_RGB(0, 0, 255), 1);
     cv::circle(seen_buffer_illus, _top_centered_seed, 4, CV_RGB(0, 0, 255), 2);
@@ -711,8 +711,8 @@ private:
          DepthCanny::DEFAULT_CANNY_THRES1, DepthCanny::DEFAULT_CANNY_THRES2,
          GroundPlaneFinder::DEFAULT_DISTANCE_THRESHOLD_M,
          GroundPlaneFinder::DEFAULT_LOWER_RATIO_TO_USE,
-         image_utils::FloodFillEdgeCloser::DEFAULT_PREV_LINE_DIFF_THRES,
-         image_utils::FloodFillEdgeCloser::DEFAULT_SRC_WIDTH_RATIO_THRES);
+         vision_utils::FloodFillEdgeCloser::DEFAULT_PREV_LINE_DIFF_THRES,
+         vision_utils::FloodFillEdgeCloser::DEFAULT_SRC_WIDTH_RATIO_THRES);
 #else
     return _segmenter.find_blob
         (depth, seed, _user_mask, BlobSegmenter::GROUND_PLANE_FINDER);
@@ -728,8 +728,8 @@ private:
     // printf("refresh_illus_images_frame_counter(%i)\n", _input_images_nb);
     // write nb of images
     if (_input_images_nb != 1) {
-      cv::Rect text_roi = image_utils::putTextBackground
-                          (_illus_color_img, string_utils::cast_to_string(_input_images_nb),
+      cv::Rect text_roi = vision_utils::putTextBackground
+                          (_illus_color_img, vision_utils::cast_to_string(_input_images_nb),
                            cv::Point(_illus_color_img.cols / 2, _illus_color_img.rows - 5),
                            CV_FONT_HERSHEY_PLAIN, 2.f,
                            CV_RGB(255, 255, 255), CV_RGB(120, 0, 0), 1, 2);

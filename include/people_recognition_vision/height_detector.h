@@ -27,7 +27,7 @@ A class for computing the height of a user in a mask.
 #ifndef HEIGHT_DETECTOR_H
 #define HEIGHT_DETECTOR_H
 
-#include "vision_utils/kinect_openni_utils.h"
+
 #include "vision_utils/image_comparer.h"
 #include <vision_utils/img_path.h>
 #include "vision_utils/head_finder.h"
@@ -88,12 +88,12 @@ public:
       return herror;
     }
     if (!_head_finder.find(user_mask, _head_pos)) {
-      maggiePrint("HeightDetector: could not find head pos!");
+      ROS_WARN("HeightDetector: could not find head pos!");
       return herror;
     }
     // point out of bbox (error in find_top_point_centered() for instance
-    if (!image_utils::bbox_full(user_mask).contains(_head_pos)) {
-      maggiePrint("HeightDetector: _head pos outside of user mask bounds!");
+    if (!vision_utils::bbox_full(user_mask).contains(_head_pos)) {
+      ROS_WARN("HeightDetector: _head pos outside of user mask bounds!");
       return herror;
     }
     _skeleton_expanded.create(user_mask.size());
@@ -103,8 +103,8 @@ public:
 #else // recompute skeleton
     _thinner.thin(user_mask, _head_finder.get_thinning_method(), true);
     //  printf("skel:'%s', user_mask:'%s'\n",
-    //         image_utils::infosImage(_thinner.get_skeleton()).c_str(),
-    //         image_utils::infosImage(user_mask).c_str());
+    //         vision_utils::infosImage(_thinner.get_skeleton()).c_str(),
+    //         vision_utils::infosImage(user_mask).c_str());
     _thinner.get_skeleton().copyTo(_skeleton_expanded(_thinner.get_bbox()));
     // head pos must be the closest point on _skeleton_expanded
     _head_pos = _head2closest_skeleton_finder.find(_skeleton_expanded, _head_pos);
@@ -127,12 +127,12 @@ public:
     // no need to search top point as it is already the one we have
     _filler.floodfill(_skeleton_expanded, _head_pos, false);
     cv::Mat1s* _seen_buffer = &_filler.get_queued();
-    // image_utils::propagative_floodfill
+    // vision_utils::propagative_floodfill
     // (_skeleton_expanded, _head_pos, _seen_buffer, false);
 
-    image_utils::BufferElem dist_head2feet;
+    vision_utils::BufferElem dist_head2feet;
     // find the remotest point at the level of the feet
-    if (!image_utils::minnonzero_from_botton_row(*_seen_buffer, dist_head2feet, _foot_pos)) {
+    if (!vision_utils::minnonzero_from_botton_row(*_seen_buffer, dist_head2feet, _foot_pos)) {
       return herror;
     }
     // printf("dist_head2feet:%i\n", dist_head2feet);
@@ -160,7 +160,7 @@ public:
   Height height_meters(const cv::Mat1b & user_mask,
                        const double & pixel2meters_factor,
                        bool compute_confidence = false) {
-    if (pixel2meters_factor == kinect_openni_utils::NAN_DOUBLE) {
+    if (pixel2meters_factor == vision_utils::NAN_DOUBLE) {
       Height ans;
       ans.height_m = ERROR;
       return ans;
@@ -189,7 +189,7 @@ public:
       ans.height_m = ERROR;
       return ans;
     }
-    double pixel2meters_factor = kinect_openni_utils::compute_average_pixel2meters_factor
+    double pixel2meters_factor = vision_utils::compute_average_pixel2meters_factor
                                  (depth, depth_camera_model, user_mask);
     // printf("pixel2meters_factor:%g\n", pixel2meters_factor);
     return height_meters(user_mask, pixel2meters_factor, compute_confidence);
@@ -221,7 +221,7 @@ public:
     // paint skeleton
     _filler.illus_img(out, clear_before);
     if (thicker) { // only dilate bbox
-      cv::Rect bbox = image_utils::boundingBox(_filler.get_queued());
+      cv::Rect bbox = vision_utils::boundingBox(_filler.get_queued());
       if (bbox.width > 0 && bbox.height > 0) {
         cv::Mat3b out_bbox = out(bbox);
         cv::dilate(out_bbox, out_bbox, cv::Mat());
@@ -247,7 +247,7 @@ public:
       txt << std::setprecision(3) <<  h.height_m << "m";
     else
       txt << std::setprecision(3) <<  h.height_px << "px";
-    // txt << h.confidence << " lkl";
+    // txt << h.reliability << " lkl";
     cv::putText(out, txt.str(), txt_pos, CV_FONT_HERSHEY_PLAIN, 2,
                 CV_RGB(0, 255, 0), 2);
     if (h.height_confidence != ERROR && h.height_confidence != NOT_COMPUTED) {
@@ -289,7 +289,7 @@ public:
     }
     // find all users
     std::vector<uchar> user_indices;
-    image_utils::get_all_different_values(user_mask, user_indices, true);
+    vision_utils::get_all_different_values(user_mask, user_indices, true);
     unsigned int nusers = user_indices.size();
 
     // iterate on all user values
@@ -360,10 +360,10 @@ protected:
   HeadFinder _head_finder;
   cv::Mat1b _skeleton_expanded;
   VoronoiThinner _thinner;
-  image_utils::ClosestPointInMask2<uchar> _head2closest_skeleton_finder;
+  vision_utils::ClosestPointInMask2<uchar> _head2closest_skeleton_finder;
 
   // propagation stuff
-  image_utils::PropagativeFloodfiller<uchar> _filler;
+  vision_utils::PropagativeFloodfiller<uchar> _filler;
   cv::Point _head_pos, _foot_pos;
 
   // confidence stuff

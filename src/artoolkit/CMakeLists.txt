@@ -1,3 +1,3 @@
 add_executable(artoolkit_pplm.exe artoolkit_pplm.cpp )
 target_link_libraries(artoolkit_pplm.exe ${catkin_LIBRARIES})
-add_dependencies(artoolkit_pplm.exe        ${people_msgs_rl_EXPORTED_TARGETS})
+add_dependencies(artoolkit_pplm.exe        ${people_msgs_EXPORTED_TARGETS})

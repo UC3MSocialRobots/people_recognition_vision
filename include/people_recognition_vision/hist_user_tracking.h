@@ -1,5 +1,5 @@
 /*!
-  \file        people_msgs_rl.h
+  \file        people_msgs.h
   \author      Arnaud Ramey <arnaud.a.ramey@gmail.com>
                 -- Robotics Lab, University Carlos III of Madrid
   \date        2012/11/30

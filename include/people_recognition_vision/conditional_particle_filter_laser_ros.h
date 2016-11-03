@@ -36,8 +36,8 @@
 #include <sensor_msgs/LaserScan.h>
 #include <visualization_msgs/Marker.h>
 #include <tf/transform_listener.h>
-#include "vision_utils/utils/laser_utils.h"
-#include "vision_utils/color_utils.h"
+
+
 // conditional_particle_filter
 #include "people_recognition_vision/conditional_particle_filter_laser.h"
 
@@ -90,7 +90,7 @@ public:
           // put a color depending on the person index
           _marker.colors.push_back(std_msgs::ColorRGBA());
           _marker.colors.back().a = 1;
-          color_utils::indexed_color_norm
+          vision_utils::indexed_color_norm
               (_marker.colors.back().r,
                _marker.colors.back().g,
                _marker.colors.back().b,
@@ -150,21 +150,21 @@ public:
     ROS_INFO_THROTTLE(1, "data_callback()");
     // get the robot order
     RobotCommandOrder u_t;
-    pt_utils::copy3(cmd_vel_msg->twist.linear, u_t.linear);
-    pt_utils::copy3(cmd_vel_msg->twist.angular, u_t.angular);
+    vision_utils::copy3(cmd_vel_msg->twist.linear, u_t.linear);
+    vision_utils::copy3(cmd_vel_msg->twist.angular, u_t.angular);
 
     // build the laser data
     SensorMeasurement z_t;
-    laser_utils::convert_sensor_data_to_xy(*laser_msg, z_t);
+    vision_utils::convert_sensor_data_to_xy(*laser_msg, z_t);
     // convert to static_frame
     geometry_msgs::PointStamped pt_stamped_in, pt_stamped_out;
     pt_stamped_in.point.z = 0;
     pt_stamped_in.header = laser_msg->header;
     for (unsigned int pt_idx = 0; pt_idx < z_t.size(); ++pt_idx) {
-      pt_utils::copy2(z_t[pt_idx], pt_stamped_in.point);
+      vision_utils::copy2(z_t[pt_idx], pt_stamped_in.point);
       _tf_listener.transformPoint(static_frame,  ros::Time(0),
                                   pt_stamped_in, static_frame, pt_stamped_out);
-      pt_utils::copy2(pt_stamped_out.point, z_t[pt_idx]);
+      vision_utils::copy2(pt_stamped_out.point, z_t[pt_idx]);
     } // end loop pt_idx
 
 
@@ -210,7 +210,7 @@ public:
                                pose_stamped_in, static_frame, pose_stamped_out);
     RobotPose zero_robot_pose;
     zero_robot_pose.yaw = tf::getYaw(pose_stamped_out.pose.orientation);
-    pt_utils::copy2(pose_stamped_out.pose.position, zero_robot_pose);
+    vision_utils::copy2(pose_stamped_out.pose.position, zero_robot_pose);
     _R_t_minus1 = std::vector<RobotPose>(_N_r, zero_robot_pose);
   } // end init()
 

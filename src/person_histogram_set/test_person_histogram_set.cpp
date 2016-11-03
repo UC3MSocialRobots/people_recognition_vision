@@ -27,7 +27,7 @@ ________________________________________________________________________________
 #include <opencv2/highgui/highgui.hpp>
 // AD
 #include "vision_utils/user_image_to_rgb.h"
-#include "vision_utils/utils/timer.h"
+#include "vision_utils/timer.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "people_recognition_vision/person_histogram_set.h"
 
@@ -35,11 +35,11 @@ ________________________________________________________________________________
 
 inline void test_depth_canny(const std::string filename_prefix) {
   cv::Mat rgb, depth;
-  image_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
-  // image_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
+  vision_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
+  // vision_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
 
   DepthCanny _depth_canny;
-  Timer timer;
+  vision_utils::Timer timer;
   unsigned int ntimes = 1;
   for (unsigned int i = 0; i < ntimes; ++i)
     _depth_canny.thresh(depth);
@@ -47,11 +47,11 @@ inline void test_depth_canny(const std::string filename_prefix) {
 
   TIMER_DISPLAY_CHART(_depth_canny.timer, 1);
   cv::imshow("rgb", rgb);
-  cv::imshow("depth_illus", image_utils::depth2viz(depth, image_utils::FULL_RGB_STRETCHED));
+  cv::imshow("depth_illus", vision_utils::depth2viz(depth, vision_utils::FULL_RGB_STRETCHED));
   cv::imshow("img_uchar_with_no_nan", _depth_canny._img_uchar_with_no_nan);
   cv::imshow("edges", _depth_canny._edges);
   cv::imshow("thresholded_image", _depth_canny.get_thresholded_image());
-  // image_utils::imwrite_debug("broken_edge.png", dit.get_thresholded_image());
+  // vision_utils::imwrite_debug("broken_edge.png", dit.get_thresholded_image());
   cv::waitKey(0); cv::destroyAllWindows();
 } // end test_depth_canny();
 
@@ -61,11 +61,11 @@ inline void test_depth_canny(const std::string filename_prefix) {
 inline void test_person_compute_user_mask(const std::string filename_prefix,
                                           const cv::Point & seed) {
   cv::Mat rgb, depth;
-  image_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
-  // image_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
+  vision_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
+  // vision_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
 
   PersonHistogram ph;
-  Timer timer;
+  vision_utils::Timer timer;
   unsigned int n_times  = 100;
   for (unsigned int i = 0; i < n_times; ++i)
     ph.compute_user_mask(depth, seed);
@@ -73,11 +73,11 @@ inline void test_person_compute_user_mask(const std::string filename_prefix,
 
   TIMER_DISPLAY_CHART(ph._depth_canny.timer, 1);
   cv::imshow("rgb", rgb);
-  cv::imshow("depth_illus", image_utils::depth2viz(depth, image_utils::FULL_RGB_STRETCHED));
+  cv::imshow("depth_illus", vision_utils::depth2viz(depth, vision_utils::FULL_RGB_STRETCHED));
   cv::imshow("depth_canny", ph._depth_canny.get_thresholded_image());
   cv::imshow("user_mask", ph.get_user_mask());
-  //  image_utils::imwrite_debug("mask.png", ph.get_user_mask());
-  //  image_utils::imwrite_debug("rgb.png", rgb);
+  //  vision_utils::imwrite_debug("mask.png", ph.get_user_mask());
+  //  vision_utils::imwrite_debug("rgb.png", rgb);
   cv::waitKey(0); cv::destroyAllWindows();
 }
 
@@ -86,12 +86,12 @@ inline void test_person_compute_user_mask(const std::string filename_prefix,
 inline void test_find_mask_then_top_point_centered(const std::string filename_prefix,
                                                    const cv::Point & seed) {
   cv::Mat rgb, depth;
-  image_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
+  vision_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
   PersonHistogram ph;
   ph.compute_user_mask(depth, seed);
   //  find_top_point_centered
   cv::Rect search_window;
-  cv::Point top_point = image_utils::find_top_point_centered
+  cv::Point top_point = vision_utils::find_top_point_centered
                         (ph.get_user_mask(), true, .4, (uchar) 0, &search_window);
 
   cv::Mat3b mask_illus;
@@ -111,8 +111,8 @@ inline void test_find_mask_then_top_point_centered(const std::string filename_pr
 
 inline void convert_yaml_to_images(std::string filename_prefix) {
   cv::Mat rgb, depth;
-  image_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
-  image_utils::write_rgb_and_depth_image_to_image_file(filename_prefix, &rgb, &depth);
+  vision_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
+  vision_utils::write_rgb_and_depth_image_to_image_file(filename_prefix, &rgb, &depth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,11 +121,11 @@ inline void test_person_vector_of_histograms(const std::string & filename_prefix
                                              const cv::Point & seed,
                                              const std::string & kinect_serial_number) {
   cv::Mat rgb, depth;
-  image_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
-  // image_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
+  vision_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
+  // vision_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
 
   PersonHistogram ph;
-  Timer timer;
+  vision_utils::Timer timer;
   unsigned int n_times  = 1;
   for (unsigned int i = 0; i < n_times; ++i)
     ph.create(rgb, depth, seed, kinect_serial_number,
@@ -135,22 +135,22 @@ inline void test_person_vector_of_histograms(const std::string & filename_prefix
 
   // paint results
   cv::Mat3b hist_illus;
-  histogram_utils::vector_of_histograms_to_image
-      (ph.get_hist_vector(), hist_illus, 200, 200, colormaps::ratio2hue);
+  vision_utils::vector_of_histograms_to_image
+      (ph.get_hist_vector(), hist_illus, 200, 200, vision_utils::ratio2hue);
   cv::Mat3b multimask_illus;
   user_image_to_rgb(ph.get_multimask(), multimask_illus, 8);
   TIMER_DISPLAY_CHART(ph._depth_canny.timer, 1);
 
-  //image_utils::imwrite_debug("rgb.png", rgb);
-  //image_utils::imwrite_debug("depth_illus.png", image_utils::depth2viz(depth, image_utils::FULL_RGB_STRETCHED), image_utils::COLORS256);
-  image_utils::imwrite_debug("illus_color_img.png", ph.get_illus_color_img());
-  image_utils::imwrite_debug("illus_color_mask.png", ph.get_illus_color_mask(), image_utils::MONOCHROME);
-  image_utils::imwrite_debug("seen_buffer2img.png", ph.seen_buffer2img(), image_utils::COLORS256);
-  image_utils::imwrite_debug("multimask_illus.png", multimask_illus, image_utils::COLORS256);
-  image_utils::imwrite_debug("hist_illus.png", hist_illus, image_utils::COLORS256);
+  //vision_utils::imwrite_debug("rgb.png", rgb);
+  //vision_utils::imwrite_debug("depth_illus.png", vision_utils::depth2viz(depth, vision_utils::FULL_RGB_STRETCHED), vision_utils::COLORS256);
+  vision_utils::imwrite_debug("illus_color_img.png", ph.get_illus_color_img());
+  vision_utils::imwrite_debug("illus_color_mask.png", ph.get_illus_color_mask(), vision_utils::MONOCHROME);
+  vision_utils::imwrite_debug("seen_buffer2img.png", ph.seen_buffer2img(), vision_utils::COLORS256);
+  vision_utils::imwrite_debug("multimask_illus.png", multimask_illus, vision_utils::COLORS256);
+  vision_utils::imwrite_debug("hist_illus.png", hist_illus, vision_utils::COLORS256);
 
   cv::imshow("rgb", rgb);
-  cv::imshow("depth_illus", image_utils::depth2viz(depth, image_utils::FULL_RGB_STRETCHED));
+  cv::imshow("depth_illus", vision_utils::depth2viz(depth, vision_utils::FULL_RGB_STRETCHED));
   cv::imshow("illus_color_img", ph.get_illus_color_img());
   cv::imshow("illus_color_mask", ph.get_illus_color_mask());
   cv::imshow("seen_buffer2img", ph.seen_buffer2img());
@@ -170,18 +170,18 @@ inline void test_factory_from_vector(const std::vector<std::string> & filename_p
   // paint results
   std::vector<cv::Mat3b> each_hist_illus;
   cv::Mat3b hist_illus_buffer;
-  histogram_utils::vector_of_histograms_to_image
-      (ph.get_hist_vector(), hist_illus_buffer, hist_w, hist_h, colormaps::ratio2hue);
+  vision_utils::vector_of_histograms_to_image
+      (ph.get_hist_vector(), hist_illus_buffer, hist_w, hist_h, vision_utils::ratio2hue);
   each_hist_illus.push_back(hist_illus_buffer.clone());
 
   printf("paint the histogram of each input...\n");
   for (unsigned int ph_idx = 0; ph_idx < nph; ++ph_idx) {
     PersonHistogram ph2(filename_prefixes[ph_idx], seeds[ph_idx], kinect_serial_numbers[ph_idx]);
-    histogram_utils::vector_of_histograms_to_image
-        (ph2.get_hist_vector(), hist_illus_buffer, hist_w, hist_h, colormaps::ratio2hue);
+    vision_utils::vector_of_histograms_to_image
+        (ph2.get_hist_vector(), hist_illus_buffer, hist_w, hist_h, vision_utils::ratio2hue);
     each_hist_illus.push_back(hist_illus_buffer.clone());
   } // end loop ph_idx
-  image_utils::paste_images(each_hist_illus, hist_illus_buffer,
+  vision_utils::paste_images(each_hist_illus, hist_illus_buffer,
                             true, hist_w, 3 * hist_h, 2, false);
 
   cv::imshow("hist_illus_buffer", hist_illus_buffer);
@@ -196,7 +196,7 @@ inline void test_multi_hist(const std::vector<std::string> & filename_prefixes,
                             const std::vector<std::string> & kinect_serial_numbers,
                             const std::vector<PersonHistogramSet::PersonLabel> & labels) {
   // compute all histogams
-  Timer timer;
+  vision_utils::Timer timer;
   PersonHistogramSet phset;
   phset.push_back_vec(filename_prefixes, seeds, kinect_serial_numbers, labels);
   timer.printTime("loading data and computing histograms");
@@ -206,8 +206,8 @@ inline void test_multi_hist(const std::vector<std::string> & filename_prefixes,
   PersonHistogramSet::PHMatch assign;
   phset.compare_to(phset, assign, true, true, CV_COMP_BHATTACHARYYA, true);
   timer.printTime("compare_to()");
-  maggiePrint("assign:%s, dist_matrix:'%s'",
-              assignment_utils::assignment_list_to_string(assign).c_str(),
+  ROS_WARN("assign:%s, dist_matrix:'%s'",
+              vision_utils::assignment_list_to_string(assign).c_str(),
               phset.get_dist_matrix().to_string(15).c_str());
 
   TIMER_DISPLAY_CHART(phset.front()._depth_canny.timer, 1);
@@ -217,17 +217,17 @@ inline void test_multi_hist(const std::vector<std::string> & filename_prefixes,
   cv::waitKey(0);
 
 
-  image_utils::imwrite_debug("/tmp/dist_matrix_illus.png", phset.get_dist_matrix_illus());
-  image_utils::imwrite_debug("/tmp/dist_matrix_colormap_caption.png", phset.get_dist_matrix_colormap_caption());
-  image_utils::imwrite_debug("/tmp/dist_matrix_illus_caption.png", phset.get_dist_matrix_illus_caption1());
+  vision_utils::imwrite_debug("/tmp/dist_matrix_illus.png", phset.get_dist_matrix_illus());
+  vision_utils::imwrite_debug("/tmp/dist_matrix_colormap_caption.png", phset.get_dist_matrix_colormap_caption());
+  vision_utils::imwrite_debug("/tmp/dist_matrix_illus_caption.png", phset.get_dist_matrix_illus_caption1());
 }
 
-#include "vision_utils/io.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void test_structured_person_histogram_set() {
-  Timer timer;
+  vision_utils::Timer timer;
   PersonHistogramSet phset;
   phset.push_back_vec(test_person_histogram_set_variables::all_filename_prefixes_struct(),
                       test_person_histogram_set_variables::all_seeds_struct(),
@@ -245,8 +245,8 @@ inline void test_structured_person_histogram_set() {
 
   PersonHistogramSet::PHMatch assign;
   phset.compare_to(phset, assign, true, true, CV_COMP_BHATTACHARYYA, true);
-  maggiePrint("assign:%s, dist_matrix:'%s'",
-              assignment_utils::assignment_list_to_string(assign).c_str(),
+  ROS_WARN("assign:%s, dist_matrix:'%s'",
+              vision_utils::assignment_list_to_string(assign).c_str(),
               phset.get_dist_matrix().to_string(15).c_str());
 
   TIMER_DISPLAY_CHART(phset.front()._depth_canny.timer, 1);
@@ -259,7 +259,7 @@ inline void test_structured_person_histogram_set() {
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void test_structured_person_histogram_set_reco() {
-  Timer timer;
+  vision_utils::Timer timer;
   PersonHistogramSet phset, phset2;
   phset.push_back_vec(test_person_histogram_set_variables::all_filename_prefixes_struct(),
                       test_person_histogram_set_variables::all_seeds_struct(),
@@ -279,7 +279,7 @@ inline void test_structured_person_histogram_set_reco() {
   int best_idx;
   // phset.compare_to(phset2, best_idx, true, true, CV_COMP_BHATTACHARYYA, false);
   phset.compare_to(ph, best_idx, true, true, CV_COMP_BHATTACHARYYA);
-  maggiePrint("best_idx:%i, dist_matrix:'%s'",
+  ROS_WARN("best_idx:%i, dist_matrix:'%s'",
               best_idx, phset.get_dist_matrix().to_string(15).c_str());
 
   TIMER_DISPLAY_CHART(phset.front()._depth_canny.timer, 1);
@@ -307,7 +307,7 @@ void benchmark_gait_train() {
                        DEFAULT_KINECT_SERIAL(), refresh_images));
       if (refresh_images) {
         std::ostringstream fn; fn << "illus_color_img" << file_idx << ".png";
-        image_utils::imwrite_debug(fn.str(), ph.get_illus_color_img());
+        vision_utils::imwrite_debug(fn.str(), ph.get_illus_color_img());
         cv::imshow("illus_color_img", ph.get_illus_color_img());
         cv::waitKey(20);
       }
