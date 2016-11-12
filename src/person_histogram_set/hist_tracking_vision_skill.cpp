@@ -38,15 +38,15 @@ by subscribing to a topic supplying some \a People .
         The found faces ROIs and the name of the persons recognized
 
  */
-// vision
+// people_recognition_vision
+#include "people_recognition_vision/hist_tracking_skill.h"
+// vision_utils
 #include "vision_utils/rgb_depth_skill.h"
+#include "vision_utils/ppl_tags_images.h"
+// ROS
 #include <people_msgs/People.h>
 
-
-// people_msgs
-#include "people_recognition_vision/hist_tracking_skill.h"
-
-class HistTrackingRgbDepthSkill : public RgbDepthSkill, public HistTrackingSkill {
+class HistTrackingRgbDepthSkill : public vision_utils::RgbDepthSkill, public HistTrackingSkill {
 public:
   HistTrackingRgbDepthSkill() :
     RgbDepthSkill("FOO_VISION_SKILL2_START", "FOO_VISION_SKILL2_STOP")
@@ -54,7 +54,9 @@ public:
     // get camera model
     image_geometry::PinholeCameraModel rgb_camera_model;
     vision_utils::read_camera_model_files
-        (DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
+        (vision_utils::DEFAULT_KINECT_SERIAL(),
+         _default_depth_camera_model,
+         _default_rgb_camera_model);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -113,18 +115,22 @@ public:
 
     face_recs_mutex.lock();
     people_msgs::People* curr_list = &face_recs.front();
-    unsigned int nusers = curr_list->poses.size();
+    unsigned int nusers = curr_list->people.size();
 
     // find histogram for each face
     curr_phset.clear();
     for (unsigned int user_idx = 0; user_idx < nusers; ++user_idx) {
       // get seed
-      //vision_utils::Rect user_roi = curr_list->poses[user_idx].image_roi;
+      //vision_utils::Rect user_roi = pp->image_roi;
       //cv::Point seed(user_roi.x + user_roi.width / 2, user_roi.y + user_roi.height / 2);
-      cv::Point seed(curr_list->poses[user_idx].images_offsetx
-                     + curr_list->poses[user_idx].rgb.width / 2,
-                     curr_list->poses[user_idx].images_offsety
-                     + curr_list->poses[user_idx].rgb.height / 2);
+      people_msgs::Person* pp = &(curr_list->people[user_idx]);
+      cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(*pp, "rgb");
+      cv::Mat1f depth = vision_utils::get_image_tag<float>(*pp, "depth");
+
+      cv::Point seed( vision_utils::get_tag_default(*pp, "images_offsetx", 0)
+                     + rgb.cols / 2,
+                     vision_utils::get_tag_default(*pp, "images_offsety", 0)
+                     + rgb.rows / 2);
       PersonLabel new_label = user_idx+1;
       if (!curr_phset.push_back(rgb, depth, seed, _default_depth_camera_model, new_label, true, false))
         continue;

@@ -41,16 +41,15 @@ displays them overlaid on the camera frame.
 #include <ros/ros.h>
 #include <boost/thread/mutex.hpp>
 // utils
-
 #include "vision_utils/multi_subscriber.h"
-// vision
 #include "vision_utils/rgb_skill.h"
-
-
+#include "vision_utils/ppl_tags_images.h"
+#include "vision_utils/color_utils.h"
+#include "vision_utils/draw_text_centered.h"
 // people_msgs
 #include "people_msgs/People.h"
 
-class FaceRecognizerViewer : public RgbSkill {
+class FaceRecognizerViewer : public vision_utils::RgbSkill {
 public:
   FaceRecognizerViewer()
     : RgbSkill("FACE_RECOGNIZER_VIEWER_START", "FACE_RECOGNIZER_VIEWER_STOP") {
@@ -65,7 +64,7 @@ public:
     _nh_private.param("ppl_input_topics", ppl_input_topics, ppl_input_topics);
 
     // subscribers
-    _face_recognition_results_subs = ros::MultiSubscriber::subscribe
+    _face_recognition_results_subs = vision_utils::MultiSubscriber::subscribe
         (_nh_public, ppl_input_topics, 1,
          &FaceRecognizerViewer::face_reco_result_cb, this);
   } // end create_subscribers_and_publishers()
@@ -103,16 +102,17 @@ public:
     for (unsigned int rec_idx = 0; rec_idx < _received_rec.size(); ++rec_idx) {
       people_msgs::People* curr_rec = &(_received_rec[rec_idx]);
       // draw rectangles
-      for (unsigned int face_idx = 0; face_idx < curr_rec->poses.size(); ++face_idx) {
-        const people_msgs::Person* curr_pose = &(curr_rec->poses[face_idx]);
+      for (unsigned int face_idx = 0; face_idx < curr_rec->people.size(); ++face_idx) {
+        const people_msgs::Person* curr_pose = &(curr_rec->people[face_idx]);
         std::string name = curr_pose->name;
         ROS_INFO("rec #%i: person #%i:'%s'",
                      rec_idx, face_idx, name.c_str());
         cv::Rect face_ROI;
-        face_ROI.x = curr_pose->images_offsetx;
-        face_ROI.y = curr_pose->images_offsety;
-        face_ROI.width = curr_pose->rgb.width;
-        face_ROI.height = curr_pose->rgb.height;
+        face_ROI.x = vision_utils::get_tag_default(*curr_pose, "images_offsetx", 0);
+        face_ROI.y = vision_utils::get_tag_default(*curr_pose, "images_offsety", 0);
+        cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(*curr_pose, "rgb");
+        face_ROI.width = rgb.cols;
+        face_ROI.height = rgb.rows;
         // vision_utils::copy_rectangles(curr_pose->image_roi, face_ROI);
         // cv::Scalar txt_color = vision_utils::color<cv::Scalar>(face_idx);
         cv::Scalar txt_color = vision_utils::color<cv::Scalar>
@@ -147,7 +147,7 @@ public:
 
 private:
   //! face reco sub
-  ros::MultiSubscriber _face_recognition_results_subs;
+  vision_utils::MultiSubscriber _face_recognition_results_subs;
   std::vector<people_msgs::People> _received_rec;
   //! the frame where the stuff is drawn
   cv::Mat3b _frame_out;

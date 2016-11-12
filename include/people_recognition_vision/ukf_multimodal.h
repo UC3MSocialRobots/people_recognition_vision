@@ -74,21 +74,25 @@ This gives some more robust position detections.
 #ifndef UKF_MULTIMODAL_H
 #define UKF_MULTIMODAL_H
 
-
-#include "vision_utils/multi_subscriber.h"
-#include "vision_utils/timer.h"
-// people_msgs
+// people_recognition_vision
 #include <people_recognition_vision/MatchPPL.h>
-
-
+#include "people_recognition_vision/ppl_gating.h"
+// vision_utils
+#include "vision_utils/assignment_list_to_string.h"
+#include "vision_utils/iterable_to_string.h"
+#include "vision_utils/multi_subscriber.h"
+#include "vision_utils/ppl2names.h"
+#include "vision_utils/ppl2points.h"
+#include "vision_utils/ppl2string.h"
 #include "vision_utils/ppl_attributes.h"
 #include "vision_utils/pplp_template.h"
-// people_recognition_vision
-#include "people_recognition_vision/ppl_gating.h"
+#include "vision_utils/ppl_tf_utils.h"
+#include "vision_utils/timer.h"
 // ROS
 #include <ros/service_client.h>
+#include <tf/transform_listener.h>
 
-class UkfMultiModal : public PPLPublisherTemplate {
+class UkfMultiModal : public vision_utils::PPLPublisherTemplate {
 public:
   typedef people_msgs::Person PP;
   typedef people_msgs::People PPL;
@@ -117,7 +121,7 @@ public:
 
     std::string services_str = "";
     _nh_private.param("ppl_matcher_services", services_str, services_str);
-    ros::MultiSubscriber::split_topics_list(services_str, _matcher_services);
+    vision_utils::MultiSubscriber::split_topics_list(services_str, _matcher_services);
     unsigned int nmatchers = _matcher_services.size();
 
     // parse weights
@@ -142,7 +146,7 @@ public:
 
     // subscribe to PPLP clients
     _tf_listener = new tf::TransformListener();
-    _ppl_subs = ros::MultiSubscriber::subscribe
+    _ppl_subs = vision_utils::MultiSubscriber::subscribe
                 (_nh_public, _ppl_input_topics, QUEUE_SIZE,
                  &UkfMultiModal::ppl_cb, this);
     // blobs publisher
@@ -217,9 +221,9 @@ public:
   //! \return the static frame of the UKF
   inline std::string get_static_frame_id() const { return _static_frame_id; }
   //! \return the number of users
-  inline unsigned int nusers() const { return _tracks.poses.size(); }
+  inline unsigned int nusers() const { return _tracks.people.size(); }
   //! \return the number of blobs after last ppl_cb()
-  inline unsigned int nblobs() const { return _blobs.poses.size(); }
+  inline unsigned int nblobs() const { return _blobs.people.size(); }
   //! \return the total number of publishers
   inline unsigned int nb_total_pplp() const { return _ppl_subs.nTopics(); }
   //! \return the registered number of publishers
@@ -251,7 +255,7 @@ public:
   }
 
   //! \return the costs to match a new PP to an existing track
-  inline const CMatrix<double> & get_avg_costs() const {
+  inline const vision_utils::CMatrix<double> & get_avg_costs() const {
     return _avg_costs;
   }
 
@@ -259,7 +263,7 @@ public:
 
   /*! the callback when a user is detected. */
   void ppl_cb(const PPL & new_ppl_bad_tf) {
-    unsigned int npps = new_ppl_bad_tf.poses.size(), ntracks =  nusers();
+    unsigned int npps = new_ppl_bad_tf.people.size(), ntracks =  nusers();
     ros::Time now_stamp = new_ppl_bad_tf.header.stamp;
     std::string method = vision_utils::get_method(new_ppl_bad_tf);
     DEBUG_PRINT("UkfMultiModal::ppl_cb(npps:%i, method:'%s')\n",
@@ -278,7 +282,9 @@ public:
     // gate if needed
     people_msgs::People unassociated_poses_from_new_ppl;
     if (_use_gating)
-      ppl_gating::gate_ppl(new_ppl, _tracks, unassociated_poses_from_new_ppl,
+      ppl_gating::gate_ppl(new_ppl,
+                           _tracks,
+                           unassociated_poses_from_new_ppl,
                            _human_walking_speed);
     npps = new_ppl.people.size();
 
@@ -303,16 +309,26 @@ public:
       // make the proper service call
       std::string matcher_name = _matcher_services[matcher_idx];
       res.costs.clear();
-      res.new_ppl_added_attributes.clear();
-      res.tracks_added_attributes.clear();
+      res.new_ppl_added_indices.clear();
+      res.new_ppl_added_tagnames.clear();
+      res.new_ppl_added_tags.clear();
+      res.tracks_added_indices.clear();
+      res.tracks_added_tagnames.clear();
+      res.tracks_added_tags.clear();
       if (!_matchers[matcher_idx].call(req, res)
           || !res.match_success) {
         ROS_WARN("UkfMultiModal::ppl_cb(): PPLM '%s' failed!\n", matcher_name.c_str());
         continue;
       }
       // add attributes
-      vision_utils::copy_tags(res.new_ppl_added_attributes, new_ppl);
-      vision_utils::copy_tags(res.tracks_added_attributes, _tracks);
+      vision_utils::apply_new_tags(res.new_ppl_added_tagnames,
+                                   res.new_ppl_added_tags,
+                                   res.new_ppl_added_indices,
+                                   new_ppl);
+      vision_utils::apply_new_tags(res.tracks_added_tagnames,
+                                   res.tracks_added_tags,
+                                   res.tracks_added_indices,
+                                   _tracks);
 
       // mix costs of results with avg_costs
       if (res.costs.size() != costs_size) {
@@ -356,13 +372,13 @@ public:
     DEBUG_PRINT("after match_ppl2tracks_and_clean(), "
                 "affectations:'%s', unassociated_poses_from_new_ppl:size:%i\n",
                 vision_utils::assignment_list_to_string(_ppl2track_affectations).c_str(),
-                unassociated_poses_from_new_ppl.size());
+                unassociated_poses_from_new_ppl.people.size());
 
     // compute UKF
     for (unsigned int affec_idx = 0; affec_idx < _ppl2track_affectations.size(); ++affec_idx) {
       int detec_idx = _ppl2track_affectations[affec_idx].first;
       int track_idx = _ppl2track_affectations[affec_idx].second;
-      PP* track = &(_tracks.poses.at(track_idx));
+      PP* track = &(_tracks.people.at(track_idx));
       PP* detec = &(new_ppl.people.at(detec_idx));
       //DEBUG_PRINT("UkfMultiModal: detec_idx:%i, track_idx:%i, "
       //             "list->poses: size %i, tracks: size %i\n",
@@ -378,14 +394,15 @@ public:
         track_speed = 0;
       }
       // call UKF
-      double delta_t_sec = (detec->header.stamp - track->header.stamp).toSec();
+      double track_stamp = vision_utils::get_tag_default(*track, "stamp", 0);
+      double delta_t_sec = new_ppl.header.stamp.toSec() - track_stamp;
       UkfPersonPose ukf_pp(track_pos, track_orien, track_speed);
       geometry_msgs::Point detec_pos = detec->position;
       // ROS_WARN("detec_pos:'%s'", vision_utils::printP(detec_pos).c_str());
       ukf_pp.measurement_update(detec_pos, delta_t_sec);
 
       // refresh PP
-      track->header = detec->header;
+      vision_utils::set_tag(*track, "stamp", new_ppl.header.stamp.toSec());
       ukf_pp.get_state(track->position, track_orien, track_speed);
       vision_utils::set_tag(*track, "ukf_orien", track_orien);
       vision_utils::set_tag(*track, "ukf_speed", track_speed);
@@ -393,16 +410,9 @@ public:
           && detec->name != "NOREC"
           && detec->name != "RECFAIL")
         track->name = detec->name;
-      track->std_dev = ukf_pp.get_std_dev();
+      //track->std_dev = ukf_pp.get_std_dev();
       track->reliability = detec->reliability; // TODO improve that
-      if (detec->rgb.width > 0 && detec->rgb.height > 0) { // copy images
-        track->rgb = detec->rgb;
-        track->depth = detec->depth;
-        track->user = detec->user;
-        track->images_offsetx = detec->images_offsetx;
-        track->images_offsety = detec->images_offsety;
-      }
-      // copy all other attributes
+      // copy all other attributes including images
       vision_utils::copy_tags(*detec, *track);
     } // end for affec_idx
 
@@ -444,10 +454,10 @@ private:
 
   // input PPls
   std::string _ppl_input_topics;
-  ros::MultiSubscriber _ppl_subs;
+  vision_utils::MultiSubscriber _ppl_subs;
 
   // matchers
-  CMatrix<double> _avg_costs;
+  vision_utils::CMatrix<double> _avg_costs;
   std::vector<std::string> _matcher_services;
   std::vector<double> _matcher_weights;
   std::vector<ros::ServiceClient> _matchers;
@@ -455,7 +465,7 @@ private:
   // outputs
   ros::Publisher _blobs_pub;
   double _cost_matrices_display_timeout;
-  Timer _cost_matrices_display_timer;
+  vision_utils::Timer _cost_matrices_display_timer;
 }; // end class UkfMultiModal
 
 #endif // UKF_MULTIMODAL_H

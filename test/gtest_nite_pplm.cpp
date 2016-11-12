@@ -52,9 +52,9 @@ TEST(TestSuite, test_same_msg_david_arnaud) {
   if (!vision_utils::rosmaster_alive()) return;
   NitePPLM matcher;
   for (unsigned int nusers = 0; nusers < 10; ++nusers)
-    vision_utils::test_same_msg(matcher, nusers, 1E-1, IMG_DIR "depth/david_arnaud1");
+    vision_utils::test_same_msg(matcher, nusers, 1E-1, vision_utils::IMG_DIR() +  "depth/david_arnaud1");
   for (unsigned int nusers = 0; nusers < 10; ++nusers)
-    vision_utils::test_same_msg(matcher, nusers, 1E-1, IMG_DIR "depth/david_arnaud2");
+    vision_utils::test_same_msg(matcher, nusers, 1E-1, vision_utils::IMG_DIR() +  "depth/david_arnaud2");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,11 +63,11 @@ TEST(TestSuite, test_two_frames_matching) {
   if (!vision_utils::rosmaster_alive()) return;
   NitePPLM matcher;
   vision_utils::test_two_frames_matching
-      (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud2");
+      (matcher, vision_utils::IMG_DIR() +  "depth/david_arnaud1", vision_utils::IMG_DIR() +  "depth/david_arnaud2");
   vision_utils::test_two_frames_matching
-      (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud3");
+      (matcher, vision_utils::IMG_DIR() +  "depth/david_arnaud1", vision_utils::IMG_DIR() +  "depth/david_arnaud3");
   vision_utils::test_two_frames_matching
-      (matcher, IMG_DIR "depth/david_arnaud2", IMG_DIR "depth/david_arnaud3");
+      (matcher, vision_utils::IMG_DIR() +  "depth/david_arnaud2", vision_utils::IMG_DIR() +  "depth/david_arnaud3");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

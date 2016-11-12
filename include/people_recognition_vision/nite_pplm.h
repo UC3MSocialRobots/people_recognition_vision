@@ -34,7 +34,7 @@ ________________________________________________________________________________
 #ifndef NITE_PPLM_H
 #define NITE_PPLM_H
 
-#include "vision_utils/pplm_template.h"
+#include "people_recognition_vision/pplm_template.h"
 #include "vision_utils/ppl_attributes.h"
 #include "ros/ros.h"
 #include <ros/package.h>
@@ -49,9 +49,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
-    unsigned int npps = new_ppl.people.size(),  ntracks = tracks.poses.size();
+             std::vector<std::string> & new_ppl_added_tagnames,
+                     std::vector<std::string> & new_ppl_added_tags,
+                     std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+                     std::vector<std::string> & tracks_added_tags,
+                     std::vector<unsigned int> & tracks_added_indices) {
+    unsigned int npps = new_ppl.people.size(),  ntracks = tracks.people.size();
     //printf("NitePPLM:match(%i tracks, %i PPs)\n", ntracks, npps);
     costs.resize(ntracks * npps, DEFAULT_COST);
     for (unsigned int i = 0; i < std::min(npps, ntracks); ++i) // set diagonal costs
@@ -77,7 +81,7 @@ public:
       // check matches
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
         if (!vision_utils::get_tag
-            (tracks.poses[track_idx], "user_multimap_name", track_name))
+            (tracks.people[track_idx], "user_multimap_name", track_name))
           track_name = "NOREC";
         //printf("curr:%i='%s', track:%i='%s'\n", curr_idx, curr_name.c_str(), track_idx, track_name.c_str());
         if (track_name.empty()
@@ -85,10 +89,10 @@ public:
             || track_name == "NOREC")
           continue;
         int cost_idx = curr_idx * ntracks + track_idx;
-        
+
         const int MATCH_COST_auxConst = MATCH_COST;
         const int NOMATCH_COST_auxConst = NOMATCH_COST;
-        
+
         costs[cost_idx] = (curr_name == track_name ? MATCH_COST_auxConst : NOMATCH_COST_auxConst);
       } // end for track_idx
     } // end for curr_idx

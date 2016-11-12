@@ -27,12 +27,25 @@ A structured representation of the colors in a person.
 #define PERSON_HISTOGRAM_H
 
 // AD
-#include "vision_utils/cmatrix.h"
-
-
-
-
+#include "vision_utils/bboxes_included.h"
 #include "vision_utils/blob_segmenter.h"
+#include "vision_utils/cast_to_string.h"
+#include "vision_utils/cmatrix.h"
+#include "vision_utils/compute_pixel2meters_factor.h"
+#include "vision_utils/distance_hist_vectors.h"
+#include "vision_utils/get_vector_of_histograms.h"
+#include "vision_utils/hist_to_string.h"
+#include "vision_utils/mask.h"
+#include "vision_utils/mean_std_dev_modulo.h"
+#include "vision_utils/merge_histograms.h"
+#include "vision_utils/normalize_hist.h"
+#include "vision_utils/print_rect.h"
+#include "vision_utils/propagative_floodfill.h"
+#include "vision_utils/putTextBackground.h"
+#include "vision_utils/read_rgb_depth_user_image_from_image_file.h"
+#include "vision_utils/rect_center.h"
+#include "vision_utils/rgb2hue.h"
+#include "vision_utils/vector_of_histograms_to_image.h"
 
 #define SVM_USE_STD_DEV_HIST
 
@@ -278,7 +291,7 @@ public:
 
     // get pixel2meters_factor from depth_camera_model
     double pixel2meters_factor = vision_utils::compute_pixel2meters_factor
-                                 (depth, pixel2meters_arg, _seed);
+        (depth, pixel2meters_arg, _seed);
     if (isnan(pixel2meters_factor)) {
       printf("PersonHistogram::create(): pixel2meters_factor at seed (%i, %i) "
              "is NaN!\n", _seed.x, _seed.y);
@@ -286,7 +299,7 @@ public:
     }
 #else
     double pixel2meters_factor = vision_utils::compute_average_pixel2meters_factor
-                                 (depth, pixel2meters_arg, user_mask);
+        (depth, pixel2meters_arg, user_mask);
 #endif
     TIMER_PRINT_RESET(_depth_canny.timer, "pixel2meters_factor()");
 
@@ -319,7 +332,7 @@ public:
     cv::Mat1b user_mask;
     cv::Mat rgb, depth;
     bool ok = vision_utils::read_rgb_depth_user_image_from_image_file
-              (rgb_depth_user_filename_prefix, &rgb, &depth, &user_mask);
+        (rgb_depth_user_filename_prefix, &rgb, &depth, &user_mask);
     if (!ok)
       return false;
     return create<T>(rgb, (user_mask == user_idx), depth, pixel2meters_arg,
@@ -432,9 +445,9 @@ public:
    * \see function factory create() for all possibilites of arguments */
   template<class _T1, class _T2, class _T3>
   bool create(const std::vector<_T1> & v1,
-               const std::vector<_T2> & v2,
-               const std::vector<_T3> & v3,
-               bool want_refresh_illus_images = true)
+              const std::vector<_T2> & v2,
+              const std::vector<_T3> & v3,
+              bool want_refresh_illus_images = true)
   {
     DEBUG_PRINT("PersonHistogram::create(line %i)\n", __LINE__);
     clear();
@@ -509,14 +522,6 @@ public:
     fs << "illus_color_img" << _illus_color_img;
   } // end write()
 
-  //////////////////////////////////////////////////////////////////////////////
-
-  static inline bool is_bg(const cv::Vec3b & val) {
-    return val[0] == PH_ILLUS_BG_COLOR_B
-        && val[1] == PH_ILLUS_BG_COLOR_G
-        && val[2] == PH_ILLUS_BG_COLOR_R;
-}
-
   inline void read(const cv::FileNode &fn) {
     fn["illus_color_img"] >> _illus_color_img;
     // regenerate mask
@@ -530,12 +535,21 @@ public:
       hist_nodes[hist_idx] >> _hist_vector[hist_idx];
   } // end read
 
+  //////////////////////////////////////////////////////////////////////////////
+
+  static inline bool is_bg(const cv::Vec3b & val) {
+    return val[0] == PH_ILLUS_BG_COLOR_B
+        && val[1] == PH_ILLUS_BG_COLOR_G
+        && val[2] == PH_ILLUS_BG_COLOR_R;
+  }
+
+
   ////////////////////////////////////////////////////////////////////////////////
 
   static inline bool merge_histograms(const std::vector<PersonHistogram> & phists,
                                       PersonHistogram & out,
                                       bool want_normalize_hist = true) {
-    printf("merge_histograms(%i histograms)\n", phists.size());
+    printf("merge_histograms(%li histograms)\n", phists.size());
     if (phists.size() == 0) {
       out = PersonHistogram();
       return true;
@@ -556,7 +570,7 @@ public:
         //         person_idx, hist_idx, hists[person_idx].rows);
       } // end loop person_idx
       bool ok = vision_utils::merge_histograms(hists, weights, out._hist_vector[hist_idx],
-                                                  want_normalize_hist);
+                                               want_normalize_hist);
       if (!ok)
         return false;
     } // end loop hist_idx
@@ -579,7 +593,7 @@ public:
 
 #ifdef SVM_USE_STD_DEV_HIST
     if (_hist_vector.size() != BODY_PARTS) {
-      printf("to_mat(): _hist_vector has not the correct size:%i != BODY_PARTS %i\n",
+      printf("to_mat(): _hist_vector has not the correct size:%li != BODY_PARTS %i\n",
              _hist_vector.size(), BODY_PARTS);
       return false;
     }
@@ -715,7 +729,7 @@ private:
          vision_utils::FloodFillEdgeCloser::DEFAULT_SRC_WIDTH_RATIO_THRES);
 #else
     return _segmenter.find_blob
-        (depth, seed, _user_mask, BlobSegmenter::GROUND_PLANE_FINDER);
+        (depth, seed, _user_mask, vision_utils::BlobSegmenter::GROUND_PLANE_FINDER);
 #endif
   }
 
@@ -729,10 +743,10 @@ private:
     // write nb of images
     if (_input_images_nb != 1) {
       cv::Rect text_roi = vision_utils::putTextBackground
-                          (_illus_color_img, vision_utils::cast_to_string(_input_images_nb),
-                           cv::Point(_illus_color_img.cols / 2, _illus_color_img.rows - 5),
-                           CV_FONT_HERSHEY_PLAIN, 2.f,
-                           CV_RGB(255, 255, 255), CV_RGB(120, 0, 0), 1, 2);
+          (_illus_color_img, vision_utils::cast_to_string(_input_images_nb),
+           cv::Point(_illus_color_img.cols / 2, _illus_color_img.rows - 5),
+           CV_FONT_HERSHEY_PLAIN, 2.f,
+           CV_RGB(255, 255, 255), CV_RGB(120, 0, 0), 1, 2);
       _user_mask_bbox(text_roi).setTo(255);
     }
     //    cv::imshow("_illus_color_img", _illus_color_img);
@@ -751,7 +765,7 @@ private:
   cv::Mat1b _user_mask_bbox;
 
   // temp data:
-  BlobSegmenter _segmenter;
+  vision_utils::BlobSegmenter _segmenter;
   cv::Mat1b _user_mask;
   cv::Mat3b _rgb_hsv;
   cv::Mat1b _hue;
@@ -760,6 +774,16 @@ private:
   cv::Rect _user_mask_bbox_rect;
   SEEN_BUFFER_TYPE _seen_buffer_short;
   cv::Mat1f _lookup_result;
-};
+}; // end class PersonHistogram
+
+// http://docs.opencv.org/2.4/doc/tutorials/core/file_input_output_with_xml_yml/file_input_output_with_xml_yml.html
+static void read(const cv::FileNode& node,
+                 PersonHistogram& x,
+                 const PersonHistogram& default_value = PersonHistogram()){
+  if(node.empty())
+    x = default_value;
+  else
+    x.read(node);
+}
 
 #endif // PERSON_HISTOGRAM_H

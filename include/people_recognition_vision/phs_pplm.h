@@ -35,11 +35,14 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 
 // #define DISPLAY
 
-#include "vision_utils/pplm_template.h"
+#include "people_recognition_vision/pplm_template.h"
 #include "people_recognition_vision/person_histogram.h"
+#include "vision_utils/user_image_to_rgb.h"
+#include <vision_utils/kinect_serials.h>
+#include <vision_utils/ppl_tags_images.h>
+// ROS
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include "vision_utils/user_image_to_rgb.h"
 
 class PHSPPLM : public PPLMatcherTemplate {
 public:
@@ -49,31 +52,19 @@ public:
     // get camera model
     image_geometry::PinholeCameraModel rgb_camera_model;
     vision_utils::read_camera_model_files
-        (DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
+        (vision_utils::DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   bool pp2phs(const PP & pp, PH & ans) {
-    if (pp.rgb.width == 0 || pp.rgb.height == 0) {
+    cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(pp, "rgb");
+    cv::Mat1f depth = vision_utils::get_image_tag<float>(pp, "depth");
+    cv::Mat1b user = vision_utils::get_image_tag<uchar>(pp, "user");
+    if (rgb.empty() || depth.empty() || user.empty()) {
       printf("PHSPPLM: PP has no rgb image\n");
       return false;
     }
-    boost::shared_ptr<void const> tracked_object;
-    try {
-      _rgb_bridge = cv_bridge::toCvShare(pp.rgb, tracked_object,
-                                         sensor_msgs::image_encodings::BGR8);
-      _depth_bridge = cv_bridge::toCvShare(pp.depth, tracked_object,
-                                           sensor_msgs::image_encodings::TYPE_32FC1);
-      _user_bridge = cv_bridge::toCvShare(pp.user, tracked_object,
-                                          sensor_msgs::image_encodings::TYPE_8UC1);
-    } catch (cv_bridge::Exception& e) {
-      printf("PHSPPLM: cv_bridge exception: %s", e.what());
-      return false;
-    }
-    const cv::Mat3b & rgb = _rgb_bridge->image;
-    const cv::Mat1f & depth = _depth_bridge->image;
-    const cv::Mat1b & user = _user_bridge->image;
     // careful about the order here!
     bool ok = ans.create(rgb, user, depth, _default_depth_camera_model);
 
@@ -92,10 +83,14 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
+             std::vector<std::string> & new_ppl_added_tagnames,
+                     std::vector<std::string> & new_ppl_added_tags,
+                     std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+                     std::vector<std::string> & tracks_added_tags,
+                     std::vector<unsigned int> & tracks_added_indices) {
     unsigned int ncurr_users = new_ppl.people.size(),
-        ntracks = tracks.poses.size();
+        ntracks = tracks.people.size();
     DEBUG_PRINT("PHSPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
     // if there is only one track and one user, skip computation
@@ -115,7 +110,7 @@ public:
       }
     } // end for (curr_idx)
     for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-      if (!pp2phs(tracks.poses[track_idx], track_heights[track_idx])) {
+      if (!pp2phs(tracks.people[track_idx], track_heights[track_idx])) {
         printf("track_idx:%i returned an error\n", track_idx);
         return false;
       }

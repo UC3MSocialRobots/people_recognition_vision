@@ -35,12 +35,12 @@ A PPLMatcherTemplate using the color of the user as a matcher.
 
 // #define DISPLAY
 
-#include "vision_utils/pplm_template.h"
+#include "people_recognition_vision/pplm_template.h"
 #include "vision_utils/opencv_face_detector.h"
 #include "people_recognition_vision/face_recognizer.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
-#include "vision_utils/ppl_attributes.h"
+#include "vision_utils/ppl_tags_images.h"
 
 
 class FaceRecognizerPPLM : public PPLMatcherTemplate {
@@ -69,24 +69,20 @@ public:
   /*! \arg pp not const because we store the result of the face reco when succesful
     */
   bool pp2reco(const PP & pp, face_recognition::PersonName & ans,
-               people_msgs::PersonAttributes & added_attributes) {
+               const unsigned int & idx,
+               std::vector<std::string> & added_tagnames,
+               std::vector<std::string> & added_tags,
+               std::vector<unsigned int> & added_indices) {
     ans = "RECFAIL";
-    if (pp.rgb.width == 0 || pp.rgb.height == 0) {
+    cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(pp, "rgb");
+    if (rgb.empty()) {
       printf("FaceRecognizerPPLM: PP has no rgb image\n");
       return false;
     }
-    boost::shared_ptr<void const> tracked_object;
-    try {
-      _rgb_bridge = cv_bridge::toCvShare(pp.rgb, tracked_object,
-                                         sensor_msgs::image_encodings::BGR8);
-    } catch (cv_bridge::Exception& e) {
-      printf("FaceRecognizerPPLM: cv_bridge exception: %s", e.what());
-      return false;
-    }
-    //cv::imshow("rgb", _rgb_bridge->image); cv::waitKey(0);
+    //cv::imshow("rgb", rgb); cv::waitKey(0);
     std::vector<cv::Rect> faces_roi;
     vision_utils::detect_with_opencv
-        (_rgb_bridge->image, _classifier,
+        (rgb, _classifier,
          _small_img, faces_roi,
          _resize_max_width, _resize_max_height, _scale_factor,
          _min_neighbors, _min_width);
@@ -94,7 +90,7 @@ public:
       DEBUG_PRINT("FaceRecognizerPPLM::pp2reco(): no face found\n");
       return false;
     }
-    cv::Mat3b face_color = _rgb_bridge->image(faces_roi.front());
+    cv::Mat3b face_color = rgb(faces_roi.front());
     //cv::imshow("face_color", face_color); cv::waitKey(0);
     ans = _face_reco.predict_non_preprocessed_face(face_color);
     if (ans == face_recognition::NOBODY || ans == "RECFAIL") {
@@ -106,16 +102,21 @@ public:
     //printf("FaceRecognizerPPLM::pp2reco(): reco result='%s'\n", ans.c_str());
     added_tagnames.push_back("face_name");
     added_tags.push_back(ans);
+    added_indices.push_back(idx);
     return true;
   } // end pp2reco()
 
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
+             std::vector<std::string> & new_ppl_added_tagnames,
+             std::vector<std::string> & new_ppl_added_tags,
+             std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+             std::vector<std::string> & tracks_added_tags,
+             std::vector<unsigned int> & tracks_added_indices) {
     unsigned int npps = new_ppl.people.size(),
-        ntracks = tracks.poses.size();
+        ntracks = tracks.people.size();
     DEBUG_PRINT("FaceRecognizerPPLM::match(%i new PP, %i tracks)\n",
                 npps, ntracks);
     // if there is only one track and one user, skip computation
@@ -128,13 +129,14 @@ public:
     // retrieve result of face recos in tracks
     std::vector<face_recognition::PersonName> ppl_recos(npps), track_recos(ntracks);
     for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-      const PP* track = &(tracks.poses[track_idx]);
+      const PP* track = &(tracks.people[track_idx]);
       DEBUG_PRINT("track #%i:'%s'\n", track_idx, vision_utils::pp2string(*track).c_str());
       // retrieve result of face recos in track attributes
       if (vision_utils::get_tag(*track, "face_name", track_recos[track_idx]))
         continue;
       // otherwise try and detect them
-      if (pp2reco(*track, track_recos[track_idx], tracks_added_attributes[track_idx]))
+      if (pp2reco(*track, track_recos[track_idx], track_idx,
+                  tracks_added_tagnames, tracks_added_tags, tracks_added_indices))
         continue;
       track_recos[track_idx] = "RECFAIL";
       DEBUG_PRINT("Could not recognize the face of track #%i\n", track_idx);
@@ -142,7 +144,8 @@ public:
     // apply face reco on PP
     for (unsigned int pp_idx = 0; pp_idx < npps; ++pp_idx) {
       const PP* pp = &(new_ppl.people[pp_idx]);
-      if (pp2reco(*pp, ppl_recos[pp_idx], new_ppl_added_attributes[pp_idx]))
+      if (pp2reco(*pp, ppl_recos[pp_idx], pp_idx,
+                  new_ppl_added_tagnames, new_ppl_added_tags, new_ppl_added_indices))
         continue;
       ppl_recos[pp_idx] = "RECFAIL";
       DEBUG_PRINT("Could not recognize the face of PP #%i\n", pp_idx);
@@ -168,10 +171,10 @@ public:
             || track_name == "NOREC")
           continue;
         int cost_idx = pp_idx * ntracks + track_idx;
-        
+
         const int MATCH_COST_auxConst = MATCH_COST;
         const int NOMATCH_COST_auxConst = NOMATCH_COST;
-        
+
         costs[cost_idx] = (curr_name == track_name ? MATCH_COST_auxConst : NOMATCH_COST_auxConst);
       } // end for (track_idx)
     } // end for (pp_idx)

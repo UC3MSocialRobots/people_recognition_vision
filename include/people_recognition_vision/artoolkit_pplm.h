@@ -39,8 +39,7 @@ the tracks and the PPL detections.
 #ifndef ARTOOLKIT_PPLM_H
 #define ARTOOLKIT_PPLM_H
 
-#include "vision_utils/pplm_template.h"
-#include "vision_utils/distances.h"
+#include "people_recognition_vision/pplm_template.h"
 
 class ARToolkitPPLM : public PPLMatcherTemplate {
 public:
@@ -52,9 +51,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
-    unsigned int ntracks = tracks.poses.size(),
+             std::vector<std::string> & new_ppl_added_tagnames,
+             std::vector<std::string> & new_ppl_added_tags,
+             std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+             std::vector<std::string> & tracks_added_tags,
+             std::vector<unsigned int> & tracks_added_indices) {
+    unsigned int ntracks = tracks.people.size(),
         ncurr_users = new_ppl.people.size();
     std::string method  = vision_utils::get_method(new_ppl);
     if (method != "artoolkit") {
@@ -74,7 +77,7 @@ public:
     for (unsigned int curr_idx = 0; curr_idx < ncurr_users; ++curr_idx) {
       std::string curr_name = new_ppl.people[curr_idx].name;
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-        std::string track_name = tracks.poses[curr_idx].name;
+        std::string track_name = tracks.people[curr_idx].name;
         if (curr_name != track_name)
           continue;
         // set a low cost

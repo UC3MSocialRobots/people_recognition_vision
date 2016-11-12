@@ -145,31 +145,31 @@ void test_height_pixels(const std::string user_mask_name,
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, height_pixels_heads_01) {
-  test_height_pixels(IMG_DIR "skeletons/heads/01.png", 350, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/01.png", 350, 50);
 }
 TEST(TestSuite, height_pixels_heads_02) {
-  test_height_pixels(IMG_DIR "skeletons/heads/02.png", 350, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/02.png", 350, 50);
 }
 TEST(TestSuite, height_pixels_heads_03) {
-  test_height_pixels(IMG_DIR "skeletons/heads/03.png", 350, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/03.png", 350, 50);
 }
 TEST(TestSuite, height_pixels_heads_04) {
-  test_height_pixels(IMG_DIR "skeletons/heads/04.png", 350, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/04.png", 350, 50);
 }
 TEST(TestSuite, height_pixels_heads_05) {
-  test_height_pixels(IMG_DIR "skeletons/heads/05.png", 400, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/05.png", 400, 50);
 }
 TEST(TestSuite, height_pixels_heads_06) {
-  test_height_pixels(IMG_DIR "skeletons/heads/06.png", 370, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/06.png", 370, 50);
 }
 TEST(TestSuite, height_pixels_hard_mask1) {
-  test_height_pixels(IMG_DIR "skeletons/heads/hard_mask1.png", 240, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/hard_mask1.png", 240, 50);
 }
 TEST(TestSuite, height_pixels_hard_mask2) {
-  test_height_pixels(IMG_DIR "skeletons/heads/hard_mask2.png", 274, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/hard_mask2.png", 274, 50);
 }
 TEST(TestSuite, height_pixels_hard_mask3) {
-  test_height_pixels(IMG_DIR "skeletons/heads/hard_mask3.png", 274, 50);
+  test_height_pixels(vision_utils::IMG_DIR() +  "skeletons/heads/hard_mask3.png", 274, 50);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ TEST(TestSuite, height_meters_zero_mask) {
   cv::Mat1f depth;
   cv::Mat1b user_mask;
   image_geometry::PinholeCameraModel depth_camera_model;
-  load_depth_mask_cammodel(depth, user_mask, depth_camera_model, IMG_DIR "depth/juggling1");
+  load_depth_mask_cammodel(depth, user_mask, depth_camera_model, vision_utils::IMG_DIR() +  "depth/juggling1");
   user_mask.setTo(0);
   HeightDetector detec;
   HeightDetector::Height h = detec.height_meters(depth, user_mask, depth_camera_model);
@@ -245,15 +245,15 @@ void test_height_meters(std::string prefix,
 }
 
 TEST(TestSuite, height_meters_juggling1) {
-  test_height_meters(IMG_DIR "depth/juggling1", 1.8, .2, false);
+  test_height_meters(vision_utils::IMG_DIR() +  "depth/juggling1", 1.8, .2, false);
 }
 
 TEST(TestSuite, height_meters_juggling2) {
-  test_height_meters(IMG_DIR "depth/juggling2", 1.8, .2, false);
+  test_height_meters(vision_utils::IMG_DIR() +  "depth/juggling2", 1.8, .2, false);
 }
 
 TEST(TestSuite, height_meters_alberto1) {
-  test_height_meters(IMG_DIR "depth/alberto1", 1.8, .2, false);
+  test_height_meters(vision_utils::IMG_DIR() +  "depth/alberto1", 1.8, .2, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -303,19 +303,19 @@ void test_height_all_values(const std::string filename_prefix,
 } // end test_height_all_values();
 
 TEST(TestSuite, height_all_values_empty_lab) {
-  test_height_all_values(IMG_DIR "depth/empty_lab", 0, KINECT_SERIAL_LAB());
+  test_height_all_values(vision_utils::IMG_DIR() +  "depth/empty_lab", 0, vision_utils::KINECT_SERIAL_LAB());
 }
 
 TEST(TestSuite, height_all_values_juggling1) {
-  test_height_all_values(IMG_DIR "depth/juggling1", 1, KINECT_SERIAL_LAB());
+  test_height_all_values(vision_utils::IMG_DIR() +  "depth/juggling1", 1, vision_utils::KINECT_SERIAL_LAB());
 }
 
 TEST(TestSuite, height_all_values_david_arnaud1) {
-  test_height_all_values(IMG_DIR "depth/david_arnaud1", 2, KINECT_SERIAL_LAB());
+  test_height_all_values(vision_utils::IMG_DIR() +  "depth/david_arnaud1", 2, vision_utils::KINECT_SERIAL_LAB());
 }
 
 TEST(TestSuite, height_all_values_david_arnaud2) {
-  test_height_all_values(IMG_DIR "depth/david_arnaud2", 2, KINECT_SERIAL_LAB());
+  test_height_all_values(vision_utils::IMG_DIR() +  "depth/david_arnaud2", 2, vision_utils::KINECT_SERIAL_LAB());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

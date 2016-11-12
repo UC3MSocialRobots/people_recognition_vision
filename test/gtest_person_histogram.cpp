@@ -65,7 +65,7 @@ void ASSERT_SOUND_PH(const PersonHistogram & ph,
 
 TEST(TestSuite, test_copy) {
   PersonHistogram ph, ph_copy;
-  ASSERT_TRUE(ph.create(juggling1_file, juggling1_seed, KINECT_SERIAL_LAB()));
+  ASSERT_TRUE(ph.create(juggling1_file, juggling1_seed, vision_utils::KINECT_SERIAL_LAB()));
   ASSERT_SOUND_PH(ph, 1);
   ph_copy = ph;
   ASSERT_SOUND_PH(ph_copy, 1);
@@ -218,7 +218,7 @@ TEST(TestSuite, to_mat_empty) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, to_mat) {
-  PersonHistogram ph(juggling1_file, juggling1_seed, KINECT_SERIAL_LAB());
+  PersonHistogram ph(juggling1_file, juggling1_seed, vision_utils::KINECT_SERIAL_LAB());
   cv::Mat ph2mat;
   //matrix not allocated: should succeed
   ASSERT_TRUE(ph.to_mat(ph2mat));
@@ -247,8 +247,8 @@ TEST(TestSuite, merge_empty) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, merge_one_image) {
-  PersonHistogram ph_out(alberto1_file, alberto1_seed, KINECT_SERIAL_LAB()),
-      ph_in(juggling1_file, juggling1_seed, KINECT_SERIAL_LAB());
+  PersonHistogram ph_out(alberto1_file, alberto1_seed, vision_utils::KINECT_SERIAL_LAB()),
+      ph_in(juggling1_file, juggling1_seed, vision_utils::KINECT_SERIAL_LAB());
   ASSERT_SOUND_PH(ph_in, 1);
   ASSERT_SOUND_PH(ph_out, 1);
   std::vector<PersonHistogram> phists(1, ph_in);
@@ -263,9 +263,9 @@ TEST(TestSuite, merge_one_image) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, merge_two_images) {
-  PersonHistogram ph_out(alberto1_file, alberto1_seed, KINECT_SERIAL_LAB()),
-      ph_in1(juggling1_file, juggling1_seed, KINECT_SERIAL_LAB()),
-      ph_in2(juggling2_file, juggling2_seed, KINECT_SERIAL_LAB());
+  PersonHistogram ph_out(alberto1_file, alberto1_seed, vision_utils::KINECT_SERIAL_LAB()),
+      ph_in1(juggling1_file, juggling1_seed, vision_utils::KINECT_SERIAL_LAB()),
+      ph_in2(juggling2_file, juggling2_seed, vision_utils::KINECT_SERIAL_LAB());
   std::vector<PersonHistogram> phists;
   phists.push_back(ph_in1);
   phists.push_back(ph_in2);
@@ -285,9 +285,9 @@ TEST(TestSuite, merge_two_images) {
 ////////////////////////////////////////////////////////////////////////////////
 
 TEST(TestSuite, merge_four_images) {
-  PersonHistogram ph_out(alberto1_file, alberto1_seed, KINECT_SERIAL_LAB()),
-      ph_in1(juggling1_file, juggling1_seed, KINECT_SERIAL_LAB()),
-      ph_in2(juggling2_file, juggling2_seed, KINECT_SERIAL_LAB());
+  PersonHistogram ph_out(alberto1_file, alberto1_seed, vision_utils::KINECT_SERIAL_LAB()),
+      ph_in1(juggling1_file, juggling1_seed, vision_utils::KINECT_SERIAL_LAB()),
+      ph_in2(juggling2_file, juggling2_seed, vision_utils::KINECT_SERIAL_LAB());
   std::vector<PersonHistogram> phists;
   phists.push_back(ph_in1);
   phists.push_back(ph_in2);

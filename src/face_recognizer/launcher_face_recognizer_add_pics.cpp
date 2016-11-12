@@ -54,16 +54,15 @@ ________________________________________________________________________________
 #include <ros/ros.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-// ad_core
-#include "vision_utils/nano_skill.h"
-// vision
-#include "vision_utils/make_opencv_interface.h"
-
-// people_msgs
-#include "people_recognition_vision/face_recognizer.h"
 #include "people_msgs/People.h"
+// vision_utils
+#include "vision_utils/nano_skill.h"
+#include "vision_utils/ppl_tags_images.h"
+#include "vision_utils/make_opencv_interface.h"
+// people_recognition_vision
+#include "people_recognition_vision/face_recognizer.h"
 
-class FaceRecognizerAddPics : public NanoSkill {
+class FaceRecognizerAddPics : public vision_utils::NanoSkill {
 public:
   FaceRecognizerAddPics()
     : NanoSkill("FACE_RECOGNIZER_ADD_PICS_START", "FACE_RECOGNIZER_ADD_PICS_STOP") {
@@ -171,18 +170,9 @@ public:
 
     for (unsigned int face_idx = 0; face_idx < nfaces; ++face_idx) {
       const people_msgs::Person* curr_pose = &(msg->people[face_idx]);
-      if (curr_pose->rgb.width == 0 || curr_pose->rgb.height == 0)
+      _current_face = vision_utils::get_image_tag<cv::Vec3b>(*curr_pose, "rgb");
+      if (_current_face.empty())
         continue;
-
-      // try to recognize each face
-      try {
-        img_ptr = cv_bridge::toCvShare(curr_pose->rgb, tracked_object,
-                                       sensor_msgs::image_encodings::BGR8);
-      } catch (cv_bridge::Exception e) {
-        ROS_WARN("cv_bridge exception:'%s'", e.what());
-        continue;
-      }
-      img_ptr->image.copyTo(_current_face);
 
       std::vector<std::string> button_names;
       button_names.push_back("Skip");

@@ -34,17 +34,30 @@ http://www.embeddedheaven.com/ros-nodelet.htm
 
  */
 
-#include "kinect/skeleton_utils.h"
 // #include "skill_templates/nite/nite_ROS_subscriber_template.h"
-#include "kinect/nite_subscriber_template.h"
+#include "vision_utils/accessible_to_string.h"
+#include "vision_utils/rgb_depth_user_skill.h"
+#include "vision_utils/get_all_different_values.h"
 #include "people_recognition_vision/hist_tracking_skill.h"
 
-class HistTrackingNiteSkill : public NiteSubscriberTemplate, public HistTrackingSkill {
+class HistTrackingNiteSkill : public vision_utils::RgbDepthUserSkill, public HistTrackingSkill {
 public:
-  void fn(const cv::Mat3b & color,
+  HistTrackingNiteSkill() : RgbDepthUserSkill("HIST_TRACKING_NITE_SKILL_START",
+                                              "HIST_TRACKING_NITE_SKILL_STOP") {
+    // get camera model
+    image_geometry::PinholeCameraModel rgb_camera_model;
+    vision_utils::read_camera_model_files
+        (vision_utils::DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  virtual void create_subscribers_and_publishers() {}
+  virtual void shutdown_subscribers_and_publishers() {}
+
+  void process_rgb_depth_user(const cv::Mat3b & color,
           const cv::Mat1f & depth,
-          const cv::Mat1b & user,
-          const kinect::NiteSkeletonList & skeleton_list) {
+          const cv::Mat1b & user) {
     ROS_INFO_THROTTLE(1, "HistTrackingNiteSkill:fn()");
     DEBUG_PRINT("HistTrackingNiteSkill:fn()");
     // ROS_INFO("fn()");
@@ -62,10 +75,10 @@ public:
       // get user mask
       user_mask = (user == user_label);
       PersonLabel new_label = user_label_idx+1;
-      if (!curr_phset.push_back(color, user_mask, depth, depth_camera_model, new_label, true, false))
+      if (!curr_phset.push_back(color, user_mask, depth, _default_depth_camera_model, new_label, true, false))
         continue;
     } // end loop user_label_idx
-    Timer::Time time_compute_vector_of_histograms = timer_callback.time();
+    vision_utils::Timer::Time time_compute_vector_of_histograms = timer_callback.time();
 
     if (!compare())
       return;
@@ -91,8 +104,6 @@ public:
 
 private:
   cv::Mat1b user_mask;
-  // display
-  cv::Mat3b user_skeleton_illus;
 }; // end class HistTrackingNiteSkill
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +111,6 @@ private:
 int main(int argc, char** argv) {
   ros::init(argc, argv, "hist_tracking_nite_skill");
   HistTrackingNiteSkill skill;
-  skill.init();
+  skill.start();
   ros::spin();
 }

@@ -29,7 +29,7 @@ ________________________________________________________________________________
 #include "people_recognition_vision/face_recognizer.h"
 #include <people_msgs/People.h>
 
-#define FACES_DIR   IMG_DIR "faces/"
+#define FACES_DIR   vision_utils::IMG_DIR() +  "faces/"
 
 //#define DISPLAY
 

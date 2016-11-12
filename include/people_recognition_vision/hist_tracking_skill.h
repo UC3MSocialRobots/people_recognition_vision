@@ -43,15 +43,14 @@ A bunch of functions doing that with different kind of inputs are available,
 #define HIST_TRACKING_SKILL_H
 
 // AD
-
 #include "vision_utils/timer.h"
-#include "std_msgs/String.h"
 #include "vision_utils/nano_etts_api.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
-
 #include "vision_utils/user_image_to_rgb.h"
-// people_msgs
+// people_recognition_vision
 #include "people_recognition_vision/person_histogram_set.h"
+// ROS
+#include "std_msgs/String.h"
 
 class HistTrackingSkill {
 public:
@@ -69,21 +68,21 @@ public:
 
     // create reference PersonHistogramSet
     //    ref_phset.create
-    //        (test_person_histogram_set_variables::all_filename_prefixes_struct(),
-    //         test_person_histogram_set_variables::all_seeds_struct(),
-    //         test_person_histogram_set_variables::all_kinect_serials_struct());
+    //        (all_filename_prefixes_struct(),
+    //         all_seeds_struct(),
+    //         all_kinect_serials_struct());
     ref_phset.push_back_vec
-        (test_person_histogram_set_variables::refset_filename_prefixes,
-         test_person_histogram_set_variables::refset_seeds,
-         test_person_histogram_set_variables::refset_kinect_serials,
-         test_person_histogram_set_variables::refset_labels());
+        (vision_utils::refset_filename_prefixes,
+         vision_utils::refset_seeds,
+         vision_utils::refset_kinect_serials,
+         vision_utils::refset_labels());
     previous_phset_size = 0;
 
     // draw caption
-    colormap_to_caption_image(_colormap_caption,
-                              150, 300,
-                              vision_utils::ratio2red_green_half,
-                              0., .6, .05, .1);
+    vision_utils::colormap_to_caption_image(_colormap_caption,
+                                            150, 300,
+                                            vision_utils::ratio2red_green_half,
+                                            0., .6, .05, .1);
 
     // GUI
     ref_phs_prev_button = NO_USER_SELECTED;
@@ -251,7 +250,7 @@ public:
       } // end if (illus_seen_buffer_per_user)
 
       if (illus_multimask_illus_per_user) {
-        user_image_to_rgb(ph->get_multimask(), multimask_illus, 8);
+        vision_utils::user_image_to_rgb(ph->get_multimask(), multimask_illus, 8);
         if (!multimask_illus.empty()) {
           window_title.str("");  window_title << "multimask #" << (int) curr_label;
           cv::imshow(window_title.str(), multimask_illus);
@@ -301,7 +300,7 @@ public:
       if (std::find(last_sentences_said.begin(), last_sentences_said.end(),
                     sentence) != last_sentences_said.end()) {
         ROS_INFO("Sentence '%s' was already said, skipping it.",
-                     sentence.c_str());
+                 sentence.c_str());
         continue;
       }
       _etts_api.say_text(sentence);
@@ -623,8 +622,8 @@ protected:
   cv::Mat3b _interface;
 
   // stuff for etts
-  NanoEttsApi _etts_api;
-  Timer sentence_time;
+  vision_utils::NanoEttsApi _etts_api;
+  vision_utils::Timer sentence_time;
   std::vector<std::string> last_sentences_said;
 }; // end class HistTrackingSkill
 

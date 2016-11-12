@@ -1,7 +1,7 @@
 #include "people_recognition_vision/face_recognizer.h"
+#include <vision_utils/retrieve_file_split.h>
 
-#define FACES_DIR   IMG_DIR "faces/"
-
+#define FACES_DIR   vision_utils::IMG_DIR() +  "faces/"
 
 /*!
  * Split a vector into two subvectors,
@@ -111,7 +111,7 @@ inline std::vector<face_recognition::PersonName> image_filenames_to_names
     bool is_woman = is_woman_ptr(images_filenames[file_idx]);
     names.push_back(is_woman ? "woman" : "man");
   } // end loop filename
-  ROS_WARN("image_filenames_to_names(): %i pics, %i%% men",
+  printf("image_filenames_to_names(): %li pics, %li%% men",
               names.size(), n_men(names) * 100 / names.size());
   return names;
 }
@@ -136,7 +136,7 @@ inline bool yale_is_woman(const std::string & filename) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_google_genders_face_recognizer() {
-  ROS_INFO("train_google_genders_face_recognizer()");
+  printf("train_google_genders_face_recognizer()");
   face_recognition::FaceRecognizer reco;
   reco.from_color_images_filenames
       (create_google_genders_images_filenames(),
@@ -148,7 +148,7 @@ void train_google_genders_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_yale_face_recognizer() {
-  ROS_INFO("train_yale_face_recognizer()");
+  printf("train_yale_face_recognizer()");
   std::vector<std::string> filenames_big = create_yale_images_filenames();
   std::vector<std::string> filenames_small;
   decimate_vector(filenames_big, filenames_small, 1.f / 20);
@@ -161,7 +161,7 @@ void train_yale_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_yale_small_face_recognizer() {
-  ROS_INFO("train_yale_small_face_recognizer()");
+  printf("train_yale_small_face_recognizer()");
 #if 0 // create training and test subsets
   std::vector<std::string> filenames_big = create_yale_images_filenames(),
       filenames_small, training_set_filenames, test_set_filenames;
@@ -194,13 +194,13 @@ void train_yale_small_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_people_lab_face_recognizer() {
-  ROS_INFO("test_people_lab_face_recognizer()");
+  printf("test_people_lab_face_recognizer()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "people_lab/index.xml");
 
   // test it
   cv::Mat3b test = cv::imread(
-        //IMG_DIR "arnaud001.png",
+        //vision_utils::IMG_DIR() +  "arnaud001.png",
         FACES_DIR "people_lab/avi_35.png",
         CV_LOAD_IMAGE_COLOR);
   face_recognition::PersonName predict_result =
@@ -208,7 +208,7 @@ void test_people_lab_face_recognizer() {
   printf("predict_result:'%s'", predict_result.c_str());
 
   // add a new face
-  cv::Mat3b new_pic = cv::imread(IMG_DIR "arnaud001.png", CV_LOAD_IMAGE_COLOR);
+  cv::Mat3b new_pic = cv::imread(vision_utils::IMG_DIR() +  "arnaud001.png", CV_LOAD_IMAGE_COLOR);
   reco.add_non_preprocessed_face_to_person(new_pic, "arnaud");
 
   // save file
@@ -218,12 +218,12 @@ void test_people_lab_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_google_genders_face_recognizer() {
-  ROS_INFO("test_google_genders_face_recognizer()");
+  printf("test_google_genders_face_recognizer()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "google_genders/index.xml");
 
   // test it
-  cv::Mat3b test = cv::imread(IMG_DIR "arnaud001.png", CV_LOAD_IMAGE_COLOR);
+  cv::Mat3b test = cv::imread(vision_utils::IMG_DIR() +  "arnaud001.png", CV_LOAD_IMAGE_COLOR);
   face_recognition::PersonName predict_result =
       reco.predict_color_image(test);
   printf("predict_result:'%s'", predict_result.c_str());
@@ -232,7 +232,7 @@ void test_google_genders_face_recognizer() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void test_google_genders_face_recognizer_varying_size() {
-  ROS_INFO("test_google_genders_face_recognizer_varying_size()");
+  printf("test_google_genders_face_recognizer_varying_size()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "google_genders/index.xml");
 
@@ -253,7 +253,7 @@ void test_google_genders_face_recognizer_varying_size() {
 
 //! benchmark: train on google images, test on yale
 void benchmark_google_with_yale() {
-  ROS_INFO("benchmark_google_with_yale()");
+  printf("benchmark_google_with_yale()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "google_genders/index.xml");
   reco.benchmark_color_images_filenames
@@ -265,7 +265,7 @@ void benchmark_google_with_yale() {
 
 //! benchmark: train on people from the lab, test on yale
 void benchmark_yale_with_google() {
-  ROS_INFO("benchmark_yale_with_google()");
+  printf("benchmark_yale_with_google()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "YaleB/index.xml");
   reco.benchmark_color_images_filenames
@@ -278,7 +278,7 @@ void benchmark_yale_with_google() {
 
 //! benchmark: train on people from the lab, test on yale
 void benchmark_yale_small_with_yale_small2() {
-  ROS_INFO("benchmark_yale_small_with_yale_small2()");
+  printf("benchmark_yale_small_with_yale_small2()");
   face_recognition::FaceRecognizer reco;
   reco.from_xml_file(FACES_DIR "Yale_B_small/index.xml");
 
@@ -292,7 +292,7 @@ void benchmark_yale_small_with_yale_small2() {
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(/*int argc, char** argv*/) {
-  ROS_INFO("test_face_recognizer()");
+  printf("test_face_recognizer()");
   int idx = 1;
   printf("%i: train_google_genders_face_recognizer();\n", idx++);
   printf("%i: train_yale_face_recognizer();\n", idx++);

@@ -53,11 +53,11 @@ TEST(TestSuite, test_two_frames_matching) {
   if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
   vision_utils::test_two_frames_matching
-      (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud2");
+      (matcher, vision_utils::IMG_DIR() +  "depth/david_arnaud1", vision_utils::IMG_DIR() +  "depth/david_arnaud2");
   vision_utils::test_two_frames_matching
-      (matcher, IMG_DIR "depth/david_arnaud1", IMG_DIR "depth/david_arnaud3");
+      (matcher, vision_utils::IMG_DIR() +  "depth/david_arnaud1", vision_utils::IMG_DIR() +  "depth/david_arnaud3");
   vision_utils::test_two_frames_matching
-      (matcher, IMG_DIR "depth/david_arnaud2", IMG_DIR "depth/david_arnaud3");
+      (matcher, vision_utils::IMG_DIR() +  "depth/david_arnaud2", vision_utils::IMG_DIR() +  "depth/david_arnaud3");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,8 +71,8 @@ void test_pplm_benchmark(const std::string & filename_regex) {
 }
 
 TEST(TestSuite, pplm_benchmark) {
-  test_pplm_benchmark(IMG_DIR "breast/*_rgb.png");
-  test_pplm_benchmark(IMG_DIR "depth/*_rgb.png");
+  test_pplm_benchmark(vision_utils::IMG_DIR() +  "breast/*_rgb.png");
+  test_pplm_benchmark(vision_utils::IMG_DIR() +  "depth/*_rgb.png");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

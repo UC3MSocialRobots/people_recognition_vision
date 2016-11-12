@@ -38,8 +38,8 @@ the tracks and the PPL detections.
 #ifndef EUCLIDEAN_PPLM_H
 #define EUCLIDEAN_PPLM_H
 
-#include "vision_utils/pplm_template.h"
-#include "vision_utils/distances.h"
+#include "people_recognition_vision/pplm_template.h"
+#include <vision_utils/distance_points3.h>
 
 class EuclideanPPLM : public PPLMatcherTemplate {
 public:
@@ -51,9 +51,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
-    unsigned int ntracks = tracks.poses.size(), npps = new_ppl.people.size();
+             std::vector<std::string> & new_ppl_added_tagnames,
+                     std::vector<std::string> & new_ppl_added_tags,
+                     std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+                     std::vector<std::string> & tracks_added_tags,
+                     std::vector<unsigned int> & tracks_added_indices) {
+    unsigned int ntracks = tracks.people.size(), npps = new_ppl.people.size();
     DEBUG_PRINT("EuclideanPPLM::match(%i new PP, %i tracks)\n",
                 npps, ntracks);
     // if there is only one track and one user, skip computation
@@ -66,7 +70,7 @@ public:
     for (unsigned int pp_idx = 0; pp_idx < npps; ++pp_idx) {
       const PP* pp = &(new_ppl.people[pp_idx]);
       for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-        const PP* track = &(tracks.poses[track_idx]);
+        const PP* track = &(tracks.people[track_idx]);
         double curr_dist = vision_utils::distance_points3
                            (pp->position, track->position);
         // convert to [0-1] - octave:fplot ("1-exp(-3*x)", [0, .5])

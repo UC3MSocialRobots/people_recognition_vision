@@ -30,10 +30,21 @@ thanks to the size of his/her breast.
 #include "people_recognition_vision/height_detector.h"
 #include "cvstage/plugins/draw_xy_lines.h"
 #include "cvstage/plugins/draw_ellipses.h"
+// vision_utils
 #include "vision_utils/cloud_tilter.h"
-
+#include "vision_utils/clamp.h"
+#include "vision_utils/median.h"
+#include "vision_utils/drawPolygon.h"
+#include "vision_utils/drawListOfPoints.h"
+#include "vision_utils/normalize_vec.h"
+#include "vision_utils/gaussian_pdf.h"
+#include "vision_utils/gaussian_pdf2ellipse.h"
+#include "vision_utils/exec_system_get_output.h"
+#include "vision_utils/read_rgb_depth_user_image_from_image_file.h"
+#include "vision_utils/cloud_viewer_gnuplot.h"
 #include "vision_utils/Rect3.h"
 #include "vision_utils/find_and_replace.h"
+#include "vision_utils/rotate_translate_polygon.h"
 #include "vision_utils/string_split.h"
 //#define DEBUG
 // opencv
@@ -130,13 +141,13 @@ public:
   };
   //////////////////////////////////////////////////////////////////////////////
 
-  static const char* SVM_FILE(Method method) {
+  static std::string SVM_FILE(Method method) {
     if (method == WALK3D)
-      return IMG_DIR "breast/BreastDetector_walk3d_svm.yaml";
+      return vision_utils::IMG_DIR() +  "breast/BreastDetector_walk3d_svm.yaml";
     else if (method == REPROJECT)
-      return IMG_DIR "breast/BreastDetector_reproject_svm.yaml";
+      return vision_utils::IMG_DIR() +  "breast/BreastDetector_reproject_svm.yaml";
     else if (method == TEMPLATE_MATCHING)
-      return IMG_DIR "breast/BreastDetector_template_matching_svm.yaml";
+      return vision_utils::IMG_DIR() +  "breast/BreastDetector_template_matching_svm.yaml";
     else return "/dev/null";
   }
 
@@ -149,11 +160,11 @@ public:
     // WALK3D
     std::vector<std::string> models;
     if (KEEP_RATIO) {
-      models.push_back(IMG_DIR "breast/man_breast_model.png");
-      models.push_back(IMG_DIR "breast/woman_breast_model.png");
+      models.push_back(vision_utils::IMG_DIR() +  "breast/man_breast_model.png");
+      models.push_back(vision_utils::IMG_DIR() +  "breast/woman_breast_model.png");
     } else {
-      models.push_back(IMG_DIR "breast/man_breast_model_stretched.png");
-      models.push_back(IMG_DIR "breast/woman_breast_model_stretched.png");
+      models.push_back(vision_utils::IMG_DIR() +  "breast/man_breast_model_stretched.png");
+      models.push_back(vision_utils::IMG_DIR() +  "breast/woman_breast_model_stretched.png");
     }
     _breast_comparer.set_models(models, cv::Size(32, 32), KEEP_RATIO);
     if (!_breast_comparer.get_models_nb() == 2) {
@@ -393,7 +404,7 @@ public:
       viewer.spin();
     } // end if (method == WALK3D)
 #else
-    CloudViewerGnuPlot viewer;
+    vision_utils::CloudViewerGnuPlot viewer;
     //  if (_user_3D.size() > 0)
     //    viewer.view_cloud(_user_3D, "user_3D");
     if (_head2feet_path3D.size() > 0)
@@ -431,7 +442,7 @@ protected:
     } // end loop pt_idx
     _user_height = _user_ymax - _user_ymin;
 
-    if (!gaussian_pdf_ellipse(_proj_x, _proj_y,
+    if (!vision_utils::gaussian_pdf_ellipse(_proj_x, _proj_y,
                               _ellipse_center, _ellipse_end1, _ellipse_end2, 2)) {
       printf("fit_ellipse_and_rotate(): gaussian_pdf_ellipse() failed!\n");
       return false;
@@ -469,8 +480,8 @@ protected:
                vision_utils::infosImage(user_mask).c_str());
         return false;
       }
-      int erode_kernel_size = clamp(bbox.width / 8, 10, 30);
-      debugPrintf("erode_kernel_size:%i\n", erode_kernel_size);
+      int erode_kernel_size = vision_utils::clamp(bbox.width / 8, 10, 30);
+      // printf("erode_kernel_size:%i\n", erode_kernel_size);
       cv::Mat erode_kernel = cv::Mat(erode_kernel_size, erode_kernel_size, CV_8U, 255);
       cv::erode(user_mask, user_mask_eroded, erode_kernel);
     }
@@ -511,8 +522,8 @@ protected:
     // DEBUG: use the whole shape
     y_min = _user_ymin; y_max = y_min + _user_height;
 
-    debugPrintf("_user_height:%g m, head_height:%g m, breast in [%g, %g]\n",
-                _user_height, head_height, y_min, y_max);
+    // printf("_user_height:%g m, head_height:%g m, breast in [%g, %g]\n",
+    // _user_height, head_height, y_min, y_max);
     if (head_height < .1 || head_height > .45) {
       printf("convert_head2feet_path_to_feature(): "
              "head_height %g m out of bounds! "
@@ -526,7 +537,7 @@ protected:
     _breast3D_Y.clear();
     _breast3D_Z.clear();
     unsigned int npts_head2feet = _head2feet_path3D.size();
-    debugPrintf("_head2feet_path3D:%i pts\n", npts_head2feet);
+    // printf("_head2feet_path3D:%i pts\n", npts_head2feet);
     for (unsigned int pt_idx = 0; pt_idx < npts_head2feet; ++pt_idx) {
       double curr_y = _head2feet_path3D[pt_idx].y;
       if (curr_y <= y_min || curr_y >= y_max)
@@ -542,24 +553,24 @@ protected:
     // for each of the bins, find the median point along the Z axis in that bin
     IndexDoubleConverter _head2feet_path_to_bins_conv(y_min, y_max, NBINS);
     unsigned int npts_breast = _head2feet_path3D.size();
-    debugPrintf("npts_breast:%i\n", npts_breast);
+    // printf("npts_breast:%i\n", npts_breast);
     std::vector< std::vector<double> > binsZ;
     binsZ.resize(NBINS, std::vector<double>());
     for (unsigned int pt_idx = 0; pt_idx < npts_breast; ++pt_idx) {
       int curr_bin = _head2feet_path_to_bins_conv.double2index(_breast3D_Y[pt_idx]);
       if (curr_bin < 0 || curr_bin >= (int) NBINS)
         continue;
-      debugPrintf("y:%g -> bin %i\n", _breast3D_Y[pt_idx], curr_bin);
+      // printf("y:%g -> bin %i\n", _breast3D_Y[pt_idx], curr_bin);
       binsZ[curr_bin].push_back(_breast3D_Z[pt_idx]);
     } // end loop pt_idx
     // display bins
     for (unsigned int bin_idx = 0; bin_idx < NBINS; ++bin_idx) {
-      debugPrintf("bin %i:'%s'\n", bin_idx, vision_utils::iterable_to_string(binsZ[bin_idx]).c_str());
+      // printf("bin %i:'%s'\n", bin_idx, vision_utils::iterable_to_string(binsZ[bin_idx]).c_str());
     }
 
     // find the median point along the Z axis
-    double avgZ = median(_breast3D_Z.begin(), _breast3D_Z.end());
-    debugPrintf("avgZ:%g\n", avgZ);
+    double avgZ = vision_utils::median(_breast3D_Z.begin(), _breast3D_Z.end());
+    // printf("avgZ:%g\n", avgZ);
     // these medians now make our feature
     _feature.resize(NBINS);
     for (unsigned int bin_idx = 0; bin_idx < NBINS; ++bin_idx) {
@@ -567,12 +578,12 @@ protected:
       if (bin_values->empty())
         _feature[bin_idx] = 0;
       else
-        _feature[bin_idx] = -avgZ + median(bin_values->begin(), bin_values->end());
+        _feature[bin_idx] = -avgZ + vision_utils::median(bin_values->begin(), bin_values->end());
       //_feature[bin_idx] = -avgZ + *std::max_element(bin_values->begin(), bin_values->end());
     } // end loop bin_idx
-    debugPrintf("feature:'%s'\n", vision_utils::iterable_to_string(_feature).c_str());
-    normalize(_feature);
-    debugPrintf("feature:'%s'\n", vision_utils::iterable_to_string(_feature).c_str());
+    // printf("feature:'%s'\n", vision_utils::iterable_to_string(_feature).c_str());
+    vision_utils::normalize_vec(_feature);
+    // printf("feature:'%s'\n", vision_utils::iterable_to_string(_feature).c_str());
 
     return predict_svm(method);
   } // end convert_head2feet_path_to_feature()
@@ -634,7 +645,7 @@ protected:
     }
 #endif
     if (*status == SVM_STATUS_LOADED_FAILED)
-      printf("BreastDetector: could not load SVM in '%s'\n", SVM_FILE(method));
+      printf("BreastDetector: could not load SVM in '%s'\n", SVM_FILE(method).c_str());
     return (*status == SVM_STATUS_TRAINED_SUCCESFULLY);
   } // end load_svm();
 
@@ -714,7 +725,7 @@ protected:
 #endif
     cv::FileStorage fs(SVM_FILE(method), cv::FileStorage::APPEND);
     if (!fs.isOpened()) {
-      printf("Could not open SVM file '%s'!\n", SVM_FILE(method));
+      printf("Could not open SVM file '%s'!\n", SVM_FILE(method).c_str());
       return false;
     }
     fs << "training_mat" << training_mat;
@@ -1411,7 +1422,7 @@ protected:
 
   // shared data
   std::vector<Pt3f> _user_3D;
-  CloudTilter _tilter;
+  vision_utils::CloudTilter _tilter;
   cv::Mat1b user_mask_eroded;
   TIMER_CREATE(_timer);
 
@@ -1439,7 +1450,7 @@ protected:
   std::vector<Pt3f> _breast_path3D;
   std::vector<Pt2i> _breast_projected_2D;
   cv::Mat1b _breast_projected_img;
-  ImageComparer _breast_comparer;
+  vision_utils::ImageComparer _breast_comparer;
 
   MySVMPtr _svm_walk_3d;
   SvmStatus _svm_walk_3d_status;

@@ -24,9 +24,10 @@ ________________________________________________________________________________
  */
 #include "vision_utils/images2ppl.h"
 #include "vision_utils/rlpd2imgs.h"
-
-
 #include "vision_utils/timer.h"
+#include "vision_utils/map_to_string.h"
+#include "vision_utils/linear_assign.h"
+#include "vision_utils/assignment_list_to_string.h"
 // people_msgs
 #include <people_recognition_vision/MatchPPL.h>
 #include <ros/ros.h>
@@ -41,7 +42,7 @@ int main(int argc, char** argv) {
   std::ostringstream files;
   for (int argi = 1; argi < argc; ++argi) // 0 is the name of the exe
     files << argv[argi]<< ";";
-  RLPD2Imgs reader;
+  vision_utils::RLPD2Imgs reader;
   bool repeat = false;
   if (!reader.from_file(files.str(), repeat)) {
     ROS_ERROR("Could not parse files '%s'", files.str().c_str());
@@ -128,7 +129,7 @@ int main(int argc, char** argv) {
     // call "MatchPPL" service
     req.tracks = req.new_ppl;
     req.new_ppl = (eval_nite ? *niteppl: *gtppl);
-    unsigned int ntracks = req.tracks.poses.size(), nppl = req.new_ppl.people.size();
+    unsigned int ntracks = req.tracks.people.size(), nppl = req.new_ppl.people.size();
     if (nppl < 2 && ntracks < 2) {
       ROS_WARN_THROTTLE(5, "Only %i users and %i tracks, no recognition to be made!",
                         nppl, ntracks);
@@ -170,7 +171,7 @@ int main(int argc, char** argv) {
       std::string ppl_name,track_name;
       std::string attr = (eval_nite ? "gt_user_multimap_name" : "user_multimap_name");
       if (!vision_utils::get_tag(req.new_ppl.people[ppli], attr, ppl_name)
-          || !vision_utils::get_tag(req.tracks.poses[tracki], attr, track_name)) {
+          || !vision_utils::get_tag(req.tracks.people[tracki], attr, track_name)) {
         ROS_WARN("Couldn't get names!");
         continue;
       }

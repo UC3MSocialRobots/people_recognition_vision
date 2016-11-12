@@ -70,7 +70,7 @@ TEST(TestSuite, gate_pp2tracks) {
 TEST(TestSuite, gate_ppl) {
   ros::Time track_stamp = ros::Time(100), ppl_stamp = track_stamp + ros::Duration(1); // 1 second after tracks
   PPL ppl, tracks;
-  std::vector<PP> unassociated_poses_from_new_ppl;
+  PPL unassociated_poses_from_new_ppl;
   double human_walking_speed = 10;
   ASSERT_TRUE(ppl_gating::gate_ppl(ppl, tracks, unassociated_poses_from_new_ppl, human_walking_speed));
   ASSERT_TRUE(unassociated_poses_from_new_ppl.empty());
@@ -91,8 +91,8 @@ TEST(TestSuite, gate_ppl) {
 
 TEST(TestSuite, match_ppl2tracks_and_clean) {
   PPL ppl, tracks;
-  std::vector<PP> unassociated_poses_from_new_ppl;
-  CMatrix<double> costs;
+  PPL unassociated_poses_from_new_ppl;
+  vision_utils::CMatrix<double> costs;
   vision_utils::MatchList matches;
   // empty ppl and track
   ASSERT_TRUE(ppl_gating::match_ppl2tracks_and_clean(ppl, tracks, costs, unassociated_poses_from_new_ppl, matches));
@@ -101,14 +101,14 @@ TEST(TestSuite, match_ppl2tracks_and_clean) {
 
   for (unsigned int ntracks = 0; ntracks < 10; ++ntracks) {
     // empty tracks
-    tracks.poses.clear();
+    tracks.people.clear();
     ppl.people.resize(ntracks);
     ASSERT_TRUE(ppl_gating::match_ppl2tracks_and_clean(ppl, tracks, costs, unassociated_poses_from_new_ppl, matches));
     ASSERT_TRUE(unassociated_poses_from_new_ppl.size() == ntracks);
     ASSERT_TRUE(matches.empty());
 
     // simple diag cost
-    tracks.poses.resize(ntracks);
+    tracks.people.resize(ntracks);
     costs.resize(ntracks, ntracks);
     for (unsigned int i = 0; i < ntracks; ++i)
       for (unsigned int j = 0; j < ntracks; ++j)
@@ -137,7 +137,7 @@ TEST(TestSuite, match_ppl2tracks_and_clean) {
 
 TEST(TestSuite, update_blobs_and_create_new_tracks) {
   ros::Time time_now = ros::Time(100);
-  std::vector<PP> unassociated_poses_from_new_ppl;
+  PPL unassociated_poses_from_new_ppl;
   PPL blobs, tracks;
   unsigned int total_seen_tracks = 0;
   double human_walking_speed = ppl_gating::DEFAULT_HUMAN_WALKING_SPEED;
@@ -148,7 +148,7 @@ TEST(TestSuite, update_blobs_and_create_new_tracks) {
   // create a simple blob
   for (unsigned int x = 0; x < 5; ++x) {
     blobs.poses.clear();
-    tracks.poses.clear();
+    tracks.people.clear();
     PP pp;
     pp.position.x = pp.position.y = x;
     pp.reliability = 1;
@@ -159,14 +159,14 @@ TEST(TestSuite, update_blobs_and_create_new_tracks) {
       ASSERT_TRUE(ppl_gating::update_blobs_and_create_new_tracks
                   (time_now, unassociated_poses_from_new_ppl, blobs, tracks, total_seen_tracks, human_walking_speed));
       ASSERT_TRUE(unassociated_poses_from_new_ppl.size() == 0);
-      if (!tracks.poses.empty()) // break when the first track is created
+      if (!tracks.people.empty()) // break when the first track is created
         break;
     } // end for i
     ASSERT_TRUE(blobs.poses.size()  <= 0) // the track was created, no blob left
         << "blobs:" << vision_utils::ppl2string(blobs, 3, false);
-    ASSERT_TRUE(tracks.poses.size() == 1)
+    ASSERT_TRUE(tracks.people.size() == 1)
         << "tracks:" << vision_utils::ppl2string(tracks, 3, false);
-    geometry_msgs::Point track_pos = tracks.poses.front().position.position;
+    geometry_msgs::Point track_pos = tracks.people.front().position.position;
     ASSERT_TRUE(track_pos.x == x && track_pos.y == x)
         << "tracks:" << vision_utils::ppl2string(tracks, 3, false);
   } // end for x

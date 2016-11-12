@@ -25,6 +25,8 @@ state-of-the-art height detectors.
  */
 #include "people_recognition_vision/height_detector.h"
 #include "vision_utils/Rect3.h"
+#include "vision_utils/read_rgb_depth_user_image_from_image_file.h"
+#include "vision_utils/string_split.h"
 typedef double Height;
 typedef cv::Point3f Pt3f;
 typedef vision_utils::Rect3f Rect3f;
@@ -118,13 +120,13 @@ int main(int argc, char**argv) {
       continue;
     }
     // read camera model
-    std::string kinect_serial_number = KINECT_SERIAL_LAB();
+    std::string kinect_serial_number = vision_utils::KINECT_SERIAL_LAB();
     if (words.size() == 4) {
       std::string kinect_serial_number = words.back();
       if (kinect_serial_number == "KINECT_SERIAL_LAB")
-        kinect_serial_number = KINECT_SERIAL_LAB();
+        kinect_serial_number = vision_utils::KINECT_SERIAL_LAB();
       else if (kinect_serial_number == "KINECT_SERIAL_ARNAUD")
-        kinect_serial_number = KINECT_SERIAL_ARNAUD();
+        kinect_serial_number = vision_utils::KINECT_SERIAL_ARNAUD();
     }
     image_geometry::PinholeCameraModel rgb_camera_model, depth_camera_model;
     assert(vision_utils::read_camera_model_files

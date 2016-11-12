@@ -27,6 +27,10 @@ ________________________________________________________________________________
 #include <opencv2/highgui/highgui.hpp>
 // AD
 #include "vision_utils/user_image_to_rgb.h"
+#include "vision_utils/read_depth_rgb_from_yaml_file.h"
+#include "vision_utils/write_rgb_and_depth_image_to_image_file.h"
+#include "vision_utils/user_image_to_rgb.h"
+#include "vision_utils/imwrite_debug.h"
 #include "vision_utils/timer.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "people_recognition_vision/person_histogram_set.h"
@@ -38,7 +42,7 @@ inline void test_depth_canny(const std::string filename_prefix) {
   vision_utils::read_rgb_and_depth_image_from_image_file(filename_prefix, &rgb, &depth);
   // vision_utils::read_depth_rgb_from_yaml_file(filename_prefix, rgb, depth);
 
-  DepthCanny _depth_canny;
+  vision_utils::DepthCanny _depth_canny;
   vision_utils::Timer timer;
   unsigned int ntimes = 1;
   for (unsigned int i = 0; i < ntimes; ++i)
@@ -138,7 +142,7 @@ inline void test_person_vector_of_histograms(const std::string & filename_prefix
   vision_utils::vector_of_histograms_to_image
       (ph.get_hist_vector(), hist_illus, 200, 200, vision_utils::ratio2hue);
   cv::Mat3b multimask_illus;
-  user_image_to_rgb(ph.get_multimask(), multimask_illus, 8);
+  vision_utils::user_image_to_rgb(ph.get_multimask(), multimask_illus, 8);
   TIMER_DISPLAY_CHART(ph._depth_canny.timer, 1);
 
   //vision_utils::imwrite_debug("rgb.png", rgb);
@@ -206,7 +210,7 @@ inline void test_multi_hist(const std::vector<std::string> & filename_prefixes,
   PersonHistogramSet::PHMatch assign;
   phset.compare_to(phset, assign, true, true, CV_COMP_BHATTACHARYYA, true);
   timer.printTime("compare_to()");
-  ROS_WARN("assign:%s, dist_matrix:'%s'",
+  printf("assign:%s, dist_matrix:'%s'",
               vision_utils::assignment_list_to_string(assign).c_str(),
               phset.get_dist_matrix().to_string(15).c_str());
 
@@ -229,10 +233,10 @@ inline void test_multi_hist(const std::vector<std::string> & filename_prefixes,
 inline void test_structured_person_histogram_set() {
   vision_utils::Timer timer;
   PersonHistogramSet phset;
-  phset.push_back_vec(test_person_histogram_set_variables::all_filename_prefixes_struct(),
-                      test_person_histogram_set_variables::all_seeds_struct(),
-                      test_person_histogram_set_variables::all_kinect_serials_struct(),
-                      test_person_histogram_set_variables::all_labels_struct(),
+  phset.push_back_vec(vision_utils::all_filename_prefixes_struct(),
+                      vision_utils::all_seeds_struct(),
+                      vision_utils::all_kinect_serials_struct(),
+                      vision_utils::all_labels_struct(),
                       true, true);
   timer.printTime("PersonHistogramSet ctor");
 
@@ -245,7 +249,7 @@ inline void test_structured_person_histogram_set() {
 
   PersonHistogramSet::PHMatch assign;
   phset.compare_to(phset, assign, true, true, CV_COMP_BHATTACHARYYA, true);
-  ROS_WARN("assign:%s, dist_matrix:'%s'",
+  printf("assign:%s, dist_matrix:'%s'",
               vision_utils::assignment_list_to_string(assign).c_str(),
               phset.get_dist_matrix().to_string(15).c_str());
 
@@ -261,25 +265,25 @@ inline void test_structured_person_histogram_set() {
 inline void test_structured_person_histogram_set_reco() {
   vision_utils::Timer timer;
   PersonHistogramSet phset, phset2;
-  phset.push_back_vec(test_person_histogram_set_variables::all_filename_prefixes_struct(),
-                      test_person_histogram_set_variables::all_seeds_struct(),
-                      test_person_histogram_set_variables::all_kinect_serials_struct(),
-                      test_person_histogram_set_variables::all_labels_struct());
-  //  phset2.create(test_person_histogram_set_variables::all_filename_prefixes,
-  //                test_person_histogram_set_variables::all_seeds,
-  //                test_person_histogram_set_variables::all_kinect_serial_numbers);
-  PersonHistogram ph(test_person_histogram_set_variables::alvaro1_file,
-                     test_person_histogram_set_variables::alvaro1_seed,
-                     KINECT_SERIAL_LAB());
-  //~ PersonHistogram ph(test_person_histogram_set_variables::juggling1_file,
-  //~ test_person_histogram_set_variables::juggling1_pt,
-  //~ KINECT_SERIAL_LAB());
+  phset.push_back_vec(vision_utils::all_filename_prefixes_struct(),
+                      vision_utils::all_seeds_struct(),
+                      vision_utils::all_kinect_serials_struct(),
+                      vision_utils::all_labels_struct());
+  //  phset2.create(vision_utils::all_filename_prefixes,
+  //                vision_utils::all_seeds,
+  //                vision_utils::all_kinect_serial_numbers);
+  PersonHistogram ph(vision_utils::alvaro1_file,
+                     vision_utils::alvaro1_seed,
+                     vision_utils::KINECT_SERIAL_LAB());
+  //~ PersonHistogram ph(vision_utils::juggling1_file,
+  //~ vision_utils::juggling1_pt,
+  //~ vision_utils::KINECT_SERIAL_LAB());
   timer.printTime("PersonHistogramSet ctors");
 
   int best_idx;
   // phset.compare_to(phset2, best_idx, true, true, CV_COMP_BHATTACHARYYA, false);
   phset.compare_to(ph, best_idx, true, true, CV_COMP_BHATTACHARYYA);
-  ROS_WARN("best_idx:%i, dist_matrix:'%s'",
+  printf("best_idx:%i, dist_matrix:'%s'",
               best_idx, phset.get_dist_matrix().to_string(15).c_str());
 
   TIMER_DISPLAY_CHART(phset.front()._depth_canny.timer, 1);
@@ -295,16 +299,16 @@ inline void test_structured_person_histogram_set_reco() {
 #include "vision_utils/dgaitdb_filename.h"
 void benchmark_gait_train() {
   std::string input_folder = "/home/user/Downloads/0datasets/DGaitDB_imgs/";
-  DGaitDBFilename f(input_folder);
+  vision_utils::DGaitDBFilename f(input_folder);
   PersonHistogramSet set;
   PersonHistogram ph;
-  for (unsigned int file_idx = 1; file_idx <= DGaitDBFilename::ONI_FILES; ++file_idx) {
-    printf("Loading file %i of %i\n", file_idx, DGaitDBFilename::ONI_FILES);
-    for (unsigned int train_idx = 1; train_idx <= DGaitDBFilename::NFILES_TRAIN; ++train_idx) {
+  for (unsigned int file_idx = 1; file_idx <= vision_utils::DGaitDBFilename::ONI_FILES; ++file_idx) {
+    printf("Loading file %i of %i\n", file_idx, vision_utils::DGaitDBFilename::ONI_FILES);
+    for (unsigned int train_idx = 1; train_idx <= vision_utils::DGaitDBFilename::NFILES_TRAIN; ++train_idx) {
       // create PersonHistogram
       bool refresh_images = (train_idx == 1);
-      assert(ph.create(f.filename_train(file_idx, train_idx), DGaitDBFilename::USER_IDX,
-                       DEFAULT_KINECT_SERIAL(), refresh_images));
+      assert(ph.create(f.filename_train(file_idx, train_idx), vision_utils::DGaitDBFilename::USER_IDX,
+                       vision_utils::DEFAULT_KINECT_SERIAL(), refresh_images));
       if (refresh_images) {
         std::ostringstream fn; fn << "illus_color_img" << file_idx << ".png";
         vision_utils::imwrite_debug(fn.str(), ph.get_illus_color_img());
@@ -324,7 +328,7 @@ void benchmark_gait_train() {
 
 void benchmark_gait_test() {
   std::string input_folder = "/home/user/Downloads/0datasets/DGaitDB_imgs/";
-  DGaitDBFilename f(input_folder);
+  vision_utils::DGaitDBFilename f(input_folder);
   unsigned int oni_nfiles = 55, nfiles_test_wanted = 10;
   PersonHistogramSet set;
   set.from_yaml(input_folder + "PersonHistogramSet.yaml");
@@ -335,8 +339,8 @@ void benchmark_gait_test() {
     for (unsigned int test_idx = 1; test_idx <= nfiles_test_wanted; ++test_idx) {
       // create PersonHistogram
       PersonHistogram ph;
-      assert(ph.create(f.filename_test(file_idx, test_idx), DGaitDBFilename::USER_IDX,
-                       DEFAULT_KINECT_SERIAL(), false));
+      assert(ph.create(f.filename_test(file_idx, test_idx), vision_utils::DGaitDBFilename::USER_IDX,
+                       vision_utils::DEFAULT_KINECT_SERIAL(), false));
       // test it
       int out_label_svm, out_label_hist, exp_label = file_idx;
       assert(set.compare_to(ph, out_label_hist));
@@ -360,37 +364,37 @@ int main(int argc, char** argv) {
 #if 0
   convert_yaml_to_images(juggling1_file);
   convert_yaml_to_images(juggling2_file);
-  convert_yaml_to_images(IMG_DIR "depth/inside1");
-  convert_yaml_to_images(IMG_DIR "depth/inside2");
+  convert_yaml_to_images(vision_utils::IMG_DIR() +  "depth/inside1");
+  convert_yaml_to_images(vision_utils::IMG_DIR() +  "depth/inside2");
   camera_info_bag_to_binary(KINECT_SERIAL_LAB());
   return 0;
 #endif
 
-  using namespace test_person_histogram_set_variables;
+  using namespace vision_utils;
   int idx = 1;
   if (argc < 2) {
-    printf("%i: test_depth_canny(IMG_DIR depth/inside1)\n", idx++);
-    printf("%i: test_depth_canny(IMG_DIR depth/juggling)\n", idx++);
+    printf("%i: test_depth_canny(vision_utils::IMG_DIR() +  depth/inside1)\n", idx++);
+    printf("%i: test_depth_canny(vision_utils::IMG_DIR() +  depth/juggling)\n", idx++);
     printf("\n");
 #if 0
-    printf("%i: test_person_compute_user_mask(IMG_DIR depth/juggling1)\n", idx++);
-    printf("%i: test_person_compute_user_mask(IMG_DIR depth/juggling2)\n", idx++);
-    printf("%i: test_person_compute_user_mask(IMG_DIR depth/juggling3)\n", idx++);
+    printf("%i: test_person_compute_user_mask(vision_utils::IMG_DIR() +  depth/juggling1)\n", idx++);
+    printf("%i: test_person_compute_user_mask(vision_utils::IMG_DIR() +  depth/juggling2)\n", idx++);
+    printf("%i: test_person_compute_user_mask(vision_utils::IMG_DIR() +  depth/juggling3)\n", idx++);
     //  printf("\n");
-    //  printf("%i :test_person_histogram(IMG_DIR depth/juggling1)\n", idx++);
+    //  printf("%i :test_person_histogram(vision_utils::IMG_DIR() +  depth/juggling1)\n", idx++);
     printf("\n");
-    printf("%i: test_find_mask_then_top_point_centered(IMG_DIR depth/juggling1)\n", idx++);
-    printf("%i: test_find_mask_then_top_point_centered(IMG_DIR depth/juggling2)\n", idx++);
-    printf("%i: test_find_mask_then_top_point_centered(IMG_DIR depth/alvaro2)\n", idx++);
+    printf("%i: test_find_mask_then_top_point_centered(vision_utils::IMG_DIR() +  depth/juggling1)\n", idx++);
+    printf("%i: test_find_mask_then_top_point_centered(vision_utils::IMG_DIR() +  depth/juggling2)\n", idx++);
+    printf("%i: test_find_mask_then_top_point_centered(vision_utils::IMG_DIR() +  depth/alvaro2)\n", idx++);
     printf("\n");
 #endif
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/juggling1, KINECT_SERIAL_LAB(), juggling1_pt)\n", idx++);
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/juggling2, KINECT_SERIAL_LAB(), juggling2_pt)\n", idx++);
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/juggling3, KINECT_SERIAL_LAB(), juggling3_pt)\n", idx++);
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/alberto1, KINECT_SERIAL_LAB(), alberto1_pt)\n", idx++);
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/alberto2, KINECT_SERIAL_LAB(), alberto2_pt)\n", idx++);
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/alvaro1, KINECT_SERIAL_LAB(), alvaro1_pt)\n", idx++);
-    printf("%i: test_person_vector_of_histograms(IMG_DIR depth/alvaro2, KINECT_SERIAL_LAB(), alvaro2_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/juggling1, vision_utils::KINECT_SERIAL_LAB(), juggling1_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/juggling2, vision_utils::KINECT_SERIAL_LAB(), juggling2_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/juggling3, vision_utils::KINECT_SERIAL_LAB(), juggling3_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/alberto1, vision_utils::KINECT_SERIAL_LAB(), alberto1_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/alberto2, vision_utils::KINECT_SERIAL_LAB(), alberto2_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/alvaro1, vision_utils::KINECT_SERIAL_LAB(), alvaro1_pt)\n", idx++);
+    printf("%i: test_person_vector_of_histograms(vision_utils::IMG_DIR() +  depth/alvaro2, vision_utils::KINECT_SERIAL_LAB(), alvaro2_pt)\n", idx++);
     printf("\n");
     printf("%i: test_factory_from_vector(juggling_filename_prefixes, juggling_seeds, juggling_kinect_serial_numbers)\n", idx++);
     printf("%i: test_factory_from_vector(alberto_filename_prefixes, alberto_seeds, alberto_kinect_serial_numbers)\n", idx++);
@@ -410,7 +414,7 @@ int main(int argc, char** argv) {
 
   idx = 1;
   if (choice == idx++)
-    test_depth_canny(IMG_DIR "depth/inside1");
+    test_depth_canny(vision_utils::IMG_DIR() +  "depth/inside1");
   else if (choice == idx++)
     test_depth_canny(juggling1_file);
 
@@ -434,19 +438,19 @@ int main(int argc, char** argv) {
 #endif
 
   else if (choice == idx++)
-    test_person_vector_of_histograms(juggling1_file, juggling1_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(juggling1_file, juggling1_seed, vision_utils::KINECT_SERIAL_LAB());
   else if (choice == idx++)
-    test_person_vector_of_histograms(juggling2_file, juggling2_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(juggling2_file, juggling2_seed, vision_utils::KINECT_SERIAL_LAB());
   else if (choice == idx++)
-    test_person_vector_of_histograms(juggling3_file, juggling3_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(juggling3_file, juggling3_seed, vision_utils::KINECT_SERIAL_LAB());
   else if (choice == idx++)
-    test_person_vector_of_histograms(alberto1_file, alberto1_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(alberto1_file, alberto1_seed, vision_utils::KINECT_SERIAL_LAB());
   else if (choice == idx++)
-    test_person_vector_of_histograms(alberto2_file, alberto2_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(alberto2_file, alberto2_seed, vision_utils::KINECT_SERIAL_LAB());
   else if (choice == idx++)
-    test_person_vector_of_histograms(alvaro1_file, alvaro1_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(alvaro1_file, alvaro1_seed, vision_utils::KINECT_SERIAL_LAB());
   else if (choice == idx++)
-    test_person_vector_of_histograms(alvaro2_file, alvaro2_seed, KINECT_SERIAL_LAB());
+    test_person_vector_of_histograms(alvaro2_file, alvaro2_seed, vision_utils::KINECT_SERIAL_LAB());
 
   else if (choice == idx++)
     test_factory_from_vector(juggling_filename_prefixes, juggling_seeds, juggling_kinect_serials);

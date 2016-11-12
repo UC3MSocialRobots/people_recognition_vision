@@ -27,9 +27,12 @@ ________________________________________________________________________________
 #ifndef PEOPLE_POSE_LIST_GATING_H
 #define PEOPLE_POSE_LIST_GATING_H
 
-
 #include "vision_utils/ppl_attributes.h"
-
+#include "vision_utils/distance_points3.h"
+#include "vision_utils/clean_assign.h"
+#include "vision_utils/linear_assign.h"
+#include "vision_utils/match.h"
+#include "vision_utils/printP.h"
 #include "people_recognition_vision/ukf_person_pose.h"
 
 #ifndef DEBUG_PRINT
@@ -65,25 +68,27 @@ static const double DEFAULT_BLOB_CONFIDENCE_THRES_FOR_CONV2TRACK = 2;
 /*! determine if a given Person is inside the gate of a list of tracks
  */
 inline int gate_pp2tracks(const PP & pp,
+                          const ros::Time & pp_stamp,
                           const PPL & tracks,
                           const double human_walking_speed = DEFAULT_HUMAN_WALKING_SPEED) {
   double best_dist = 1E10;
   int best_track_idx = vision_utils::UNASSIGNED;
-  unsigned int ntracks = tracks.poses.size();
+  unsigned int ntracks = tracks.people.size();
   for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-    const PP* track = &(tracks.poses[track_idx]);
+    const PP* track = &(tracks.people[track_idx]);
     // evaluate if the distance between track center and unassociated pose
     // can be done at a human speed in the time elapsed
-    double curr_time_diff = (pp.header.stamp - track->header.stamp).toSec();
+    double track_stamp = vision_utils::get_tag_default(*track, "stamp", 0);
+    double curr_time_diff = pp_stamp.toSec() - track_stamp;
     if (curr_time_diff < 0) // time soup, confused stamps => skip
       continue;
     double curr_dist = vision_utils::distance_points3
-                       (track->position, pp.position);
+        (track->position, pp.position);
     if (best_dist <= curr_dist) // we have seen better
       continue;
     // proper metric gate
-    double reachable_distance = track->std_dev + pp.std_dev +
-                                human_walking_speed *  curr_time_diff;
+    double reachable_distance = //track->std_dev + pp.std_dev +
+        human_walking_speed *  curr_time_diff;
     if (curr_dist > reachable_distance) { // too far away => skip
       DEBUG_PRINT("gate_pp2tracks(): curr_dist=%g m > reachable_distance=%g m\n",
                   curr_dist ,reachable_distance);
@@ -107,16 +112,17 @@ inline int gate_pp2tracks(const PP & pp,
 */
 bool gate_ppl(PPL & new_ppl,
               const PPL & tracks,
-              std::vector<PP> & unassociated_poses_from_new_ppl,
+              PPL & unassociated_poses_from_new_ppl,
               const double human_walking_speed = DEFAULT_HUMAN_WALKING_SPEED) {
-  DEBUG_PRINT("gate_ppl(%i PPs, %i tracks)\n", new_ppl.people.size(), tracks.poses.size());
+  DEBUG_PRINT("gate_ppl(%i PPs, %i tracks)\n", new_ppl.people.size(), tracks.people.size());
+  unassociated_poses_from_new_ppl.header = new_ppl.header;
   for (int pp_idx = 0; pp_idx < (int) new_ppl.people.size(); ++pp_idx) {
     PP* pp = &(new_ppl.people[pp_idx]);
-    int best_track_idx = gate_pp2tracks(*pp, tracks, human_walking_speed);
+    int best_track_idx = gate_pp2tracks(*pp, new_ppl.header.stamp, tracks, human_walking_speed);
     if (best_track_idx != vision_utils::UNASSIGNED)
       continue;
     // PP outside of gates -> transfer to "unassociated_poses_from_new_ppl"
-    unassociated_poses_from_new_ppl.push_back(*pp);
+    unassociated_poses_from_new_ppl.people.push_back(*pp);
     new_ppl.people.erase(new_ppl.people.begin() + pp_idx);
     --pp_idx;
   } // end for pp_idx
@@ -142,19 +148,19 @@ bool gate_ppl(PPL & new_ppl,
 bool match_ppl2tracks_and_clean
 (const PPL & new_ppl,
  const PPL & tracks,
- CMatrix<double> & costs,
- std::vector<PP> & unassociated_poses_from_new_ppl,
+ vision_utils::CMatrix<double> & costs,
+ PPL & unassociated_poses_from_new_ppl,
  vision_utils::MatchList & matches) {
   DEBUG_PRINT("match_ppl2tracks_and_clean()\n");
-  unsigned int nusers_detected = new_ppl.people.size(), ntracks = tracks.poses.size();
+  unsigned int nusers_detected = new_ppl.people.size(), ntracks = tracks.people.size();
   matches.clear();
   if (nusers_detected == 0) { // nothing to do
     return true;
   } // end if (nusers_detected == 0)
   else if (ntracks == 0) { // no linear assignment to be made
-    unassociated_poses_from_new_ppl.insert(unassociated_poses_from_new_ppl.end(),
-                                           new_ppl.people.begin(),
-                                           new_ppl.people.end());
+    unassociated_poses_from_new_ppl.people.insert(unassociated_poses_from_new_ppl.people.end(),
+                                                  new_ppl.people.begin(),
+                                                  new_ppl.people.end());
     return true;
   } // end if (ntracks == 0)
   vision_utils::Cost best_cost;
@@ -167,7 +173,7 @@ bool match_ppl2tracks_and_clean
     new_ppl_is_matched[matches[match_idx].first] = true;
   for (unsigned int new_ppl_idx = 0; new_ppl_idx < nusers_detected; ++new_ppl_idx) {
     if(!new_ppl_is_matched[new_ppl_idx])
-      unassociated_poses_from_new_ppl.push_back( new_ppl.people[new_ppl_idx]);
+      unassociated_poses_from_new_ppl.people.push_back( new_ppl.people[new_ppl_idx]);
   } // end loop new_ppl_idx
   return true;
 } // end match_ppl2tracks_and_clean();
@@ -187,7 +193,7 @@ bool match_ppl2tracks_and_clean
  */
 inline bool update_blobs_and_create_new_tracks
 (const ros::Time & time_now,
- std::vector<PP> & unassociated_poses_from_new_ppl,
+ PPL & unassociated_poses_from_new_ppl,
  PPL & blobs,
  PPL & tracks,
  unsigned int & total_seen_tracks,
@@ -195,44 +201,44 @@ inline bool update_blobs_and_create_new_tracks
 {
   DEBUG_PRINT("update_blobs_and_create_new_tracks(%i unassociated_poses_from_new_ppl, "
               "%i blobs, %i tracks)\n",
-              unassociated_poses_from_new_ppl.size(),
-              blobs.poses.size(), tracks.poses.size());
+              unassociated_poses_from_new_ppl.people.size(),
+              blobs.people.size(), tracks.people.size());
 
   // update blobs confidence
-  for (unsigned int blob_idx = 0; blob_idx < blobs.poses.size(); ++blob_idx) {
-    PP* blob = &(blobs.poses[blob_idx]);
+  for (unsigned int blob_idx = 0; blob_idx < blobs.people.size(); ++blob_idx) {
+    PP* blob = &(blobs.people[blob_idx]);
     double initial_confidence = 1;
     if (!vision_utils::get_tag(*blob, "initial_confidence", initial_confidence)) {
       vision_utils::set_tag(*blob, "initial_confidence", 1);
       initial_confidence = 1;
     }
-    double blob_age = (time_now - blob->header.stamp).toSec();
+    double blob_age = time_now.toSec() - vision_utils::get_tag_default(*blob, "stamp", 0);
     blob->reliability = initial_confidence * exp(-blob_age / DEFAULT_BLOB_HALF_LIFE);
   } // end for blob_idx
 
   // check each PP from unassociated_poses_from_new_ppl and find the matching blob
-  unsigned int npps = unassociated_poses_from_new_ppl.size();
+  unsigned int npps = unassociated_poses_from_new_ppl.people.size();
   for (unsigned int pp_idx = 0; pp_idx < npps; ++pp_idx) {
-    PP* pp = &(unassociated_poses_from_new_ppl[pp_idx]);
-    int best_blob_idx = gate_pp2tracks(*pp, blobs, human_walking_speed);
+    PP* pp = &(unassociated_poses_from_new_ppl.people[pp_idx]);
+    int best_blob_idx = gate_pp2tracks(*pp, time_now, blobs, human_walking_speed);
     if (best_blob_idx == vision_utils::UNASSIGNED)  { // no corresponding blob
       vision_utils::set_tag(*pp, "initial_confidence", pp->reliability);
-      blobs.poses.push_back(*pp);
+      blobs.people.push_back(*pp);
       continue;
     }
     // update corresponding blob
-    PP* best_blob = &(blobs.poses[best_blob_idx]);
-    best_blob->header = pp->header; // also update time_stamp
+    PP* best_blob = &(blobs.people[best_blob_idx]);
+    vision_utils::set_tag(*best_blob, "stamp", time_now.toSec()); // also update time_stamp
     best_blob->position = pp->position;
     best_blob->name = pp->name;
     vision_utils::set_tag(*best_blob, "initial_confidence",
-                             best_blob->reliability + pp->reliability);
+                          best_blob->reliability + pp->reliability);
     vision_utils::copy_tags(*pp, *best_blob);
   } // end for pp_idx
 
   // check each of the blobs: if confidence big enough, create a new track
-  for (int curr_blob_idx = 0; curr_blob_idx < (int) blobs.poses.size(); ++curr_blob_idx) {
-    PP* blob = &(blobs.poses[curr_blob_idx]);
+  for (int curr_blob_idx = 0; curr_blob_idx < (int) blobs.people.size(); ++curr_blob_idx) {
+    PP* blob = &(blobs.people[curr_blob_idx]);
     if (blob->reliability <= DEFAULT_BLOB_CONFIDENCE_THRES_FOR_CONV2TRACK)
       continue;
     // transfer blob from "blobs" to "tracks"
@@ -245,12 +251,12 @@ inline bool update_blobs_and_create_new_tracks
     DEBUG_PRINT("update_blobs_and_create_new_tracks(): Creating track '%s' in %s\n",
                 blob->name.c_str(),
                 vision_utils::printP(blob->position).c_str());
-    tracks.poses.push_back(*blob);
-    blobs.poses.erase(blobs.poses.begin() + curr_blob_idx);
+    tracks.people.push_back(*blob);
+    blobs.people.erase(blobs.people.begin() + curr_blob_idx);
     --curr_blob_idx;
   } // end loop blob_idx
 
-  unassociated_poses_from_new_ppl.clear();
+  unassociated_poses_from_new_ppl.people.clear();
   return true;
 } // end update_blobs_and_create_new_tracks();
 
@@ -264,7 +270,8 @@ inline void remove_old_tracks(const ros::Time & time_now,
   if (ppl.people.empty())
     return;
   for (int pp_idx = 0; pp_idx < (int) ppl.people.size(); ++pp_idx) {
-    if ((time_now - ppl.people[pp_idx].header.stamp).toSec() <= pp_timeout)
+    double stamp = vision_utils::get_tag_default(ppl.people[pp_idx], "stamp", 0);
+    if (time_now.toSec() -stamp <= pp_timeout)
       continue;
     ppl.people.erase(ppl.people.begin() + pp_idx);
     --pp_idx;

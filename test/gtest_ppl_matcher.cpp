@@ -30,9 +30,13 @@ public:
   FooPPLMatcher() : PPLMatcherTemplate("FOO_PPLM_START", "FOO_PPLM_STOP") {
   }
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
-    unsigned int ntracks = tracks.poses.size(),
+             std::vector<std::string> & new_ppl_added_tagnames,
+                     std::vector<std::string> & new_ppl_added_tags,
+                     std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+                     std::vector<std::string> & tracks_added_tags,
+                     std::vector<unsigned int> & tracks_added_indices) {
+    unsigned int ntracks = tracks.people.size(),
         ncurr_users = new_ppl.people.size();
     costs.resize(ntracks * ncurr_users, 1);
     // set diagonal costs to 0
@@ -81,7 +85,7 @@ TEST(TestSuite, pplm_benchmark) {
   if (!vision_utils::rosmaster_alive()) return;
   FooPPLMatcher matcher;
   FilenamePrefix2Imgs db_player;
-  ASSERT_TRUE(db_player.from_file(IMG_DIR "breast/*_rgb.png"));
+  ASSERT_TRUE(db_player.from_file(vision_utils::IMG_DIR() +  "breast/*_rgb.png"));
   vision_utils::pplm_benchmark(matcher, db_player, 1);
 }
 

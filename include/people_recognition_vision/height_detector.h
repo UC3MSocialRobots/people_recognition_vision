@@ -31,6 +31,15 @@ A class for computing the height of a user in a mask.
 #include "vision_utils/image_comparer.h"
 #include <vision_utils/img_path.h>
 #include "vision_utils/head_finder.h"
+#include "vision_utils/propagative_floodfill.h"
+#include "vision_utils/region_growth.h"
+#include "vision_utils/minnonzero_from_botton_row.h"
+#include "vision_utils/clamp.h"
+#include "vision_utils/compute_pixel2meters_factor.h"
+#include "vision_utils/get_all_different_values.h"
+#include "vision_utils/kinect_serials.h"
+// ROS
+#include <image_geometry/pinhole_camera_model.h>
 
 class HeightDetector {
 public:
@@ -69,7 +78,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   HeightDetector() {
-    _ref_skel_filename = IMG_DIR "skeletons/ref_skel.png";
+    _ref_skel_filename = vision_utils::IMG_DIR() +  "skeletons/ref_skel.png";
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -88,12 +97,12 @@ public:
       return herror;
     }
     if (!_head_finder.find(user_mask, _head_pos)) {
-      ROS_WARN("HeightDetector: could not find head pos!");
+      printf("HeightDetector: could not find head pos!");
       return herror;
     }
     // point out of bbox (error in find_top_point_centered() for instance
     if (!vision_utils::bbox_full(user_mask).contains(_head_pos)) {
-      ROS_WARN("HeightDetector: _head pos outside of user mask bounds!");
+      printf("HeightDetector: _head pos outside of user mask bounds!");
       return herror;
     }
     _skeleton_expanded.create(user_mask.size());
@@ -231,7 +240,7 @@ public:
     // copy user mask where out is black
     double scale_factor = .5;
     if (h.height_confidence != ERROR && h.height_confidence != NOT_COMPUTED)
-      scale_factor = clamp(2. * (h.height_confidence - .5), .3, 1.);
+      scale_factor = vision_utils::clamp(2. * (h.height_confidence - .5), .3, 1.);
     cv::cvtColor(out, _out_bw, CV_BGR2GRAY);
     out.setTo(255 * scale_factor, user_mask & (_out_bw == 0));
     // cv::imshow("out", out); cv::waitKey(0);
@@ -331,7 +340,7 @@ protected:
       cv::Mat ref_skel = cv::imread(_ref_skel_filename, CV_LOAD_IMAGE_GRAYSCALE);
       ref_skel = (ref_skel == 255);
       // compute its voronoi
-      VoronoiThinner ref_thinner;
+      vision_utils::VoronoiThinner ref_thinner;
       ref_thinner.thin(ref_skel, _head_finder.get_thinning_method(), true);
       // now setup ImageComparer
       std::vector<cv::Mat> model_as_vec(1, ref_thinner.get_skeleton());
@@ -357,9 +366,9 @@ protected:
 
   //////////////////////////////////////////////////////////////////////////////
 
-  HeadFinder _head_finder;
+  vision_utils::HeadFinder _head_finder;
   cv::Mat1b _skeleton_expanded;
-  VoronoiThinner _thinner;
+  vision_utils::VoronoiThinner _thinner;
   vision_utils::ClosestPointInMask2<uchar> _head2closest_skeleton_finder;
 
   // propagation stuff
@@ -368,7 +377,7 @@ protected:
 
   // confidence stuff
   std::string _ref_skel_filename;
-  ImageComparer _ref_skel_comparer;
+  vision_utils::ImageComparer _ref_skel_comparer;
 
   // viz stuff
   cv::Mat1b _out_bw;

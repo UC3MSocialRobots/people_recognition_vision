@@ -54,14 +54,14 @@ it will recognizes (put a name on) the faces that the latter finds.
 #include <ros/ros.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-// ad_core
-#include "vision_utils/nano_skill.h"
-// vision
-// people_msgs
-#include "people_recognition_vision/face_recognizer.h"
 #include <people_msgs/People.h>
+// vision_utils
+#include "vision_utils/nano_skill.h"
+#include "vision_utils/ppl_tags_images.h"
+// people_recognition_vision
+#include "people_recognition_vision/face_recognizer.h"
 
-class FaceRecognizerRos : public NanoSkill {
+class FaceRecognizerRos : public vision_utils::NanoSkill {
 public:
   FaceRecognizerRos()
     : NanoSkill("FACE_RECOGNIZER_START", "FACE_RECOGNIZER_STOP") {
@@ -69,8 +69,8 @@ public:
     // get the topic names
     _ppl_input_topic = "ppl";
     _nh_private.param("ppl_input_topic",
-                     _ppl_input_topic,
-                     _ppl_input_topic);
+                      _ppl_input_topic,
+                      _ppl_input_topic);
 
     // advertize for the updated PPL
     _face_recognition_results_pub = _nh_private.advertise
@@ -123,17 +123,12 @@ public:
       const people_msgs::Person*
           curr_pose_in = &(msg->people[face_idx]);
       people_msgs::Person*
-          curr_pose_out = &(_face_recognition_results_msg.poses[face_idx]);
+          curr_pose_out = &(_face_recognition_results_msg.people[face_idx]);
       //      if (curr_pose_in->has_image == false)
       //        continue;
 
-      boost::shared_ptr<void const> tracked_object;
-      try {
-        img_ptr = cv_bridge::toCvShare
-            (curr_pose_in->rgb, tracked_object,
-             sensor_msgs::image_encodings::BGR8);
-      } catch (cv_bridge::Exception e) {
-        ROS_WARN("cv_bridge exception:'%s'", e.what());
+      cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(*curr_pose_in, "rgb");
+      if (rgb.empty()) {
         // mark the person as not recognized
         curr_pose_out->name = "RECFAIL";
         continue;

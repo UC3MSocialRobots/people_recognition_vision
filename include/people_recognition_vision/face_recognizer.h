@@ -2,8 +2,8 @@
 #define FACE_RECOGNIZER_H
 
 // opencv
+#include <set>
 #include <opencv2/highgui/highgui.hpp>
-
 // facerec - https://github.com/bytefish/libfacerec
 // http://www.bytefish.de/blog/pca_in_opencv
 #if CV_MAJOR_VERSION > 2
@@ -13,19 +13,19 @@ namespace cv_face = cv::face;
 #include <opencv2/contrib/contrib.hpp>
 namespace cv_face = cv;
 #endif
-
 // utils
-
-#include "vision_utils/XmlDocument.h"
-
-
-#include "vision_utils/filename_handling.h"
-#include "vision_utils/timer.h"
+#include "vision_utils/accessible_to_string.h"
+#include "vision_utils/exec_system.h"
+#include "vision_utils/extract_folder_from_full_path.h"
+#include "vision_utils/infosimage.h"
 #include "vision_utils/opencv_face_detector.h"
-
-
-
+#include "vision_utils/map_to_string.h"
+#include "vision_utils/map_direct_search.h"
+#include "vision_utils/map_reverse_search.h"
+#include "vision_utils/resize_constrain_proportions.h"
+#include "vision_utils/timer.h"
 #include "vision_utils/timestamp.h"
+#include "vision_utils/XmlDocument.h"
 
 namespace face_recognition {
 
@@ -67,9 +67,9 @@ public:
 
   bool from_color_images_filenames(const std::vector<std::string> & images_filenames,
                                    const std::vector<PersonName> & names) {
-    ROS_INFO("from_color_images_filenames(%i images)", images_filenames.size());
+    printf("from_color_images_filenames(%li images)", images_filenames.size());
     if (images_filenames.size() != names.size()) {
-        printf("Cannot create face recognizer if nb images (%i) != nb names (%i).\n",
+        printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
                images_filenames.size(), names.size());
         return false;
       }
@@ -88,7 +88,7 @@ public:
     // iterate on the images
     for (unsigned int img_idx = 0; img_idx < images_filenames.size(); ++img_idx) {
         if (img_idx % 100 == 0)
-          ROS_INFO("from_color_images_filenames(%i images done / %i)", img_idx, images_filenames.size());
+          printf("from_color_images_filenames(%i images done / %li)", img_idx, images_filenames.size());
         // load_color_images
         color_img = cv::imread(images_filenames[img_idx], CV_LOAD_IMAGE_COLOR);
         if (color_img.empty()) {
@@ -117,9 +117,9 @@ public:
 
   bool from_color_images(const std::vector<ColorImage> & images,
                          const std::vector<PersonName> & names) {
-    ROS_INFO("from_color_images(%i images)", images.size());
+    printf("from_color_images(%li images)", images.size());
     if (images.size() != names.size()) {
-        printf("Cannot create face recognizer if nb images (%i) != nb names (%i).\n",
+        printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
                images.size(), names.size());
         return false;
       }
@@ -136,7 +136,7 @@ public:
     std::vector< cv::Rect > found_faces;
     for (unsigned int img_idx = 0; img_idx < images.size(); ++img_idx) {
         if (img_idx % 100 == 0)
-          ROS_INFO("from_color_images(%i images done / %i)", img_idx, images.size());
+          printf("from_color_images(%i images done / %li)", img_idx, images.size());
         vision_utils::detect_with_opencv(images[img_idx], classifier, small_img,
                                         found_faces);
         // keep results of face detection
@@ -146,7 +146,7 @@ public:
           } // end loop rect
       } // end loop img
 
-    ROS_INFO("Detected faces in %i faces out of the %i original images.",
+    printf("Detected faces in %li faces out of the %li original images.",
                  faces_raw.size(), images.size());
 
     return from_non_preprocessed_faces(faces_raw, names_filtered);
@@ -156,9 +156,9 @@ public:
 
   bool from_non_preprocessed_faces(const std::vector<NonPreprocessedColorFace> & faces_raw,
                                    const std::vector<PersonName> & names) {
-    ROS_INFO("from_non_preprocessed_faces(%i faces_raw)", faces_raw.size());
+    printf("from_non_preprocessed_faces(%li faces_raw)", faces_raw.size());
     if (faces_raw.size() != names.size()) {
-        printf("Cannot create face recognizer if nb images (%i) != nb names (%i).\n",
+        printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
                faces_raw.size(), names.size());
         return false;
       }
@@ -172,7 +172,7 @@ public:
     PreprocessedBWFace person_BW_face;
     for (unsigned int face_idx = 0; face_idx < faces_raw.size(); ++face_idx) {
         if (face_idx % 100 == 0)
-          ROS_INFO("from_non_preprocessed_faces(%i images done / %i)", face_idx, faces_raw.size());
+          printf("from_non_preprocessed_faces(%i images done / %li)", face_idx, faces_raw.size());
         // to call preprocess face, we need to know face_width and face_height
         bool preprocess_success = preprocess_face(faces_raw[face_idx], person_BW_face);
         if (!preprocess_success)
@@ -194,15 +194,15 @@ public:
         vision_utils::extract_folder_from_full_path(xml_file_absolute_path);
 
     // load the file
-    XmlDocument doc;
+    vision_utils::XmlDocument doc;
     bool reading_ok = doc.load_from_file(xml_file_absolute_path);
     if (!reading_ok)
       return false;
 
     // get person nodes
-    std::vector<XmlDocument::Node*> person_nodes;
+    std::vector<vision_utils::XmlDocument::Node*> person_nodes;
     doc.get_all_nodes_at_direction(doc.root(), "persons.person", person_nodes);
-    // printf("Got %i nodes of 'person'\n", person_nodes.size());
+    // printf("Got %li nodes of 'person'\n", person_nodes.size());
 
     for (PersonLabel person_idx = 0; person_idx < (int) person_nodes.size();
          ++person_idx) {
@@ -215,7 +215,7 @@ public:
           }
 
         // get all images for this person
-        std::vector<XmlDocument::Node*> img_nodes;
+        std::vector<vision_utils::XmlDocument::Node*> img_nodes;
         doc.get_all_nodes_at_direction
             (person_nodes[person_idx], "img", img_nodes);
         for (unsigned int img_idx = 0; img_idx < img_nodes.size(); ++img_idx) {
@@ -251,14 +251,14 @@ public:
 
     // try to get model
     bool was_model_loaded = false;
-    XmlDocument::Node* model_node = doc.get_node_at_direction(doc.root(), "model");
+    vision_utils::XmlDocument::Node* model_node = doc.get_node_at_direction(doc.root(), "model");
     if (model_node != NULL) {
         std::string model_filename = doc.get_node_attribute(model_node, "path");
         if (model_filename.size() > 0) {
             std::string model_full_filename = faces_absolute_folder + model_filename;
             try {
               _model->load(model_full_filename);
-              ROS_INFO("Model succesfully loaded from '%s'", model_full_filename.c_str());
+              printf("Model succesfully loaded from '%s'", model_full_filename.c_str());
               was_model_loaded = true;
             } catch (cv::Exception e) {
               printf("Error while loading model '%s':'%s', will retrain model.\n",
@@ -291,17 +291,17 @@ public:
     mkdir_order << "mkdir " << faces_absolute_folder << " --parents";
     vision_utils::exec_system(mkdir_order.str());
 
-    XmlDocument doc;
+    vision_utils::XmlDocument doc;
     // save model
 #if 1
     std::string model_filename("model.yaml");
     _model->save(faces_absolute_folder + model_filename);
-    XmlDocument::Node* model_node = doc.add_node(doc.root(), "model", "");
+    vision_utils::XmlDocument::Node* model_node = doc.add_node(doc.root(), "model", "");
     doc.set_node_attribute(model_node, "path", model_filename);
 #endif
 
     // make person nodes
-    XmlDocument::Node* persons_node = doc.add_node(doc.root(), "persons", "");
+    vision_utils::XmlDocument::Node* persons_node = doc.add_node(doc.root(), "persons", "");
 
     // get all existing names
     std::set<std::string> names;
@@ -316,14 +316,14 @@ public:
     for (std::set<std::string>::iterator names_it = names.begin();
          names_it != names.end(); ++names_it) {
         // write the node
-        XmlDocument::Node* person_node = doc.add_node(persons_node, "person", "");
+        vision_utils::XmlDocument::Node* person_node = doc.add_node(persons_node, "person", "");
         doc.set_node_attribute(person_node, "name", *names_it);
       }
     // doc.write_to_file("/tmp/foo.xml");
 
     // add all pictures to person nodes
     if(_BW_faces.size() != _labels.size()) {
-        printf("%i _BW_faces != %i _labels\n", _BW_faces.size(), _labels.size());
+        printf("%li _BW_faces != %li _labels\n", _BW_faces.size(), _labels.size());
         return false;
       }
     for (unsigned int img_BW_idx = 0; img_BW_idx < _BW_faces.size(); ++img_BW_idx) {
@@ -342,14 +342,14 @@ public:
             return false;
           }
         // add attribute
-        XmlDocument::Node* person_node =
+        vision_utils::XmlDocument::Node* person_node =
             doc.get_node_at_direction(persons_node, "person", "name", name);
         if (person_node == NULL) {
             printf("Could not find 'person' node with name '%s'\n",
                    name.c_str());
             continue;
           }
-        XmlDocument::Node* img_node = doc.add_node(person_node, "img", "");
+        vision_utils::XmlDocument::Node* img_node = doc.add_node(person_node, "img", "");
         doc.set_node_attribute(img_node, "path", img_rel_path_str.str());
       } // end loop img_BW
 
@@ -398,11 +398,11 @@ public:
 
   void predict_color_images(const std::vector<ColorImage> & images,
                             std::vector<PersonName> & results) {
-    printf("predict_color_images(%i images)\n", images.size());
+    printf("predict_color_images(%li images)\n", images.size());
     results.resize(images.size());
     for (unsigned int img_idx = 0; img_idx < images.size(); ++img_idx) {
         if (img_idx % 100 == 0)
-          ROS_INFO("predict_color_images(%i images done / %i)",
+          printf("predict_color_images(%i images done / %li)",
                        img_idx, images.size());
         results[img_idx] = predict_color_image(images[img_idx]);
       }
@@ -412,14 +412,14 @@ public:
 
   void benchmark_color_images_filenames(const std::vector<std::string> & images_filenames,
                                         const std::vector<PersonName> & names) {
-    ROS_INFO("benchmark_color_images_filenames(%i images)",
+    printf("benchmark_color_images_filenames(%li images)",
                  images_filenames.size());
 
     cv::Mat img;
     int success_nb = 0, failures_nb = 0, no_face_nb = 0;
     for (unsigned int img_idx = 0; img_idx < images_filenames.size(); ++img_idx) {
         if (img_idx % 100 == 0)
-          ROS_INFO("predict_color_images(%i images done / %i), "
+          printf("predict_color_images(%i images done / %li), "
                        "success_nb:%i, failures_nb:%i, no_face_nb:%i",
                        img_idx, images_filenames.size(),
                        success_nb, failures_nb, no_face_nb);
@@ -491,7 +491,7 @@ private:
   bool from_preprocessed_faces(const std::vector<PreprocessedBWFace> & preprocessed_faces,
                                const std::vector<PersonName> & names,
                                bool want_retrain_model = true) {
-    ROS_INFO("from_preprocessed_faces(%i preprocessed faces, want_retrain_model:%i)",
+    printf("from_preprocessed_faces(%li preprocessed faces, want_retrain_model:%i)",
                  preprocessed_faces.size(), want_retrain_model);
     _BW_faces = preprocessed_faces; // copy faces
     _person_labels_map.clear();
@@ -508,14 +508,14 @@ private:
   //////////////////////////////////////////////////////////////////////////////
 
   inline bool retrain_model() {
-    printf("retrain_model(%i faces, %i labels '%s', _person_labels_map:'%s')\n",
+    printf("retrain_model(%li faces, %li labels '%s', _person_labels_map:'%s')\n",
            _BW_faces.size(), _labels.size(),
            vision_utils::accessible_to_string(_labels).c_str(),
            vision_utils::map_to_string(_person_labels_map).c_str());
     vision_utils::Timer timer;
     // check sizes
     if(_BW_faces.size() != _labels.size()) {
-        printf("%i _BW_faces != %i _labels\n", _BW_faces.size(), _labels.size());
+        printf("%li _BW_faces != %li _labels\n", _BW_faces.size(), _labels.size());
         return false;
       }
     for (unsigned int face_idx = 1; face_idx < _BW_faces.size(); ++face_idx) {
@@ -542,7 +542,7 @@ private:
       printf("Exception while retrain_model():'%s'\n", e.what());
       return false;
     }
-    printf("Time to train model:%f ms (%i people, %i faces in total)\n",
+    printf("Time to train model:%f ms (%i people, %li faces in total)\n",
            timer.getTimeMilliseconds(), nb_persons_in_model(), _BW_faces.size());
     return true;
   } // end retrain_model();
@@ -623,7 +623,7 @@ private:
       printf("Error while predictiong with model:'%s'\n", e.what());
       return RECOGNITION_FAILED;
     }
-    //ROS_INFO("predict: person_label:%i, confidence:%g", person_label, confidence);
+    //printf("predict: person_label:%i, confidence:%g", person_label, confidence);
 
     PersonName name;
     bool lookup_success = vision_utils::direct_search

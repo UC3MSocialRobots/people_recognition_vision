@@ -27,7 +27,7 @@ thanks to Unscented Kalman Filters.
 #define UKF_PERSON_POSE_H
 
 #include <easykf-2.03/src/ukf.h>
-
+#include <vision_utils/rand_gaussian.h>
 
 using namespace ukf::state;
 

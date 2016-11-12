@@ -39,26 +39,29 @@ ________________________________________________________________________________
 
  */
 
-#include "kinect/nite_subscriber_template.h"
 #include "people_recognition_vision/breast_detector.h"
 #include "vision_utils/dgaitdb_filename.h"
+#include "vision_utils/rgb_depth_user_skill.h"
 
-class NiteBreastDetector : public NiteSubscriberTemplate {
+class NiteBreastDetector : public vision_utils::RgbDepthUserSkill {
 public:
+  NiteBreastDetector() : RgbDepthUserSkill("NITE_BREAST_DETECTOR_START",
+                                           "NITE_BREAST_DETECTOR_STOP") {}
 
   virtual void init() {
-    NiteSubscriberTemplate::init();
     want_illus = true;
   }
 
-  void fn(const cv::Mat3b & color,
-          const cv::Mat1f & depth,
-          const cv::Mat1b & user,
-          const kinect::NiteSkeletonList & skeleton_list) {
+  virtual void create_subscribers_and_publishers() {}
+  virtual void shutdown_subscribers_and_publishers() {}
+
+  void process_rgb_depth_user(const cv::Mat3b & color,
+                              const cv::Mat1f & depth,
+                              const cv::Mat1b & user) {
     ROS_INFO_THROTTLE(1, "NiteBreastDetector:fn()");
     bool ok = detector.breast_all_values
-              (depth, user, depth_camera_model, heights,
-               BreastDetector::WALK3D, want_illus, &breasts_illus);
+        (depth, user, _default_depth_camera_model, heights,
+         BreastDetector::WALK3D, want_illus, &breasts_illus);
     if (!ok)
       return;
     cv::imshow("breasts_illus", breasts_illus);
@@ -83,22 +86,22 @@ void test_nite() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void train_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
-  DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
+  vision_utils::DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
   // load data
-  unsigned int nfiles = DGaitDBFilename::ONI_FILES * DGaitDBFilename::NFILES_TRAIN;
+  unsigned int nfiles = vision_utils::DGaitDBFilename::ONI_FILES * vision_utils::DGaitDBFilename::NFILES_TRAIN;
   image_geometry::PinholeCameraModel depth_camera_model, rgb_camera_model;
-  vision_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
+  vision_utils::read_camera_model_files(vision_utils::DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
   // now train
   BreastDetector detector;
-  
-  const uchar USER_IDX_auxConst = DGaitDBFilename::USER_IDX;
-  
+
+  const uchar USER_IDX_auxConst = vision_utils::DGaitDBFilename::USER_IDX;
+
   bool ok = detector.train
-            (f.all_filenames_train(),
-             std::vector<uchar> (nfiles, USER_IDX_auxConst),
-             std::vector<image_geometry::PinholeCameraModel> (nfiles, depth_camera_model),
-             f.all_genders_train<BreastDetector::Gender>(BreastDetector::MALE, BreastDetector::FEMALE),
-             method);
+      (f.all_filenames_train(),
+       std::vector<uchar> (nfiles, USER_IDX_auxConst),
+       std::vector<image_geometry::PinholeCameraModel> (nfiles, depth_camera_model),
+       f.all_genders_train<BreastDetector::Gender>(BreastDetector::MALE, BreastDetector::FEMALE),
+       method);
   if (!ok)
     printf("BreastDetector failed to train.\n");
   else
@@ -108,11 +111,11 @@ void train_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
 ////////////////////////////////////////////////////////////////////////////////
 
 bool test_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
-  DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
+  vision_utils::DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
   // load data
-  unsigned int nfiles = DGaitDBFilename::ONI_FILES * DGaitDBFilename::NFILES_TEST;
+  unsigned int nfiles = vision_utils::DGaitDBFilename::ONI_FILES * vision_utils::DGaitDBFilename::NFILES_TEST;
   image_geometry::PinholeCameraModel depth_camera_model, rgb_camera_model;
-  vision_utils::read_camera_model_files(DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
+  vision_utils::read_camera_model_files(vision_utils::DEFAULT_KINECT_SERIAL(), depth_camera_model, rgb_camera_model);
   std::vector<std::string> files = f.all_filenames_test();
   std::vector<BreastDetector::Gender> exp_genders =
       f.all_genders_test<BreastDetector::Gender>(BreastDetector::MALE, BreastDetector::FEMALE);
@@ -129,9 +132,9 @@ bool test_DGaitDB(BreastDetector::Method method = BreastDetector::WALK3D) {
     if (!vision_utils::read_rgb_depth_user_image_from_image_file
         (files[file_idx], &rgb, &depth, &user_mask))
       continue;
-      
-    const uchar USER_IDX_auxConst = DGaitDBFilename::USER_IDX;  
-      
+
+    const uchar USER_IDX_auxConst = vision_utils::DGaitDBFilename::USER_IDX;
+
     user_mask = (user_mask == USER_IDX_auxConst);
     vision_utils::Timer timer;
     BreastDetector::HeightBreast h = detector.detect_breast(depth, user_mask, depth_camera_model, method);

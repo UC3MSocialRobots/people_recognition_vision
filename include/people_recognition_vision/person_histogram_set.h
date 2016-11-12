@@ -34,12 +34,19 @@ typedef cv::Ptr<cv::ml::SVM> MySVMPtr;
 typedef cv::Ptr<cv::SVM> MySVMPtr;
 #endif
 
-#include "people_recognition_vision/person_histogram.h"
-
-#include "vision_utils/colormaps.h"
-#include "vision_utils/timestamp.h"
-#include "vision_utils/array_to_color.h"
 #include "cvstage/cvstage.h"
+#include "people_recognition_vision/person_histogram.h"
+#include "vision_utils/array_to_color.h"
+#include "vision_utils/assignment_list_to_string.h"
+#include "vision_utils/colormaps.h"
+#include "vision_utils/drawCross.h"
+#include "vision_utils/linear_assign.h"
+#include "vision_utils/match.h"
+#include "vision_utils/paste_images.h"
+#include "vision_utils/reverse_assignment_list.h"
+#include "vision_utils/timestamp.h"
+#include "vision_utils/to_yaml_vector.h"
+#include "vision_utils/from_yaml_vector.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +54,7 @@ typedef cv::Ptr<cv::SVM> MySVMPtr;
 class PersonHistogramSet {
 public:
   typedef int PersonLabel;
-  typedef CMatrix<double> CostMatrix;
+  typedef vision_utils::CMatrix<double> CostMatrix;
   typedef vision_utils::MatchList PHMatch;
   typedef std::map<PersonLabel, PersonLabel> LabelMatch;
 
@@ -61,7 +68,7 @@ public:
     // draw caption
     col_titlemap = &vision_utils::int_to_uppercase_letter; // used for this PHS
     row_titlemap = &vision_utils::int_to_lowercase_letter; // used for other PHS
-    colormap_to_caption_image(dist_matrix_colormap_caption, 100, 300,
+    vision_utils::colormap_to_caption_image(dist_matrix_colormap_caption, 100, 300,
                               vision_utils::ratio2red_green_half,
                               0., .6, .05, .1);
     refresh_unique_labels();
@@ -84,7 +91,7 @@ public:
     if (v2.size() != new_hists_nb
         || v3.size() != new_hists_nb
         || labels.size() != new_hists_nb) {
-      printf("push_back_vec() sizes mismatch: v1:%i, v2:%i, v3:%i, labels:%i\n",
+      printf("push_back_vec() sizes mismatch: v1:%li, v2:%li, v3:%li, labels:%li\n",
              v1.size(), v2.size(), v3.size(), labels.size());
       return false;
     }
@@ -539,7 +546,7 @@ public:
       return -1;
     }
     if (idx >= _labels.size()) {
-      printf("label():idx=%i >= _labels_mat.rows=%i\n", idx, _labels.size());
+      printf("label():idx=%i >= _labels_mat.rows=%li\n", idx, _labels.size());
       return -1;
     }
     return _labels[idx];
@@ -548,7 +555,7 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline bool to_yaml(const std::string & full_filename) const {
-    ROS_INFO("to_yaml('%s')", full_filename.c_str());
+    printf("to_yaml('%s')", full_filename.c_str());
     //vision_utils::to_yaml_vector(_phs, yaml_filename_prefix, "PersonHistogramSet");
     cv::FileStorage fs(full_filename, cv::FileStorage::WRITE);
     if (!fs.isOpened())
@@ -565,12 +572,14 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   inline bool from_yaml(const std::string & full_filename) {
-    ROS_INFO("from_yaml('%s')", full_filename.c_str());
+    printf("from_yaml('%s')", full_filename.c_str());
     //vision_utils::from_yaml_vector(_phs, yaml_filename_prefix, "PersonHistogramSet");
     cv::FileStorage fs(full_filename, cv::FileStorage::READ);
     if (!fs.isOpened())
       return false;
     fs["phs"] >> _phs;
+    //vision_utils::read(_phs, fs, "phs");
+    //vision_utils::from_yaml_vector(_phs, fs, "phs");
     //fs["SVM"] >> _SVM;
     fs["labels"] >> _labels;
     fs["training_mat"] >> _training_mat;

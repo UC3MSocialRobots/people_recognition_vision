@@ -33,8 +33,9 @@ A PPLMatcherTemplate using the height of the users as a metric.
 #ifndef HEIGHT_PPLM_H
 #define HEIGHT_PPLM_H
 
-#include "vision_utils/pplm_template.h"
+#include "people_recognition_vision/pplm_template.h"
 #include "people_recognition_vision/height_detector.h"
+#include "vision_utils/ppl_tags_images.h"
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 
@@ -44,30 +45,20 @@ public:
     // get camera model
     image_geometry::PinholeCameraModel rgb_camera_model;
     vision_utils::read_camera_model_files
-        (DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
+        (vision_utils::DEFAULT_KINECT_SERIAL(), _default_depth_camera_model, rgb_camera_model);
   }
 
   //////////////////////////////////////////////////////////////////////////////
 
   bool pp2height_meter(const PP & pp, double & ans) {
-    if (pp.rgb.width == 0 || pp.rgb.height == 0) {
-      printf("HeightPPLM: PP has no rgb image\n");
-      return false;
-    }
-    boost::shared_ptr<void const> tracked_object;
-    try {
-      _depth_bridge = cv_bridge::toCvShare(pp.depth, tracked_object,
-                                           sensor_msgs::image_encodings::TYPE_32FC1);
-      _user_bridge = cv_bridge::toCvShare(pp.user, tracked_object,
-                                          sensor_msgs::image_encodings::TYPE_8UC1);
-    } catch (cv_bridge::Exception& e) {
-      printf("HeightPPLM: cv_bridge exception: %s", e.what());
+    cv::Mat1f depth = vision_utils::get_image_tag<float>(pp, "depth");
+    cv::Mat1b user = vision_utils::get_image_tag<uchar>(pp, "user");
+    if (depth.empty() || user.empty()) {
+      printf("HeightPPLM: PP has no depth or user image\n");
       return false;
     }
     HeightDetector::Height h = detec.height_meters
-        (_depth_bridge->image,
-         _user_bridge->image,
-         _default_depth_camera_model);
+        (depth, user, _default_depth_camera_model);
     if (h.height_m == HeightDetector::ERROR)
       return false;
     ans = h.height_m;
@@ -77,9 +68,13 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool match(const PPL & new_ppl, const PPL & tracks, std::vector<double> & costs,
-             std::vector<people_msgs::PersonAttributes> & new_ppl_added_attributes,
-             std::vector<people_msgs::PersonAttributes> & tracks_added_attributes) {
-    unsigned int ntracks = tracks.poses.size(),
+             std::vector<std::string> & new_ppl_added_tagnames,
+                     std::vector<std::string> & new_ppl_added_tags,
+                     std::vector<unsigned int> & new_ppl_added_indices,
+             std::vector<std::string> & tracks_added_tagnames,
+                     std::vector<std::string> & tracks_added_tags,
+                     std::vector<unsigned int> & tracks_added_indices) {
+    unsigned int ntracks = tracks.people.size(),
         ncurr_users = new_ppl.people.size();
     DEBUG_PRINT("HeightPPLM::match(%i new PP, %i tracks)\n",
                 ncurr_users, ntracks);
@@ -98,7 +93,7 @@ public:
         return false;
     } // end for (curr_idx)
     for (unsigned int track_idx = 0; track_idx < ntracks; ++track_idx) {
-      if (!pp2height_meter(tracks.poses[track_idx], track_heights[track_idx]))
+      if (!pp2height_meter(tracks.people[track_idx], track_heights[track_idx]))
         return false;
     } // end for (track_idx)
     DEBUG_PRINT("HeightPPLM:new_ppl_heights:%s, track_heights:%s",
