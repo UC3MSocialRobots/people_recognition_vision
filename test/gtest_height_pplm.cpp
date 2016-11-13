@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for HeightPPLM
  */
-#include "vision_utils/pplm_testing.h"
+#include "people_recognition_vision/pplm_testing.h"
 #include "people_recognition_vision/height_pplm.h"
 
 TEST(TestSuite, create) {

@@ -624,7 +624,7 @@ protected:
       return false;
 #if 0 // directly load SVM
     try {
-      _svm.load(SVM_FILE(TEMPLATE_MATCHING), "svm");
+      _svm.load(SVM_FILE(TEMPLATE_MATCHING).c_str(), "svm");
       _svm_is_loaded = (_svm.get_var_count() > 0);
     } catch (cv::Exception e) {
       printf("BreastDetector: could not load SVM in '%s'\n", e.what());
@@ -632,7 +632,7 @@ protected:
     }
 #else // load training data
     cv::Mat1f training_mat, labels_mat;
-    cv::FileStorage fs(SVM_FILE(method), cv::FileStorage::READ);
+    cv::FileStorage fs(SVM_FILE(method).c_str(), cv::FileStorage::READ);
     if (!fs.isOpened())
       *status = SVM_STATUS_LOADED_FAILED;
     else {
@@ -718,12 +718,12 @@ protected:
       return false;
 #if CV_MAJOR_VERSION > 2
     if (*status == SVM_STATUS_TRAINED_SUCCESFULLY)
-      SVM_ptr->save(SVM_FILE(method));
+      SVM_ptr->save(SVM_FILE(method).c_str());
 #else // OpenCV < 3.0
     if (*status == SVM_STATUS_TRAINED_SUCCESFULLY)
-      SVM_ptr->save(SVM_FILE(method), "svm");
+      SVM_ptr->save(SVM_FILE(method).c_str(), "svm");
 #endif
-    cv::FileStorage fs(SVM_FILE(method), cv::FileStorage::APPEND);
+    cv::FileStorage fs(SVM_FILE(method).c_str(), cv::FileStorage::APPEND);
     if (!fs.isOpened()) {
       printf("Could not open SVM file '%s'!\n", SVM_FILE(method).c_str());
       return false;

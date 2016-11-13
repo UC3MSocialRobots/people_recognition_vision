@@ -25,12 +25,15 @@ ________________________________________________________________________________
 #include <gtest/gtest.h>
 // people_msgs
 #include "people_recognition_vision/person_histogram.h"
+#include "vision_utils/from_yaml.h"
+#include "vision_utils/get_all_different_values.h"
+#include "vision_utils/iterable_to_int_string.h"
+#include "vision_utils/matrix_testing.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "vision_utils/timer.h"
-#include "vision_utils/matrix_testing.h"
+#include "vision_utils/to_yaml.h"
 
-
-using namespace test_person_histogram_set_variables;
+using namespace vision_utils;
 //#define DISPLAY
 
 void ASSERT_SOUND_PH(const PersonHistogram & ph,

@@ -191,7 +191,7 @@ public:
     }
 
     ROS_INFO("UkfMultiModal: getting People on %i topics '%s'', "
-           "%i matchers on '%s' (weights:%s), "
+           "%li matchers on '%s' (weights:%s), "
            "track timeout of %g sec, "
            "publishing filtered People on '%s', blobs on '%s'"
            "and displaying cost matrices every %g seconds."
@@ -333,7 +333,7 @@ public:
       // mix costs of results with avg_costs
       if (res.costs.size() != costs_size) {
         ROS_WARN("UkfMultiModal::ppl_cb(): PPLM '%s' returned a cost matrix with "
-               "wrong dimensions (expected %i values, got %i)\n",
+               "wrong dimensions (expected %i values, got %li)\n",
                matcher_name.c_str(), costs_size, res.costs.size());
         continue;
       }
@@ -358,7 +358,7 @@ public:
 
     if (nmatches == 0) {
       ROS_WARN("UkfMultiModal: Could not estimate the cost matrix "
-             "with any of the %i matchers ('%s')!\n",
+             "with any of the %li matchers ('%s')!\n",
              _matchers.size(), vision_utils::iterable_to_string(_matcher_services).c_str());
       return;
     }
@@ -370,7 +370,7 @@ public:
          unassociated_poses_from_new_ppl, _ppl2track_affectations))
       return;
     DEBUG_PRINT("after match_ppl2tracks_and_clean(), "
-                "affectations:'%s', unassociated_poses_from_new_ppl:size:%i\n",
+                "affectations:'%s', unassociated_poses_from_new_ppl:size:%li\n",
                 vision_utils::assignment_list_to_string(_ppl2track_affectations).c_str(),
                 unassociated_poses_from_new_ppl.people.size());
 

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ________________________________________________________________________________
 Some tests for EuclideanPPLM
  */
-#include "vision_utils/pplm_testing.h"
+#include "people_recognition_vision/pplm_testing.h"
 #include "people_recognition_vision/euclidean_pplm.h"
 #include "vision_utils/filename_prefix2imgs.h"
 
@@ -65,7 +65,7 @@ TEST(TestSuite, test_two_frames_matching) {
 void test_pplm_benchmark(const std::string & filename_regex) {
   if (!vision_utils::rosmaster_alive()) return;
   EuclideanPPLM matcher;
-  FilenamePrefix2Imgs db_player;
+  vision_utils::FilenamePrefix2Imgs db_player;
   ASSERT_TRUE(db_player.from_file(filename_regex));
   vision_utils::pplm_benchmark(matcher, db_player, 1);
 }

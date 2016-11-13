@@ -26,9 +26,10 @@ Some tests for HeightDetector
 
 // Bring in gtest
 #include <gtest/gtest.h>
-
-#include "vision_utils/timer.h"
 #include "people_recognition_vision/height_detector.h"
+#include "vision_utils/map_to_string.h"
+#include "vision_utils/read_rgb_depth_user_image_from_image_file.h"
+#include "vision_utils/timer.h"
 
 //#define DISPLAY
 
@@ -36,7 +37,7 @@ void load_depth_mask_cammodel(cv::Mat1f & depth,
                               cv::Mat1b & user_mask,
                               image_geometry::PinholeCameraModel & depth_camera_model,
                               const std::string filename_prefix,
-                              const std::string kinect_serial_number = DEFAULT_KINECT_SERIAL()) {
+                              const std::string kinect_serial_number = vision_utils::DEFAULT_KINECT_SERIAL()) {
   vision_utils::read_rgb_depth_user_image_from_image_file
       (filename_prefix, NULL, &depth, &user_mask);
   image_geometry::PinholeCameraModel rgb_camera_model;
@@ -53,7 +54,7 @@ TEST(TestSuite, height_pixels_empty_img) {
   HeightDetector detec;
   HeightDetector::Height h = detec.height_pixels(query);
   ASSERT_TRUE(h.height_px == HeightDetector::ERROR)
-      << "query:" << ImageContour::to_string(query)
+      << "query:" << vision_utils::ImageContour::to_string(query)
       << "height:" << h.to_string();
 }
 
@@ -65,7 +66,7 @@ TEST(TestSuite, height_pixels_black_img) {
   HeightDetector detec;
   HeightDetector::Height h = detec.height_pixels(query);
   ASSERT_TRUE(h.height_px == HeightDetector::ERROR)
-      << "query:" << ImageContour::to_string(query)
+      << "query:" << vision_utils::ImageContour::to_string(query)
       << "height:" << h.to_string();
 }
 
@@ -76,7 +77,7 @@ TEST(TestSuite, height_pixels_white_img) {
   cv::Mat1b query(cols, cols, (uchar) 255);
   HeightDetector detec;
   HeightDetector::Height h = detec.height_pixels(query);
-  ASSERT_TRUE(h.height_px == cols) << "query:" << ImageContour::to_string(query)
+  ASSERT_TRUE(h.height_px == cols) << "query:" << vision_utils::ImageContour::to_string(query)
                                    << "height:" << h.to_string();
 }
 
@@ -88,7 +89,7 @@ TEST(TestSuite, height_pixels_single_pt) {
   query(cols / 2, cols / 2) = 255;
   HeightDetector detec;
   HeightDetector::Height h = detec.height_pixels(query);
-  ASSERT_TRUE(h.height_px == 1) << "query:" << ImageContour::to_string(query)
+  ASSERT_TRUE(h.height_px == 1) << "query:" << vision_utils::ImageContour::to_string(query)
                                 << "height:" << h.to_string();
 }
 
@@ -103,7 +104,7 @@ TEST(TestSuite, height_pixels_circle) {
     cv::circle(query, cv::Point(cols / 2, cols / 2), cols / 4, cv::Scalar::all(255), -1);
     HeightDetector detec;
     HeightDetector::Height h = detec.height_pixels(query);
-    ASSERT_TRUE(h.height_px == 1 + cols / 2) << "query:" << ImageContour::to_string(query)
+    ASSERT_TRUE(h.height_px == 1 + cols / 2) << "query:" << vision_utils::ImageContour::to_string(query)
                                              << "height:" << h.to_string()
                                              << ", exp height:" << 1 + cols / 2;
   } // end loop time
@@ -183,7 +184,7 @@ TEST(TestSuite, height_meters_empty) {
   HeightDetector detec;
   HeightDetector::Height h = detec.height_meters(depth, user_mask, depth_camera_model);
   ASSERT_TRUE(h.height_m == HeightDetector::ERROR)
-      << "user_mask:" << ImageContour::to_string(user_mask)
+      << "user_mask:" << vision_utils::ImageContour::to_string(user_mask)
       << "height:" << h.to_string();
 }
 
@@ -198,7 +199,7 @@ TEST(TestSuite, height_meters_zero_mask) {
   HeightDetector detec;
   HeightDetector::Height h = detec.height_meters(depth, user_mask, depth_camera_model);
   ASSERT_TRUE(h.height_m == HeightDetector::ERROR)
-      << "user_mask:" << ImageContour::to_string(user_mask)
+      << "user_mask:" << vision_utils::ImageContour::to_string(user_mask)
       << "height:" << h.to_string();
 }
 
@@ -222,7 +223,7 @@ void test_height_meters(std::string prefix,
   ASSERT_TRUE(h.height_m != HeightDetector::NOT_COMPUTED);
   ASSERT_TRUE(h.height_m != HeightDetector::ERROR);
   ASSERT_NEAR(h.height_m, exp_height_m, height_error)
-      << "user_mask:" << ImageContour::to_string(user_mask)
+      << "user_mask:" << vision_utils::ImageContour::to_string(user_mask)
       << "height:" << h.to_string()
       << "exp_height_m:" << exp_height_m;
 
@@ -239,7 +240,7 @@ void test_height_meters(std::string prefix,
   ASSERT_TRUE(h.height_confidence != HeightDetector::NOT_COMPUTED);
   ASSERT_TRUE(h.height_confidence != HeightDetector::ERROR);
   ASSERT_NEAR(h.height_confidence, exp_confidence, lkl_error)
-      << "user_mask:" << ImageContour::to_string(user_mask)
+      << "user_mask:" << vision_utils::ImageContour::to_string(user_mask)
       << "height:" << h.to_string()
       << "exp_confidence:" << exp_confidence;
 }
@@ -262,7 +263,7 @@ TEST(TestSuite, height_meters_alberto1) {
 
 void test_height_all_values(const std::string filename_prefix,
                             unsigned int exp_nusers,
-                            const std::string kinect_serial_number = DEFAULT_KINECT_SERIAL()) {
+                            const std::string kinect_serial_number = vision_utils::DEFAULT_KINECT_SERIAL()) {
   cv::Mat1f depth;
   cv::Mat1b user_mask;
   image_geometry::PinholeCameraModel depth_camera_model;
@@ -331,7 +332,7 @@ TEST(TestSuite, ref_skel) {
   ASSERT_TRUE(h.height_confidence != HeightDetector::NOT_COMPUTED);
   ASSERT_TRUE(h.height_confidence != HeightDetector::ERROR);
   ASSERT_NEAR(h.height_confidence, 1, .1)
-      // << "user_mask:" << ImageContour::to_string(user_mask)
+      // << "user_mask:" << vision_utils::ImageContour::to_string(user_mask)
       << "height:" << h.to_string();
 }
 

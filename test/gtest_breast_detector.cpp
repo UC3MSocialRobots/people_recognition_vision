@@ -131,7 +131,7 @@ void load_depth_mask_cammodel(cv::Mat1f & depth,
                               cv::Mat1b & user_mask,
                               image_geometry::PinholeCameraModel & depth_camera_model,
                               const std::string filename_prefix,
-                              const std::string kinect_serial_number = DEFAULT_KINECT_SERIAL()) {
+                              const std::string kinect_serial_number = vision_utils::DEFAULT_KINECT_SERIAL()) {
   cv::Mat3b rgb;
   ASSERT_TRUE(vision_utils::read_rgb_depth_user_image_from_image_file
               (filename_prefix, &rgb, &depth, &user_mask));
@@ -253,7 +253,7 @@ void test_breast(BreastDetector & detec,
 void test_breast(BreastDetector & detec,
                  const std::string filename_prefix,
                  uchar user_idx,
-                 const std::string kinect_serial_number = DEFAULT_KINECT_SERIAL(),
+                 const std::string kinect_serial_number = vision_utils::DEFAULT_KINECT_SERIAL(),
                  bool must_pass = true) {
   printf("test_breast('%s')\n", filename_prefix.c_str());
   test_breast(detec, filename_prefix, user_idx, kinect_serial_number, BreastDetector::WALK3D, must_pass);
@@ -276,42 +276,45 @@ TEST(TestSuite, breast_wrong_user_idx) {
 void test_breast_DGaitDB(BreastDetector & detec) {
   ROS_WARN("test_breast_DGaitDB()");
 
-  DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
+  vision_utils::DGaitDBFilename f("/home/user/Downloads/0datasets/DGaitDB_imgs/");
   if (!f.directory_exists())
     return;
-  for (unsigned int oni_idx = 1; oni_idx <= DGaitDBFilename::ONI_FILES; ++oni_idx) {
-    test_breast(detec, f.filename_train(oni_idx, 1), DGaitDBFilename::USER_IDX, DEFAULT_KINECT_SERIAL());
-    //for (unsigned int train_idx = 1; train_idx <= DGaitDBFilename::NFILES_TRAIN; ++train_idx)
-    //  test_breast(detec, f.filename_train(oni_idx, train_idx), DGaitDBFilename::USER_IDX, DEFAULT_KINECT_SERIAL());
+  for (unsigned int oni_idx = 1; oni_idx <= vision_utils::DGaitDBFilename::ONI_FILES; ++oni_idx) {
+    test_breast(detec, f.filename_train(oni_idx, 1),
+                vision_utils::DGaitDBFilename::USER_IDX,
+                vision_utils::DEFAULT_KINECT_SERIAL());
+    //for (unsigned int train_idx = 1; train_idx <= vision_utils::DGaitDBFilename::NFILES_TRAIN; ++train_idx)
+    //  test_breast(detec, f.filename_train(oni_idx, train_idx), vision_utils::DGaitDBFilename::USER_IDX,
+    //vision_utils::DEFAULT_KINECT_SERIAL());
   } // end loop oni_idx
 }
 
 void test_breast_ainara(BreastDetector & detec) {
   ROS_WARN("test_breast_ainara()");
 
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-13-769", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-17-635", 4, KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-13-769", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-17-635", 4, vision_utils::KINECT_SERIAL_ARNAUD());
   //
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-03-286", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-03-861", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-05-027", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-14-841", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-16-198", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-18-208", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-18-804", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-22-545", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-23-350", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-24-254", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-26-315", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-27-255", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-29-673", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-32-351", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-35-989", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-40-027", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-41-242", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-45-296", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-45-998", 4, KINECT_SERIAL_ARNAUD());
-  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-46-901", 4, KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-03-286", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-03-861", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-05-027", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-14-841", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-16-198", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-18-208", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-18-804", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-22-545", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-23-350", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-24-254", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-26-315", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-27-255", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-29-673", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-32-351", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-35-989", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-40-027", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-41-242", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-45-296", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-45-998", 4, vision_utils::KINECT_SERIAL_ARNAUD());
+  test_breast(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-46-901", 4, vision_utils::KINECT_SERIAL_ARNAUD());
 }
 
 void test_breast_men(BreastDetector & detec) {
@@ -371,11 +374,11 @@ void test_breast_all_values_ainara(BreastDetector & detec) {
   ROS_WARN("test_breast_all_values_ainara()");
 
   test_breast_all_values(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-13-769", 1,
-                         KINECT_SERIAL_ARNAUD(), BreastDetector::WALK3D);
+                         vision_utils::KINECT_SERIAL_ARNAUD(), BreastDetector::WALK3D);
   //  test_breast_all_values(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-13-769", 1,
-  //                         KINECT_SERIAL_ARNAUD(), BreastDetector::REPROJECT);
+  //                         vision_utils::KINECT_SERIAL_ARNAUD(), BreastDetector::REPROJECT);
   test_breast_all_values(detec, vision_utils::IMG_DIR() +  "breast/2013-10-05_15-46-13-769", 1,
-                         KINECT_SERIAL_ARNAUD(), BreastDetector::TEMPLATE_MATCHING);
+                         vision_utils::KINECT_SERIAL_ARNAUD(), BreastDetector::TEMPLATE_MATCHING);
 }
 
 void test_breast_all_values_men(BreastDetector & detec) {

@@ -22,7 +22,7 @@ ________________________________________________________________________________
 
 Some tests for PPLMatcherTemplate.
  */
-#include "vision_utils/pplm_testing.h"
+#include "people_recognition_vision/pplm_testing.h"
 #include "vision_utils/filename_prefix2imgs.h"
 
 class FooPPLMatcher : public PPLMatcherTemplate {
@@ -84,7 +84,7 @@ TEST(TestSuite, test_same_msg) {
 TEST(TestSuite, pplm_benchmark) {
   if (!vision_utils::rosmaster_alive()) return;
   FooPPLMatcher matcher;
-  FilenamePrefix2Imgs db_player;
+  vision_utils::FilenamePrefix2Imgs db_player;
   ASSERT_TRUE(db_player.from_file(vision_utils::IMG_DIR() +  "breast/*_rgb.png"));
   vision_utils::pplm_benchmark(matcher, db_player, 1);
 }

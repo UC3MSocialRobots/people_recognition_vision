@@ -27,13 +27,13 @@ ________________________________________________________________________________
 #ifndef PEOPLE_POSE_LIST_GATING_H
 #define PEOPLE_POSE_LIST_GATING_H
 
-#include "vision_utils/ppl_attributes.h"
-#include "vision_utils/distance_points3.h"
+#include "people_recognition_vision/ukf_person_pose.h"
 #include "vision_utils/clean_assign.h"
+#include "vision_utils/distance_points3.h"
 #include "vision_utils/linear_assign.h"
 #include "vision_utils/match.h"
+#include "vision_utils/ppl_attributes.h"
 #include "vision_utils/printP.h"
-#include "people_recognition_vision/ukf_person_pose.h"
 
 #ifndef DEBUG_PRINT
 //#define DEBUG_PRINT(...)   {}
@@ -114,7 +114,7 @@ bool gate_ppl(PPL & new_ppl,
               const PPL & tracks,
               PPL & unassociated_poses_from_new_ppl,
               const double human_walking_speed = DEFAULT_HUMAN_WALKING_SPEED) {
-  DEBUG_PRINT("gate_ppl(%i PPs, %i tracks)\n", new_ppl.people.size(), tracks.people.size());
+  DEBUG_PRINT("gate_ppl(%li PPs, %li tracks)\n", new_ppl.people.size(), tracks.people.size());
   unassociated_poses_from_new_ppl.header = new_ppl.header;
   for (int pp_idx = 0; pp_idx < (int) new_ppl.people.size(); ++pp_idx) {
     PP* pp = &(new_ppl.people[pp_idx]);
@@ -199,8 +199,8 @@ inline bool update_blobs_and_create_new_tracks
  unsigned int & total_seen_tracks,
  const double human_walking_speed = DEFAULT_HUMAN_WALKING_SPEED)
 {
-  DEBUG_PRINT("update_blobs_and_create_new_tracks(%i unassociated_poses_from_new_ppl, "
-              "%i blobs, %i tracks)\n",
+  DEBUG_PRINT("update_blobs_and_create_new_tracks(%li unassociated_poses_from_new_ppl, "
+              "%li blobs, %li tracks)\n",
               unassociated_poses_from_new_ppl.people.size(),
               blobs.people.size(), tracks.people.size());
 
@@ -266,7 +266,7 @@ inline bool update_blobs_and_create_new_tracks
 inline void remove_old_tracks(const ros::Time & time_now,
                               PPL & ppl,
                               const double & pp_timeout) {
-  DEBUG_PRINT("remove_old_tracks(%i ppl)\n", ppl.people.size());
+  DEBUG_PRINT("remove_old_tracks(%li ppl)\n", ppl.people.size());
   if (ppl.people.empty())
     return;
   for (int pp_idx = 0; pp_idx < (int) ppl.people.size(); ++pp_idx) {

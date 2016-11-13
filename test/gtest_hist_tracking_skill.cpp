@@ -24,14 +24,15 @@ ________________________________________________________________________________
  */
 // Bring in gtest
 #include <gtest/gtest.h>
-#include "vision_utils/timer.h"
-#include "vision_utils/matrix_testing.h"
-
-#include <vision_utils/rosmaster_alive.h>
-#include <vision_utils/img_path.h>
 #include "people_recognition_vision/hist_tracking_skill.h"
+#include <vision_utils/img_path.h>
+#include <vision_utils/map_to_string.h>
+#include "vision_utils/matrix_testing.h"
+#include <vision_utils/rosmaster_alive.h>
+#include <vision_utils/sort_assignment_list.h>
+#include "vision_utils/timer.h"
 
-using namespace test_person_histogram_set_variables;
+using namespace vision_utils;
 //#define DISPLAY
 
 ////////////////////////////////////////////////////////////////////////////////

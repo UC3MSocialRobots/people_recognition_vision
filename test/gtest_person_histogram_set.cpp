@@ -24,12 +24,12 @@ ________________________________________________________________________________
 #include <gtest/gtest.h>
 // people_msgs
 #include "people_recognition_vision/person_histogram_set.h"
+#include "vision_utils/iterable_to_string.h"
+#include "vision_utils/matrix_testing.h"
 #include "vision_utils/test_person_histogram_set_variables.h"
 #include "vision_utils/timer.h"
-#include "vision_utils/matrix_testing.h"
 
-
-using namespace test_person_histogram_set_variables;
+using namespace vision_utils;
 //#define DISPLAY
 
 TEST(TestSuite, to_mat) {

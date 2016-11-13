@@ -22,12 +22,12 @@ ________________________________________________________________________________
 
 \todo Description of the file
  */
+#include "vision_utils/assignment_list_to_string.h"
 #include "vision_utils/images2ppl.h"
+#include "vision_utils/linear_assign.h"
+#include "vision_utils/map_to_string.h"
 #include "vision_utils/rlpd2imgs.h"
 #include "vision_utils/timer.h"
-#include "vision_utils/map_to_string.h"
-#include "vision_utils/linear_assign.h"
-#include "vision_utils/assignment_list_to_string.h"
 // people_msgs
 #include <people_recognition_vision/MatchPPL.h>
 #include <ros/ros.h>
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
     unsigned int costs_size = nppl * ntracks;
     if (res.costs.size() != costs_size) {
       ROS_WARN("pplm_benchmarker::ppl_cb(): PPLM '%s' returned a cost matrix with "
-               "wrong dimensions (expected %i values, got %i)",
+               "wrong dimensions (expected %i values, got %li)",
                matcher.getService().c_str(), costs_size, res.costs.size());
       continue;
     }

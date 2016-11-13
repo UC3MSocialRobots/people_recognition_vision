@@ -19,19 +19,19 @@ catkin_add_gtest     (gtest_height_pplm  gtest_height_pplm.cpp)
 target_link_libraries(gtest_height_pplm  ${catkin_LIBRARIES} )
 
 catkin_add_gtest     (gtest_hist_tracking_skill  gtest_hist_tracking_skill.cpp)
-target_link_libraries(gtest_hist_tracking_skill ${catkin_LIBRARIES} )
+target_link_libraries(gtest_hist_tracking_skill ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 
 catkin_add_gtest     (gtest_nite_pplm  gtest_nite_pplm.cpp)
 target_link_libraries(gtest_nite_pplm  ${catkin_LIBRARIES} )
 
 catkin_add_gtest     (gtest_person_histogram  gtest_person_histogram.cpp)
-target_link_libraries(gtest_person_histogram  ${catkin_LIBRARIES} )
+target_link_libraries(gtest_person_histogram  ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 
 catkin_add_gtest     (gtest_person_histogram_set  gtest_person_histogram_set.cpp)
-target_link_libraries(gtest_person_histogram_set  ${catkin_LIBRARIES} )
+target_link_libraries(gtest_person_histogram_set  ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 
 catkin_add_gtest     (gtest_phs_pplm  gtest_phs_pplm.cpp)
-target_link_libraries(gtest_phs_pplm ${catkin_LIBRARIES} )
+target_link_libraries(gtest_phs_pplm ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 
 catkin_add_gtest     (gtest_ppl_gating  gtest_ppl_gating.cpp)
 target_link_libraries(gtest_ppl_gating  ${catkin_LIBRARIES} gsl blas )

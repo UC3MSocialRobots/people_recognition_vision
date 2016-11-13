@@ -24,12 +24,11 @@ Some tests for UkfMultiModal,
 using EuclideanPPLM as a PeopleMatcher.
  */
 #include <gtest/gtest.h>
+#include "vision_utils/foo_point.h"
 #include "vision_utils/ppl_testing.h"
 #include "people_recognition_vision/ukf_multimodal.h"
 #include "people_recognition_vision/euclidean_pplm.h"
 #include <vision_utils/rosmaster_alive.h>
-
-#define ASSERT_TRUE_TIMEOUT(cond, timeout) { vision_utils::Timer timer; while (timer.getTimeSeconds() < timeout && !(cond)) usleep(50 * 1000); } ASSERT_TRUE(cond)
 
 typedef people_msgs::Person PP;
 typedef people_msgs::People PPL;
@@ -327,7 +326,7 @@ void test_random_detections_miss(UkfMultiModal& ukf, PPL& truth_ppl, void* cooki
         continue;
       detection_ppl.people.push_back(truth_ppl.people[user_idx]);
       vision_utils::add_gaussian_noise
-          (detection_ppl.people.back().position.position, c->pos_error_std_dev);
+          (detection_ppl.people.back().position, c->pos_error_std_dev);
     } // end for user_idx
     ukf.ppl_cb(detection_ppl);
     usleep(100 * 1000);

@@ -16,7 +16,7 @@ people_msgs/People tracks
 bool match_success
 
 # "costs" should be of size (|new_ppl| x ntracks),
-# ie new_ppl.poses.size() x tracks.people.size(),
+# ie new_ppl.people.size() x tracks.people.size(),
 # the costs are obtained by costs[detected_pp_idx][track_idx]
 float64[] costs
 

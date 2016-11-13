@@ -29,11 +29,13 @@ Some useful classes for benchmarking PPLMatcherTemplate children classes.
 #include <ros/service_client.h>
 // AD
 #include "people_recognition_vision/pplm_template.h"
+#include "vision_utils/clean_assign.h"
 #include "vision_utils/database_player.h"
 #include "vision_utils/images2ppl.h"
-#include "vision_utils/timer.h"
-#include <vision_utils/rosmaster_alive.h>
 #include <vision_utils/img_path.h>
+#include "vision_utils/linear_assign.h"
+#include <vision_utils/rosmaster_alive.h>
+#include "vision_utils/timer.h"
 
 #define ASSERT_TRUE_TIMEOUT(cond, timeout) { ::vision_utils::Timer timer; while (timer.getTimeSeconds() < timeout && !(cond)) usleep(50 * 1000); } ASSERT_TRUE(cond)
 
@@ -67,9 +69,9 @@ inline bool create_ppl
   }
   // set foo coordinates
   for (int user_idx = 0; user_idx < nusers; ++user_idx) {
-    ppl.people[user_idx].position.position.x = cos(user_idx*2*M_PI/nusers);
-    ppl.people[user_idx].position.position.y = sin(user_idx*2*M_PI/nusers);
-    ppl.people[user_idx].position.position.z = 1;
+    ppl.people[user_idx].position.x = cos(user_idx*2*M_PI/nusers);
+    ppl.people[user_idx].position.y = sin(user_idx*2*M_PI/nusers);
+    ppl.people[user_idx].position.z = 1;
   } // end for (user_idx)
   return true;
 }
@@ -86,7 +88,7 @@ void test_sizes(PPLMatcherTemplate & skill,
   people_recognition_vision::MatchPPLRequest req;
   people_recognition_vision::MatchPPLResponse res;
   ros::ServiceClient client = nh_public.serviceClient<people_recognition_vision::MatchPPL>
-                              (skill.get_match_service_name());
+      (skill.get_match_service_name());
   ASSERT_TRUE_TIMEOUT(client.exists(), 1);
   unsigned int ntimes = 10;
 
@@ -121,7 +123,7 @@ void test_same_msg(PPLMatcherTemplate & skill,
   people_recognition_vision::MatchPPLRequest req;
   people_recognition_vision::MatchPPLResponse res;
   ros::ServiceClient client = nh_public.serviceClient<people_recognition_vision::MatchPPL>
-                              (skill.get_match_service_name());
+      (skill.get_match_service_name());
   ASSERT_TRUE_TIMEOUT(client.exists(), 1);
   ASSERT_TRUE(create_ppl(req.tracks, nusers, filename_prefix));
   ASSERT_TRUE(create_ppl(req.new_ppl, nusers, filename_prefix));
@@ -159,7 +161,7 @@ void test_two_frames_matching
   people_recognition_vision::MatchPPLRequest req;
   people_recognition_vision::MatchPPLResponse res;
   ros::ServiceClient client = nh_public.serviceClient<people_recognition_vision::MatchPPL>
-                              (skill.get_match_service_name());
+      (skill.get_match_service_name());
   ASSERT_TRUE_TIMEOUT(client.exists(), 1);
   ASSERT_TRUE(create_ppl(req.tracks, -1, filename_prefix1));
   ASSERT_TRUE(create_ppl(req.new_ppl, -1, filename_prefix2));
@@ -208,10 +210,11 @@ void pplm_benchmark(PPLMatcherTemplate & skill,
     curr_ppl.people.push_back(test_ppl.people[user_test_idx]);
     set_method(curr_ppl, "pplm_benchmark");
     std::vector<double> costs;
-    people_msgs::People
-        new_ppl_add_tags,tracks_add_tags;
+    std::vector<std::string> new_ppl_added_tagnames, new_ppl_added_tags, tracks_added_tagnames, tracks_added_tags;
+    std::vector<unsigned int> new_ppl_added_indices, tracks_added_indices;
     if (!skill.match(curr_ppl, ref_ppl, costs,
-                     new_ppl_add_tags, tracks_add_tags)) {
+                     new_ppl_added_tagnames, new_ppl_added_tags, new_ppl_added_indices,
+                     tracks_added_tagnames, tracks_added_tags, tracks_added_indices)) {
       printf("pplm_benchmark(): failed on test PP #%i\n", user_test_idx);
       continue;
     }
@@ -244,9 +247,9 @@ void pplm_benchmark(PPLMatcherTemplate & skill,
     ASSERT_TRUE(db_player.has_rgb() && db_player.has_depth()  && db_player.has_user());
     if (!ppl_conv.convert(db_player.get_bgr(), db_player.get_depth(), db_player.get_user()))
       continue;
-    unsigned int npps = ppl_conv.get_ppl().poses.size();
+    unsigned int npps = ppl_conv.get_ppl().people.size();
     // add randomly to ref or test
-    people_msgs::People* target_ppv = &ref_ppl.people;
+    std::vector<people_msgs::Person>* target_ppv = &ref_ppl.people;
     std::vector<UserIdx>* target_indexv = &ref_indices;
     UserIdx curr_user_idx = db_player.get_user_idx();
     if ((user2ref_nb[curr_user_idx]++) >= pp_per_ref_user) {
@@ -254,8 +257,8 @@ void pplm_benchmark(PPLMatcherTemplate & skill,
       target_indexv = &exp_test_indices;
     }
     target_ppv->insert(target_ppv->end(),
-                       ppl_conv.get_ppl().poses.begin(),
-                       ppl_conv.get_ppl().poses.end());
+                       ppl_conv.get_ppl().people.begin(),
+                       ppl_conv.get_ppl().people.end());
     for (unsigned int i = 0; i < npps; ++i)
       target_indexv->push_back(curr_user_idx);
   } // end while(player.go_to_next_frame())
