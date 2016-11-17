@@ -51,9 +51,10 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool pp2height_meter(const PP & pp, double & ans) {
-    cv::Mat1f depth = vision_utils::get_image_tag<float>(pp, "depth");
-    cv::Mat1b user = vision_utils::get_image_tag<uchar>(pp, "user");
-    if (depth.empty() || user.empty()) {
+    cv::Mat1f depth;
+    cv::Mat1b user;
+    if (!vision_utils::get_image_tag<float>(pp, "depth", depth)
+        || !vision_utils::get_image_tag<uchar>(pp, "user", user)) {
       printf("HeightPPLM: PP has no depth or user image\n");
       return false;
     }

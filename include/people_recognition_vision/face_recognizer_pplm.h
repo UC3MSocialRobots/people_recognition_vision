@@ -74,8 +74,8 @@ public:
                std::vector<std::string> & added_tags,
                std::vector<unsigned int> & added_indices) {
     ans = "RECFAIL";
-    cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(pp, "rgb");
-    if (rgb.empty()) {
+    cv::Mat3b rgb;
+    if (!vision_utils::get_image_tag<cv::Vec3b>(pp, "rgb", rgb)){
       printf("FaceRecognizerPPLM: PP has no rgb image\n");
       return false;
     }

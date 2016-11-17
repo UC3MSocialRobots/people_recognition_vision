@@ -110,7 +110,9 @@ public:
         cv::Rect face_ROI;
         face_ROI.x = vision_utils::get_tag_default(*curr_pose, "images_offsetx", 0);
         face_ROI.y = vision_utils::get_tag_default(*curr_pose, "images_offsety", 0);
-        cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(*curr_pose, "rgb");
+        cv::Mat3b rgb;
+        if (!vision_utils::get_image_tag<cv::Vec3b>(*curr_pose, "rgb", rgb))
+          continue;
         face_ROI.width = rgb.cols;
         face_ROI.height = rgb.rows;
         // vision_utils::copy_rectangles(curr_pose->image_roi, face_ROI);

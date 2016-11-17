@@ -58,10 +58,12 @@ public:
   //////////////////////////////////////////////////////////////////////////////
 
   bool pp2phs(const PP & pp, PH & ans) {
-    cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(pp, "rgb");
-    cv::Mat1f depth = vision_utils::get_image_tag<float>(pp, "depth");
-    cv::Mat1b user = vision_utils::get_image_tag<uchar>(pp, "user");
-    if (rgb.empty() || depth.empty() || user.empty()) {
+    cv::Mat3b rgb ;
+    cv::Mat1f depth;
+    cv::Mat1b user ;
+    if (!vision_utils::get_image_tag(pp, "rgb", rgb)
+        || !vision_utils::get_image_tag(pp, "depth", depth)
+        || !vision_utils::get_image_tag(pp, "user", user)) {
       printf("PHSPPLM: PP has no rgb image\n");
       return false;
     }

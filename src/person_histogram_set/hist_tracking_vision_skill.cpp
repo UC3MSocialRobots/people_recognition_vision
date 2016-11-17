@@ -124,8 +124,11 @@ public:
       //vision_utils::Rect user_roi = pp->image_roi;
       //cv::Point seed(user_roi.x + user_roi.width / 2, user_roi.y + user_roi.height / 2);
       people_msgs::Person* pp = &(curr_list->people[user_idx]);
-      cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(*pp, "rgb");
-      cv::Mat1f depth = vision_utils::get_image_tag<float>(*pp, "depth");
+      cv::Mat3b rgb;
+      cv::Mat1f depth;
+      if (!vision_utils::get_image_tag<cv::Vec3b>(*pp, "rgb", rgb)
+          || !vision_utils::get_image_tag<float>(*pp, "depth", depth))
+        continue;
 
       cv::Point seed( vision_utils::get_tag_default(*pp, "images_offsetx", 0)
                      + rgb.cols / 2,

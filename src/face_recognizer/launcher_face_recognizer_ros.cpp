@@ -127,8 +127,8 @@ public:
       //      if (curr_pose_in->has_image == false)
       //        continue;
 
-      cv::Mat3b rgb = vision_utils::get_image_tag<cv::Vec3b>(*curr_pose_in, "rgb");
-      if (rgb.empty()) {
+      cv::Mat3b rgb;
+      if (!vision_utils::get_image_tag<cv::Vec3b>(*curr_pose_in, "rgb", rgb)) {
         // mark the person as not recognized
         curr_pose_out->name = "RECFAIL";
         continue;

@@ -170,8 +170,7 @@ public:
 
     for (unsigned int face_idx = 0; face_idx < nfaces; ++face_idx) {
       const people_msgs::Person* curr_pose = &(msg->people[face_idx]);
-      _current_face = vision_utils::get_image_tag<cv::Vec3b>(*curr_pose, "rgb");
-      if (_current_face.empty())
+      if (!vision_utils::get_image_tag<cv::Vec3b>(*curr_pose, "rgb", _current_face))
         continue;
 
       std::vector<std::string> button_names;
