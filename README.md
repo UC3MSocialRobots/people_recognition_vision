@@ -119,3 +119,9 @@ Transactions on.
 
 * [Ramey, 2015]
 Cf above "How to cite this work"
+
+
+Licence
+=======
+
+LGPL v3 (GNU Lesser General Public License version 3).
