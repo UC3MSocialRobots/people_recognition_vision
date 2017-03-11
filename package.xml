@@ -26,6 +26,7 @@
   <!-- AD:
       these should be in the dependencies.rosinstall of the package -->
   <depend>cvstage</depend>
+  <depend>vision_utils</depend>
 
   <export>
     <rosdoc config="rosdoc.yaml" />

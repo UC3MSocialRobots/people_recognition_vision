@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(people_recognition_vision)
 ### 3 - Find other CMake/Catkin packages needed for build
 SET(ROSDEPS  cvstage cv_bridge  dynamic_reconfigure  image_transport
-             message_generation  people_msgs  roscpp  roslib  tf)
+             message_generation  people_msgs  roscpp  roslib  tf  vision_utils)
 find_package(catkin REQUIRED COMPONENTS ${ROSDEPS})
 find_package(PCL REQUIRED common  segmentation  visualization)
 ### 4 - Message/Service/Action Generators (add_message_files(), add_service_files(), add_action_files())
@@ -24,11 +24,6 @@ catkin_package(
   DEPENDS
 )
 ### 7 - Libraries/Executables to build (add_library()/add_executable()/target_link_libraries())
-# get vision_utils includes from SVN
-execute_process( # https://cmake.org/cmake/help/v3.0/command/execute_process.html
-  COMMAND bash svn_vision_utils.bash
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
 include_directories(
   include
   third_parties
