@@ -147,8 +147,8 @@ public:
     // subscribe to PPLP clients
     _tf_listener = new tf::TransformListener();
     _ppl_subs = vision_utils::MultiSubscriber::subscribe
-                (_nh_public, _ppl_input_topics, QUEUE_SIZE,
-                 &UkfMultiModal::ppl_cb, this);
+        (_nh_public, _ppl_input_topics, QUEUE_SIZE,
+         &UkfMultiModal::ppl_cb, this);
     // blobs publisher
     _blobs_pub = _nh_public.advertise<PPL>("ukf_blobs", 1);
     // subscribe to PPLM services
@@ -171,8 +171,8 @@ public:
     // check we still have PPLPs and PPLMs
     if (_ppl_subs.getNumPublishers() == 0) {
       ROS_FATAL("UkfMultiModal: you didn't specify any valid PPLP"
-               "(_ppl_input_topics:=\"%s\"), "
-               "please set param '~ppl_input_topics', cf doc."
+                "(_ppl_input_topics:=\"%s\"), "
+                "please set param '~ppl_input_topics', cf doc."
                 "If you use 'ukf_multimodal_lite.launch', "
                 "activate at least one PPLP using "
                 "<arg name=\"pplp_use_XXX\" value=\"true\"/>\n",
@@ -181,8 +181,8 @@ public:
     }
     if (_matchers.empty()) {
       ROS_FATAL("UkfMultiModal: you didn't specify any valid PPLM"
-               "(_ppl_matcher_services:=\"%s\"), "
-               "please set param '~ppl_matcher_services', cf doc."
+                "(_ppl_matcher_services:=\"%s\"), "
+                "please set param '~ppl_matcher_services', cf doc."
                 "If you use 'ukf_multimodal_lite.launch', "
                 "activate at least one PPLM using "
                 "<arg name=\"pplm_use_XXX\" value=\"true\"/>\n",
@@ -191,17 +191,17 @@ public:
     }
 
     ROS_INFO("UkfMultiModal: getting People on %i topics '%s'', "
-           "%li matchers on '%s' (weights:%s), "
-           "track timeout of %g sec, "
-           "publishing filtered People on '%s', blobs on '%s'"
-           "and displaying cost matrices every %g seconds."
-           "use_gating:%i, human_walking_speed:%g m/s\n",
-           _ppl_subs.nTopics(), _ppl_subs.getTopics().c_str(),
-           _matchers.size(), vision_utils::iterable_to_string(_matcher_services).c_str(),
-           vision_utils::iterable_to_string(_matcher_weights).c_str(),
-           _track_timeout,
-           get_ppl_topic().c_str(), _blobs_pub.getTopic().c_str(),
-           _cost_matrices_display_timeout, _use_gating, _human_walking_speed);
+             "%li matchers on '%s' (weights:%s), "
+             "track timeout of %g sec, "
+             "publishing filtered People on '%s', blobs on '%s'"
+             "and displaying cost matrices every %g seconds."
+             "use_gating:%i, human_walking_speed:%g m/s\n",
+             _ppl_subs.nTopics(), _ppl_subs.getTopics().c_str(),
+             _matchers.size(), vision_utils::iterable_to_string(_matcher_services).c_str(),
+             vision_utils::iterable_to_string(_matcher_weights).c_str(),
+             _track_timeout,
+             get_ppl_topic().c_str(), _blobs_pub.getTopic().c_str(),
+             _cost_matrices_display_timeout, _use_gating, _human_walking_speed);
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -275,9 +275,14 @@ public:
     if (!vision_utils::convert_ppl_tf
         (new_ppl, _static_frame_id, *_tf_listener)) {
       ROS_WARN("UkfMultiModal:Could not convert new_ppl to tf '%s'\n",
-             _static_frame_id.c_str());
+               _static_frame_id.c_str());
       return;
     }
+    // set stamp to each PP
+    for (unsigned int i = 0; i < npps; ++i)
+      vision_utils::set_tag(new_ppl.people[i],
+                            "stamp", now_stamp.toSec()); // copy timestamp to each pose
+
 
     // gate if needed
     people_msgs::People unassociated_poses_from_new_ppl;
@@ -291,7 +296,7 @@ public:
     // compute cost matrix
     if (!_avg_costs.resize(npps, ntracks)) {
       ROS_WARN("UkfMultiModal:Could not allocate cost matrix to (%i, %i)\n",
-             npps, ntracks);
+               npps, ntracks);
       return;
     }
     _avg_costs.set_to_zero();
@@ -333,8 +338,8 @@ public:
       // mix costs of results with avg_costs
       if (res.costs.size() != costs_size) {
         ROS_WARN("UkfMultiModal::ppl_cb(): PPLM '%s' returned a cost matrix with "
-               "wrong dimensions (expected %i values, got %li)\n",
-               matcher_name.c_str(), costs_size, res.costs.size());
+                 "wrong dimensions (expected %i values, got %li)\n",
+                 matcher_name.c_str(), costs_size, res.costs.size());
         continue;
       }
       int data_counter = 0; // copy res.costs to _avg_costs
@@ -353,13 +358,13 @@ public:
         out << std::setprecision(3) << std::setw(5) << res.costs[i]
                << (i < costs_size-1 && (i+1)%ntracks == 0 ? "\n" : " \t");
       ROS_INFO("UkfMultiModal::ppl_cb(): PPLM '%s', weight:%g, cost matrix:\n%s\n",
-             matcher_name.c_str(), matcher_weight, out.str().c_str());
+               matcher_name.c_str(), matcher_weight, out.str().c_str());
     } // end for (matcher_idx)
 
     if (nmatches == 0) {
       ROS_WARN("UkfMultiModal: Could not estimate the cost matrix "
-             "with any of the %li matchers ('%s')!\n",
-             _matchers.size(), vision_utils::iterable_to_string(_matcher_services).c_str());
+               "with any of the %li matchers ('%s')!\n",
+               _matchers.size(), vision_utils::iterable_to_string(_matcher_services).c_str());
       return;
     }
 
@@ -370,9 +375,9 @@ public:
          unassociated_poses_from_new_ppl, _ppl2track_affectations))
       return;
     DEBUG_PRINT("after match_ppl2tracks_and_clean(), "
-                "affectations:'%s', unassociated_poses_from_new_ppl:size:%li\n",
+                "affectations:'%s', unassociated_poses_from_new_ppl:%s\n",
                 vision_utils::assignment_list_to_string(_ppl2track_affectations).c_str(),
-                unassociated_poses_from_new_ppl.people.size());
+                vision_utils::ppl2string(unassociated_poses_from_new_ppl).c_str());
 
     // compute UKF
     for (unsigned int affec_idx = 0; affec_idx < _ppl2track_affectations.size(); ++affec_idx) {
@@ -380,9 +385,9 @@ public:
       int track_idx = _ppl2track_affectations[affec_idx].second;
       PP* track = &(_tracks.people.at(track_idx));
       PP* detec = &(new_ppl.people.at(detec_idx));
-      //DEBUG_PRINT("UkfMultiModal: detec_idx:%i, track_idx:%i, "
-      //             "list->poses: size %i, tracks: size %i\n",
-      //             detec_idx, track_idx, new_ppl.people.size(), tracks.size());
+      DEBUG_PRINT("UkfMultiModal: detec_idx:%i, track_idx:%i, "
+                  "list->poses: size %li, tracks: size %li\n",
+                  detec_idx, track_idx, new_ppl.people.size(), _tracks.people.size());
       geometry_msgs::Point track_pos = track->position;
       double track_orien = 0, track_speed = 0;
       if (!vision_utils::get_tag(*track, "ukf_orien", track_orien)) {
@@ -416,7 +421,9 @@ public:
       vision_utils::copy_tags(*detec, *track);
     } // end for affec_idx
 
+    DEBUG_PRINT("Removing tracks..\n");
     ppl_gating::remove_old_tracks(now_stamp, _tracks, _track_timeout);
+    DEBUG_PRINT("Removing blobs..\n");
     ppl_gating::remove_old_tracks(now_stamp, _blobs, ppl_gating::DEFAULT_BLOB_UNASSIGNED_TIMEOUT);
     ppl_gating::update_blobs_and_create_new_tracks
         (now_stamp, unassociated_poses_from_new_ppl, _blobs, _tracks,
@@ -435,7 +442,7 @@ public:
     _blobs.header = _tracks.header;
     vision_utils::set_method(_blobs, "ukf_multimodal_blobs");
     _blobs_pub.publish(_blobs);
-    DEBUG_PRINT("UkfMultiModal: Time for ppl_cb(): %g ms\n", timer.getTimeMilliseconds());
+    ROS_INFO_THROTTLE(5, "UkfMultiModal: Time for ppl_cb(): %g ms", timer.getTimeMilliseconds());
   } // ppl_cb();
 
   //////////////////////////////////////////////////////////////////////////////

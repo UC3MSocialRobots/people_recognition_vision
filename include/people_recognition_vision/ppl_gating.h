@@ -36,9 +36,9 @@ ________________________________________________________________________________
 #include "vision_utils/printP.h"
 
 #ifndef DEBUG_PRINT
-//#define DEBUG_PRINT(...)   {}
+#define DEBUG_PRINT(...)   {}
 //#define DEBUG_PRINT(...)   ROS_WARN(__VA_ARGS__)
-#define DEBUG_PRINT(...)   printf(__VA_ARGS__)
+//#define DEBUG_PRINT(...)   printf(__VA_ARGS__)
 #endif // DEBUG_PRINT
 
 namespace ppl_gating {
@@ -71,6 +71,7 @@ inline int gate_pp2tracks(const PP & pp,
                           const ros::Time & pp_stamp,
                           const PPL & tracks,
                           const double human_walking_speed = DEFAULT_HUMAN_WALKING_SPEED) {
+  DEBUG_PRINT("gate_pp2tracks()\n");
   double best_dist = 1E10;
   int best_track_idx = vision_utils::UNASSIGNED;
   unsigned int ntracks = tracks.people.size();
@@ -153,14 +154,14 @@ bool match_ppl2tracks_and_clean
  vision_utils::MatchList & matches) {
   DEBUG_PRINT("match_ppl2tracks_and_clean()\n");
   unsigned int nusers_detected = new_ppl.people.size(), ntracks = tracks.people.size();
+  double stamp = new_ppl.header.stamp.toSec();
   matches.clear();
   if (nusers_detected == 0) { // nothing to do
     return true;
   } // end if (nusers_detected == 0)
-  else if (ntracks == 0) { // no linear assignment to be made
-    unassociated_poses_from_new_ppl.people.insert(unassociated_poses_from_new_ppl.people.end(),
-                                                  new_ppl.people.begin(),
-                                                  new_ppl.people.end());
+  if (ntracks == 0) { // no linear assignment to be made
+    for (unsigned int i = 0; i < nusers_detected; ++i)
+      unassociated_poses_from_new_ppl.people.push_back(new_ppl.people[i]);
     return true;
   } // end if (ntracks == 0)
   vision_utils::Cost best_cost;
