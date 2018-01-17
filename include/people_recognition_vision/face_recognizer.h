@@ -6,10 +6,10 @@
 #include <opencv2/highgui/highgui.hpp>
 // facerec - https://github.com/bytefish/libfacerec
 // http://www.bytefish.de/blog/pca_in_opencv
-#if CV_MAJOR_VERSION > 2
+#if CV_MAJOR_VERSION == 3
 #include <opencv2/face/facerec.hpp>
 namespace cv_face = cv::face;
-#else // OpenCV < 3.0
+#else // OpenCV 2.*
 #include <opencv2/contrib/contrib.hpp>
 namespace cv_face = cv;
 #endif
@@ -52,8 +52,11 @@ public:
   FaceRecognizer() {
     classifier = vision_utils::create_face_classifier();
     //_model = cv_face::createEigenFaceRecognizer();
-    //_model = cv_face::createFisherFaceRecognizer(); // best, cf Robocity paper
+#if CV_MAJOR_VERSION == 3 && CV_MINOR_VERSION >= 3 // from 3.3.1 onwards
     _model = cv_face::FisherFaceRecognizer::create();
+#else
+    _model = cv_face::createFisherFaceRecognizer(); // best, cf Robocity paper
+#endif
     //_model = cv_face::createLBPHFaceRecognizer();
   }
 
@@ -258,7 +261,11 @@ public:
       if (model_filename.size() > 0) {
         std::string model_full_filename = faces_absolute_folder + model_filename;
         try {
+#if CV_MAJOR_VERSION == 3 && CV_MINOR_VERSION >= 3 // from 3.3.1 onwards
           _model->load<cv_face::FisherFaceRecognizer>(model_full_filename);
+#else
+          _model->load(model_full_filename);
+#endif
           printf("Model succesfully loaded from '%s'", model_full_filename.c_str());
           was_model_loaded = true;
         } catch (cv::Exception e) {
