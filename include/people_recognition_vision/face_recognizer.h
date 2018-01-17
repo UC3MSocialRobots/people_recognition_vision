@@ -52,7 +52,8 @@ public:
   FaceRecognizer() {
     classifier = vision_utils::create_face_classifier();
     //_model = cv_face::createEigenFaceRecognizer();
-    _model = cv_face::createFisherFaceRecognizer(); // best, cf Robocity paper
+    //_model = cv_face::createFisherFaceRecognizer(); // best, cf Robocity paper
+    _model = cv_face::FisherFaceRecognizer::create();
     //_model = cv_face::createLBPHFaceRecognizer();
   }
 
@@ -69,10 +70,10 @@ public:
                                    const std::vector<PersonName> & names) {
     printf("from_color_images_filenames(%li images)", images_filenames.size());
     if (images_filenames.size() != names.size()) {
-        printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
-               images_filenames.size(), names.size());
-        return false;
-      }
+      printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
+             images_filenames.size(), names.size());
+      return false;
+    }
     // stuff for image loading
     ColorImage color_img;
     // stuff for face detection
@@ -87,28 +88,28 @@ public:
 
     // iterate on the images
     for (unsigned int img_idx = 0; img_idx < images_filenames.size(); ++img_idx) {
-        if (img_idx % 100 == 0)
-          printf("from_color_images_filenames(%i images done / %li)", img_idx, images_filenames.size());
-        // load_color_images
-        color_img = cv::imread(images_filenames[img_idx], CV_LOAD_IMAGE_COLOR);
-        if (color_img.empty()) {
-            printf("Error in reading image '%s', skipping it.\n",
-                   images_filenames[img_idx].c_str());
-            continue;
-          }
-        // try to find faces in images
-        vision_utils::detect_with_opencv(color_img, classifier, small_img, found_faces);
-        if (found_faces.size() != 1) // probably some false positives -> skip
-          continue;
-        // pre-process results of face detection
-        // to call preprocess face, we need to know face_width and face_height
-        bool preprocess_success = preprocess_face
-            (color_img(found_faces.front()), person_BW_face);
-        if (!preprocess_success)
-          continue;
-        faces.push_back(person_BW_face.clone());
-        names_filtered.push_back(names[img_idx]);
-      } // end loop img
+      if (img_idx % 100 == 0)
+        printf("from_color_images_filenames(%i images done / %li)", img_idx, images_filenames.size());
+      // load_color_images
+      color_img = cv::imread(images_filenames[img_idx], CV_LOAD_IMAGE_COLOR);
+      if (color_img.empty()) {
+        printf("Error in reading image '%s', skipping it.\n",
+               images_filenames[img_idx].c_str());
+        continue;
+      }
+      // try to find faces in images
+      vision_utils::detect_with_opencv(color_img, classifier, small_img, found_faces);
+      if (found_faces.size() != 1) // probably some false positives -> skip
+        continue;
+      // pre-process results of face detection
+      // to call preprocess face, we need to know face_width and face_height
+      bool preprocess_success = preprocess_face
+          (color_img(found_faces.front()), person_BW_face);
+      if (!preprocess_success)
+        continue;
+      faces.push_back(person_BW_face.clone());
+      names_filtered.push_back(names[img_idx]);
+    } // end loop img
     // process
     return from_preprocessed_faces(faces, names_filtered);
   }
@@ -119,14 +120,14 @@ public:
                          const std::vector<PersonName> & names) {
     printf("from_color_images(%li images)", images.size());
     if (images.size() != names.size()) {
-        printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
-               images.size(), names.size());
-        return false;
-      }
+      printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
+             images.size(), names.size());
+      return false;
+    }
     if(images.size() == 0) {
-        printf("Cannot create face recognizer with an empty face set.\n");
-        return false;
-      }
+      printf("Cannot create face recognizer with an empty face set.\n");
+      return false;
+    }
     std::vector<NonPreprocessedColorFace> faces_raw;
     std::vector<PersonName> names_filtered;
     names_filtered.reserve(names.size());
@@ -135,19 +136,19 @@ public:
     cv::Mat3b small_img;
     std::vector< cv::Rect > found_faces;
     for (unsigned int img_idx = 0; img_idx < images.size(); ++img_idx) {
-        if (img_idx % 100 == 0)
-          printf("from_color_images(%i images done / %li)", img_idx, images.size());
-        vision_utils::detect_with_opencv(images[img_idx], classifier, small_img,
-                                        found_faces);
-        // keep results of face detection
-        for (unsigned int rect_idx = 0; rect_idx < found_faces.size(); ++rect_idx) {
-            faces_raw.push_back(images[img_idx](found_faces[rect_idx]).clone());
-            names_filtered.push_back(names[img_idx]);
-          } // end loop rect
-      } // end loop img
+      if (img_idx % 100 == 0)
+        printf("from_color_images(%i images done / %li)", img_idx, images.size());
+      vision_utils::detect_with_opencv(images[img_idx], classifier, small_img,
+                                       found_faces);
+      // keep results of face detection
+      for (unsigned int rect_idx = 0; rect_idx < found_faces.size(); ++rect_idx) {
+        faces_raw.push_back(images[img_idx](found_faces[rect_idx]).clone());
+        names_filtered.push_back(names[img_idx]);
+      } // end loop rect
+    } // end loop img
 
     printf("Detected faces in %li faces out of the %li original images.",
-                 faces_raw.size(), images.size());
+           faces_raw.size(), images.size());
 
     return from_non_preprocessed_faces(faces_raw, names_filtered);
   }
@@ -158,27 +159,27 @@ public:
                                    const std::vector<PersonName> & names) {
     printf("from_non_preprocessed_faces(%li faces_raw)", faces_raw.size());
     if (faces_raw.size() != names.size()) {
-        printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
-               faces_raw.size(), names.size());
-        return false;
-      }
+      printf("Cannot create face recognizer if nb images (%li) != nb names (%li).\n",
+             faces_raw.size(), names.size());
+      return false;
+    }
     if(faces_raw.size() == 0) {
-        printf("Cannot create face recognizer with an empty face set.\n");
-        return false;
-      }
+      printf("Cannot create face recognizer with an empty face set.\n");
+      return false;
+    }
 
     // preprocess images
     std::vector<PreprocessedBWFace> faces;
     PreprocessedBWFace person_BW_face;
     for (unsigned int face_idx = 0; face_idx < faces_raw.size(); ++face_idx) {
-        if (face_idx % 100 == 0)
-          printf("from_non_preprocessed_faces(%i images done / %li)", face_idx, faces_raw.size());
-        // to call preprocess face, we need to know face_width and face_height
-        bool preprocess_success = preprocess_face(faces_raw[face_idx], person_BW_face);
-        if (!preprocess_success)
-          continue;
-        faces.push_back(person_BW_face.clone());
-      } // end loop face_idx
+      if (face_idx % 100 == 0)
+        printf("from_non_preprocessed_faces(%i images done / %li)", face_idx, faces_raw.size());
+      // to call preprocess face, we need to know face_width and face_height
+      bool preprocess_success = preprocess_face(faces_raw[face_idx], person_BW_face);
+      if (!preprocess_success)
+        continue;
+      faces.push_back(person_BW_face.clone());
+    } // end loop face_idx
 
     return from_preprocessed_faces(faces, names);
   } // end from_non_preprocessed_faces()
@@ -206,66 +207,66 @@ public:
 
     for (PersonLabel person_idx = 0; person_idx < (int) person_nodes.size();
          ++person_idx) {
-        PersonName name =
-            doc.get_node_attribute(person_nodes[person_idx], "name", "");
-        if (name.size() == 0) {
-            printf("Person #%i does not have her attribute 'name' set. "
-                   "Skipping it.\n", person_idx);
-            continue;
-          }
+      PersonName name =
+          doc.get_node_attribute(person_nodes[person_idx], "name", "");
+      if (name.size() == 0) {
+        printf("Person #%i does not have her attribute 'name' set. "
+               "Skipping it.\n", person_idx);
+        continue;
+      }
 
-        // get all images for this person
-        std::vector<vision_utils::XmlDocument::Node*> img_nodes;
-        doc.get_all_nodes_at_direction
-            (person_nodes[person_idx], "img", img_nodes);
-        for (unsigned int img_idx = 0; img_idx < img_nodes.size(); ++img_idx) {
-            // get the relative path
-            std::string img_relative_path =
-                doc.get_node_attribute(img_nodes[img_idx], "path", "");
-            if (img_relative_path.size() == 0) {
-                printf("Img node #%i of person '%s' does not have 'path' "
-                       "attribute set. Skipping img.\n", img_idx, name.c_str());
-                continue;
-              }
-            // build the absolute path
-            std::ostringstream img_absolute_path;
-            img_absolute_path << faces_absolute_folder << img_relative_path;
-            //printf("absolute_path:'%s'\n", absolute_path.str().c_str());
-            // try to read the image
-            PreprocessedBWFace curr_BW_img = cv::imread(img_absolute_path.str(),
-                                                        CV_LOAD_IMAGE_GRAYSCALE);
-            if (curr_BW_img.data == NULL) {
-                printf("Img '%s', referred by node #%i of person '%s' "
-                       "impossible to read. Skipping img.\n",
-                       img_absolute_path.str().c_str(), img_idx, name.c_str());
-                continue;
-              }
-            //  printf("absolute_path:'%s', curr_img:'%s'\n",
-            //           absolute_path.str().c_str(),
-            //           vision_utils::infosImage(curr_BW_img).c_str());
+      // get all images for this person
+      std::vector<vision_utils::XmlDocument::Node*> img_nodes;
+      doc.get_all_nodes_at_direction
+          (person_nodes[person_idx], "img", img_nodes);
+      for (unsigned int img_idx = 0; img_idx < img_nodes.size(); ++img_idx) {
+        // get the relative path
+        std::string img_relative_path =
+            doc.get_node_attribute(img_nodes[img_idx], "path", "");
+        if (img_relative_path.size() == 0) {
+          printf("Img node #%i of person '%s' does not have 'path' "
+                 "attribute set. Skipping img.\n", img_idx, name.c_str());
+          continue;
+        }
+        // build the absolute path
+        std::ostringstream img_absolute_path;
+        img_absolute_path << faces_absolute_folder << img_relative_path;
+        //printf("absolute_path:'%s'\n", absolute_path.str().c_str());
+        // try to read the image
+        PreprocessedBWFace curr_BW_img = cv::imread(img_absolute_path.str(),
+                                                    CV_LOAD_IMAGE_GRAYSCALE);
+        if (curr_BW_img.data == NULL) {
+          printf("Img '%s', referred by node #%i of person '%s' "
+                 "impossible to read. Skipping img.\n",
+                 img_absolute_path.str().c_str(), img_idx, name.c_str());
+          continue;
+        }
+        //  printf("absolute_path:'%s', curr_img:'%s'\n",
+        //           absolute_path.str().c_str(),
+        //           vision_utils::infosImage(curr_BW_img).c_str());
 
-            preprocessed_faces.push_back(curr_BW_img.clone());
-            names.push_back(name);
-          } // end loop img_idx
-      } // end loop person_idx
+        preprocessed_faces.push_back(curr_BW_img.clone());
+        names.push_back(name);
+      } // end loop img_idx
+    } // end loop person_idx
 
     // try to get model
     bool was_model_loaded = false;
     vision_utils::XmlDocument::Node* model_node = doc.get_node_at_direction(doc.root(), "model");
     if (model_node != NULL) {
-        std::string model_filename = doc.get_node_attribute(model_node, "path");
-        if (model_filename.size() > 0) {
-            std::string model_full_filename = faces_absolute_folder + model_filename;
-            try {
-              _model->load(model_full_filename);
-              printf("Model succesfully loaded from '%s'", model_full_filename.c_str());
-              was_model_loaded = true;
-            } catch (cv::Exception e) {
-              printf("Error while loading model '%s':'%s', will retrain model.\n",
-                     model_full_filename.c_str(), e.what());
-            }
-          }
-      } // if (model_node != NULL)
+      std::string model_filename = doc.get_node_attribute(model_node, "path");
+      if (model_filename.size() > 0) {
+        std::string model_full_filename = faces_absolute_folder + model_filename;
+        try {
+          _model->load<cv_face::FisherFaceRecognizer>(model_full_filename);
+          printf("Model succesfully loaded from '%s'", model_full_filename.c_str());
+          was_model_loaded = true;
+        } catch (cv::Exception e) {
+          printf("Error while loading model '%s':'%s', will retrain model.\n",
+                 model_full_filename.c_str(), e.what());
+        }
+      }
+    } // if (model_node != NULL)
 
     bool want_retrain_model = (!was_model_loaded);
     return from_preprocessed_faces(preprocessed_faces, names, want_retrain_model);
@@ -306,52 +307,52 @@ public:
     // get all existing names
     std::set<std::string> names;
     for (unsigned int label_idx = 0; label_idx < _labels.size(); ++label_idx) {
-        PersonName name = person_label_to_name(_labels[label_idx]);
-        if (name == "")
-          continue;
-        names.insert(name);
-      } // end loop label
+      PersonName name = person_label_to_name(_labels[label_idx]);
+      if (name == "")
+        continue;
+      names.insert(name);
+    } // end loop label
 
     // create corresponding nodes
     for (std::set<std::string>::iterator names_it = names.begin();
          names_it != names.end(); ++names_it) {
-        // write the node
-        vision_utils::XmlDocument::Node* person_node = doc.add_node(persons_node, "person", "");
-        doc.set_node_attribute(person_node, "name", *names_it);
-      }
+      // write the node
+      vision_utils::XmlDocument::Node* person_node = doc.add_node(persons_node, "person", "");
+      doc.set_node_attribute(person_node, "name", *names_it);
+    }
     // doc.write_to_file("/tmp/foo.xml");
 
     // add all pictures to person nodes
     if(_BW_faces.size() != _labels.size()) {
-        printf("%li _BW_faces != %li _labels\n", _BW_faces.size(), _labels.size());
+      printf("%li _BW_faces != %li _labels\n", _BW_faces.size(), _labels.size());
+      return false;
+    }
+    for (unsigned int img_BW_idx = 0; img_BW_idx < _BW_faces.size(); ++img_BW_idx) {
+      PersonName name = person_label_to_name(_labels[img_BW_idx]);
+      if (name == "")
+        continue;
+      // make full pathname
+      std::ostringstream img_abs_path_str, img_rel_path_str;
+      img_rel_path_str << name << "_" << img_BW_idx << ".png";
+      img_abs_path_str << faces_absolute_folder << img_rel_path_str.str();
+      // save image
+      bool write_ok = cv::imwrite(img_abs_path_str.str(), _BW_faces[img_BW_idx]);
+      if (!write_ok) {
+        printf("Impossible to save face of person '%s' into file '%s'\n",
+               name.c_str(), img_abs_path_str.str().c_str());
         return false;
       }
-    for (unsigned int img_BW_idx = 0; img_BW_idx < _BW_faces.size(); ++img_BW_idx) {
-        PersonName name = person_label_to_name(_labels[img_BW_idx]);
-        if (name == "")
-          continue;
-        // make full pathname
-        std::ostringstream img_abs_path_str, img_rel_path_str;
-        img_rel_path_str << name << "_" << img_BW_idx << ".png";
-        img_abs_path_str << faces_absolute_folder << img_rel_path_str.str();
-        // save image
-        bool write_ok = cv::imwrite(img_abs_path_str.str(), _BW_faces[img_BW_idx]);
-        if (!write_ok) {
-            printf("Impossible to save face of person '%s' into file '%s'\n",
-                   name.c_str(), img_abs_path_str.str().c_str());
-            return false;
-          }
-        // add attribute
-        vision_utils::XmlDocument::Node* person_node =
-            doc.get_node_at_direction(persons_node, "person", "name", name);
-        if (person_node == NULL) {
-            printf("Could not find 'person' node with name '%s'\n",
-                   name.c_str());
-            continue;
-          }
-        vision_utils::XmlDocument::Node* img_node = doc.add_node(person_node, "img", "");
-        doc.set_node_attribute(img_node, "path", img_rel_path_str.str());
-      } // end loop img_BW
+      // add attribute
+      vision_utils::XmlDocument::Node* person_node =
+          doc.get_node_at_direction(persons_node, "person", "name", name);
+      if (person_node == NULL) {
+        printf("Could not find 'person' node with name '%s'\n",
+               name.c_str());
+        continue;
+      }
+      vision_utils::XmlDocument::Node* img_node = doc.add_node(person_node, "img", "");
+      doc.set_node_attribute(img_node, "path", img_rel_path_str.str());
+    } // end loop img_BW
 
     doc.write_to_file(xml_absolute_filename);
     return true;
@@ -379,7 +380,7 @@ public:
     cv::Mat3b small_img;
     std::vector< cv::Rect > found_faces;
     vision_utils::detect_with_opencv(image, classifier, small_img,
-                                    found_faces);
+                                     found_faces);
     // Timer::Time t1 = timer.getTimeMilliseconds();
     // timer.reset();
     if (found_faces.size() == 0)
@@ -401,11 +402,11 @@ public:
     printf("predict_color_images(%li images)\n", images.size());
     results.resize(images.size());
     for (unsigned int img_idx = 0; img_idx < images.size(); ++img_idx) {
-        if (img_idx % 100 == 0)
-          printf("predict_color_images(%i images done / %li)",
-                       img_idx, images.size());
-        results[img_idx] = predict_color_image(images[img_idx]);
-      }
+      if (img_idx % 100 == 0)
+        printf("predict_color_images(%i images done / %li)",
+               img_idx, images.size());
+      results[img_idx] = predict_color_image(images[img_idx]);
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -413,33 +414,33 @@ public:
   void benchmark_color_images_filenames(const std::vector<std::string> & images_filenames,
                                         const std::vector<PersonName> & names) {
     printf("benchmark_color_images_filenames(%li images)",
-                 images_filenames.size());
+           images_filenames.size());
 
     cv::Mat img;
     int success_nb = 0, failures_nb = 0, no_face_nb = 0;
     for (unsigned int img_idx = 0; img_idx < images_filenames.size(); ++img_idx) {
-        if (img_idx % 100 == 0)
-          printf("predict_color_images(%i images done / %li), "
-                       "success_nb:%i, failures_nb:%i, no_face_nb:%i",
-                       img_idx, images_filenames.size(),
-                       success_nb, failures_nb, no_face_nb);
-        img = cv::imread(images_filenames[img_idx], CV_LOAD_IMAGE_COLOR);
-        if (img.empty()) {
-            printf("Error in reading image '%s', skipping it.\n",
-                   images_filenames[img_idx].c_str());
-            continue;
-          }
-        PersonName result = predict_color_image(img);
-        //printf("img %i ('%s') expected '%s', got '%s'\n",
-        //  img_idx, images_filenames[img_idx].c_str(),
-        //  names[img_idx].c_str(), result.c_str());
-        if (result == NOBODY)
-          ++no_face_nb;
-        else if (result == names[img_idx])
-          ++success_nb;
-        else
-          ++failures_nb;
-      } // end loop img
+      if (img_idx % 100 == 0)
+        printf("predict_color_images(%i images done / %li), "
+               "success_nb:%i, failures_nb:%i, no_face_nb:%i",
+               img_idx, images_filenames.size(),
+               success_nb, failures_nb, no_face_nb);
+      img = cv::imread(images_filenames[img_idx], CV_LOAD_IMAGE_COLOR);
+      if (img.empty()) {
+        printf("Error in reading image '%s', skipping it.\n",
+               images_filenames[img_idx].c_str());
+        continue;
+      }
+      PersonName result = predict_color_image(img);
+      //printf("img %i ('%s') expected '%s', got '%s'\n",
+      //  img_idx, images_filenames[img_idx].c_str(),
+      //  names[img_idx].c_str(), result.c_str());
+      if (result == NOBODY)
+        ++no_face_nb;
+      else if (result == names[img_idx])
+        ++success_nb;
+      else
+        ++failures_nb;
+    } // end loop img
     printf("success_nb:%i, failures_nb:%i, no_face_nb:%i\n",
            success_nb, failures_nb, no_face_nb);
   } // end benchmark_color_images_filenames();
@@ -492,7 +493,7 @@ private:
                                const std::vector<PersonName> & names,
                                bool want_retrain_model = true) {
     printf("from_preprocessed_faces(%li preprocessed faces, want_retrain_model:%i)",
-                 preprocessed_faces.size(), want_retrain_model);
+           preprocessed_faces.size(), want_retrain_model);
     _BW_faces = preprocessed_faces; // copy faces
     _person_labels_map.clear();
     _labels.clear();
@@ -515,17 +516,17 @@ private:
     vision_utils::Timer timer;
     // check sizes
     if(_BW_faces.size() != _labels.size()) {
-        printf("%li _BW_faces != %li _labels\n", _BW_faces.size(), _labels.size());
+      printf("%li _BW_faces != %li _labels\n", _BW_faces.size(), _labels.size());
+      return false;
+    }
+    for (unsigned int face_idx = 1; face_idx < _BW_faces.size(); ++face_idx) {
+      if(_BW_faces[face_idx].size() != _BW_faces[0].size()) {
+        printf("_BW_faces #%i:%ix%i != #0:%ix%i\n",
+               face_idx, _BW_faces[face_idx].cols, _BW_faces[face_idx].rows,
+               _BW_faces[0].cols, _BW_faces[0].rows);
         return false;
       }
-    for (unsigned int face_idx = 1; face_idx < _BW_faces.size(); ++face_idx) {
-        if(_BW_faces[face_idx].size() != _BW_faces[0].size()) {
-            printf("_BW_faces #%i:%ix%i != #0:%ix%i\n",
-                   face_idx, _BW_faces[face_idx].cols, _BW_faces[face_idx].rows,
-                   _BW_faces[0].cols, _BW_faces[0].rows);
-            return false;
-          }
-      }
+    }
 
     //    cv::Mat out;
     //    vision_utils::paste_images(_BW_faces, out, 32, 32, 0, false);
@@ -629,11 +630,11 @@ private:
     bool lookup_success = vision_utils::direct_search
         (_person_labels_map, person_label, name);
     if (!lookup_success) {
-        printf("The prediction is label #%i but it does not correspond to a "
-               "knwon person, _person_labels_map:'%s'\n",
-               person_label, vision_utils::map_to_string(_person_labels_map).c_str());
-        return RECOGNITION_FAILED;
-      }
+      printf("The prediction is label #%i but it does not correspond to a "
+             "knwon person, _person_labels_map:'%s'\n",
+             person_label, vision_utils::map_to_string(_person_labels_map).c_str());
+      return RECOGNITION_FAILED;
+    }
     return name;
   }
 
